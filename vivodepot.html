@@ -2835,6 +2835,8 @@ const STRINGS = Object.freeze({
   navMappe: "Meine Mappe",                                // Eintrag unter Finden → Mappen-Übersicht
   navPrueftermine: "Prüftermine",                         // Eintrag unter Finden → Ampel-Übersicht (Was wann erneuern); b16-Name (nav-id 'erinnerung')
   navPrueftermineSub: "Was wann erneuern",                // dezenter Untertitel des Prüftermine-Eintrags (b16-Subtitle)
+  // Rein/Raus-Durchstich (nur Gesundheit verdrahtet): zentrale Nav-Türen zu den vorhandenen Choosern.
+  navWeitergeben: "Daten weitergeben",                    // Sidebar-Eintrag → flowHerausgeben (zentrale Weitergeben-Tür); Einlesen nutzt einlesenKnopf
   prueftermineTitel: "Prüftermine",                       // Kopf der In-App-Prüftermine-Sicht
   mappeTitel: "Meine Mappe",
   mappeEinfuehrung: "Ihre Dokumente an einem Ort — Scans, Fotos, PDFs. Hier liegen sie sicher und verschlüsselt im Depot.",
@@ -3635,7 +3637,7 @@ const SEKTOREN = Object.freeze([
             hint: 'Über „Neue Person anlegen" direkt erfassen. Der Familienstand selbst steht im Bereich Identität.' },
         ] },
     ] },
-  { id: 'mobilitaet',        label: 'Mobilität & Reise',    format: SEKTOR_FORMATE.ISO_18013,  icon: 'car',
+  { id: 'mobilitaet',        label: 'Mobilität & Reise',    format: SEKTOR_FORMATE.GENERISCH,  icon: 'car',
     einfuehrungstext: 'Was Sie bewegt — und was Sie brauchen, wenn Sie unterwegs sind oder im Ausland Hilfe nötig wird.',
     sektionen: [
       { id: 'fahrzeuge-fuehrerschein', label: 'Fahrzeuge und Führerschein', felder: [
@@ -3904,7 +3906,7 @@ const SEKTOREN = Object.freeze([
         { id: 'pflegevertrag_ort',label: 'Pflegevertrag — Ablageort',                typ: 'text', ebene: 'modul', beispiel: 'Ordner „Pflege", Wohnzimmerschrank' },
       ] },
     ] },
-  { id: 'vorsorge',          label: 'Vorsorge & Recht',     format: SEKTOR_FORMATE.W3C_VC,     icon: 'scale',
+  { id: 'vorsorge',          label: 'Vorsorge & Recht',     format: SEKTOR_FORMATE.GENERISCH,  icon: 'scale',
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
     einfuehrungstext: 'Vollmacht, Testament, Patientenverfügung — damit Ihr Wille gilt.',
     // Schnitt 2.3/2.4 — geführter Einstieg in Bereich 8: zwei Wizards füllen denselben Sektor.
@@ -12870,6 +12872,14 @@ function renderSidebar() {
   html += '<button class="nav-item' + (aktiveAnsicht === 'prueftermine' ? ' aktiv' : '') + '" data-prueftermine="1">' +
     '<span class="ico">' + icon('clock') + '</span><span class="nav-item-text"><span>' + STRINGS.navPrueftermine + '</span>' +
     '<span class="nav-item-sub">' + STRINGS.navPrueftermineSub + '</span></span></button>';
+  // ── REIN & RAUS (Durchstich, nur Gesundheit verdrahtet) — zwei zentrale, nav-rangige Türen zu den
+  // vorhandenen Choosern (flowHerausgeben/flowEinlesen). „Immer sichtbar" = Nav-Rang im Drawer
+  // (konsistent mit Eintragen/Finden), keine Dauer-Präsenz. Nur bearbeitbare Modi. Zahnrad-Export
+  // bleibt vorerst; Verschieben + Bereichs-Wahl folgen nach dem Geräte-Blick.
+  if (Modus.darfBearbeiten()) {
+    html += '<button class="nav-item" data-weitergeben-zentral="gesundheit"><span class="ico">' + icon('fileDown') + '</span><span>' + STRINGS.navWeitergeben + '</span></button>';
+    html += '<button class="nav-item" data-einlesen-zentral="gesundheit"><span class="ico">' + icon('fileText') + '</span><span>' + STRINGS.einlesenKnopf + '</span></button>';
+  }
   // VERWALTUNG aufgelöst: „Verwaltete Depots" wandert konzeptuell in die Topbar-Depot-Pille (Bruch B,
   // Paket 5). Bis dahin ist die renderVerwalteteDepots-Sicht aus der Sidebar nicht erreichbar — die
   // Funktion bleibt im Code, kein Datenverlust.
@@ -12888,6 +12898,12 @@ function renderSidebar() {
   });
   sb.querySelectorAll('[data-prueftermine]').forEach(b => {
     b.onclick = oeffnePrueftermine;
+  });
+  sb.querySelectorAll('[data-weitergeben-zentral]').forEach(b => {
+    b.onclick = () => flowHerausgeben(b.getAttribute('data-weitergeben-zentral'));
+  });
+  sb.querySelectorAll('[data-einlesen-zentral]').forEach(b => {
+    b.onclick = () => flowEinlesen(b.getAttribute('data-einlesen-zentral'));
   });
 }
 
