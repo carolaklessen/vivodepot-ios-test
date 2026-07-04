@@ -776,6 +776,7 @@
   .feld-zeile.klick-durch .klick-hinweis { color: var(--ink3); font-size: var(--fs-xs); opacity: 0; transition: opacity .15s; }
   .feld-zeile.klick-durch:hover .klick-hinweis { opacity: 0.7; }
   .sensibel-marker { color: var(--gold); font-size: var(--fs-xs); font-style: italic; margin-left: var(--space-2); }
+  .autoritativ-marker { color: var(--salbei-dunkel); font-size: var(--fs-xs); font-weight: 600; margin-left: var(--space-2); }
   /* Nutzer-gewählte Sensibilität (Schema 21): kleines Schloss pro Feld + dezenter Marker. */
   .sensibel-schloss { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
     margin-left: var(--space-2); padding: 2px; border: 0; background: transparent; cursor: pointer;
@@ -812,7 +813,7 @@
   .export-ausschluss-zeile input.export-auswahl:checked ~ .export-ausschluss-label { color: var(--akzent); font-weight: 600; }
   .export-schemafest { font-style: italic; }
   .herausgeben-chooser { display: flex; flex-direction: column; gap: var(--space-2); }
-  .herausgeben-chooser .btn { justify-content: flex-start; text-align: left; }
+  .herausgeben-chooser .btn { justify-content: flex-start; text-align: left; font-size: var(--fs-sm); }   /* U2-ADR-046 ② — Chooser-Knöpfe kleiner (waren --fs-base, wirkten zu groß) */
   .qr-teile { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center; }
   .qr-teil { text-align: center; }
   .qr-teil-nr { font-size: var(--fs-xs); color: var(--ink2); margin-top: var(--space-1); }
@@ -2817,6 +2818,7 @@ const STRINGS = Object.freeze({
   deckblattFotoHinzufuegen: "Foto",                       // Platzhalter-Beschriftung (unter dem Kamera-Symbol)
   deckblattNamePlatzhalter: "Ihr Name",
   fhirExportLabel: "Gesundheitsdaten als maschinenlesbare Datei",   // FHIR-IPS-Export-Knopf (T3.4)
+  fhirExportKurz: "Gesundheitsdaten",                              // U2-ADR-046 ② — Kurz-Label im Herausgeben-Chooser; das Präfix „Maschinenlesbar —" kommt aus flowHerausgeben (keine Dopplung mehr)
   fhirExportiert: "Gesundheitsdaten als maschinenlesbare Datei gespeichert.",
   fhirGeburtsdatumTitel: "Geburtsdatum benötigt",
   fhirGeburtsdatumText: "Für den medizinischen Export (Patientenkurzakte) wird dein Geburtsdatum benötigt. Möchtest du es jetzt ergänzen?",
@@ -2836,7 +2838,7 @@ const STRINGS = Object.freeze({
   navPrueftermine: "Prüftermine",                         // Eintrag unter Finden → Ampel-Übersicht (Was wann erneuern); b16-Name (nav-id 'erinnerung')
   navPrueftermineSub: "Was wann erneuern",                // dezenter Untertitel des Prüftermine-Eintrags (b16-Subtitle)
   // Rein/Raus-Durchstich (nur Gesundheit verdrahtet): zentrale Nav-Türen zu den vorhandenen Choosern.
-  navWeitergeben: "Daten weitergeben",                    // Sidebar-Eintrag → flowHerausgeben (zentrale Weitergeben-Tür); Einlesen nutzt einlesenKnopf
+  navWeitergeben: "Daten herausgeben",                    // U2-ADR-046 ① — symmetrisch zu „Daten einlesen" (ein↔heraus); → flowHerausgeben. Interner Key/data-Attribut bleiben „weitergeben" (Rolle: nach-außen-geben)
   prueftermineTitel: "Prüftermine",                       // Kopf der In-App-Prüftermine-Sicht
   mappeTitel: "Meine Mappe",
   mappeEinfuehrung: "Ihre Dokumente an einem Ort — Scans, Fotos, PDFs. Hier liegen sie sicher und verschlüsselt im Depot.",
@@ -3286,6 +3288,16 @@ const STRINGS = Object.freeze({
   einlesenHinweis: "Welche Daten möchten Sie aus einer Datei einlesen?",
   importJsonLabel: "Aus einer Vivodepot-Sicherungsdatei übernehmen (mit Vorschau)",   // B6: klarer Wortlaut zur echten Funktion (zusammenführender Import mit Vorschau, kein blindes Überschreiben)
   importFhirLabel: "Gesundheitsdaten einlesen",
+  // U2-ADR-045 — autoritative Original-Ablage (eu-lab-Laborbefund verbatim eingelesen). Bürger-Wörter.
+  importFhirLabLabel: "Laborbefund oder Entlassbrief einlesen (vom Labor/Krankenhaus)",
+  importAutoritativBeschriftung: "Laborbefund",
+  importHdrBeschriftung: "Entlassbrief",                    // U2-ADR-048 — eu-hdr-Entlassbrief (Hospital Discharge Report)
+  importIpsBeschriftung: "Patientenkurzakte",               // U2-ADR-049 — IPS (International Patient Summary), verbatim eingelesen
+  mappeUebernehmenKnopf: "Werte in meine Felder übernehmen",   // U2-ADR-049 — additive Feld-Übernahme aus dem autoritativen Original
+  mappeUebernehmenHinweis: "Sie können die Werte aus diesem Original zusätzlich in Ihre Gesundheitsfelder übernehmen. Das Original bleibt unverändert erhalten.",
+  importAutoritativFertig: "Laborbefund abgelegt — im Original, unverändert.",
+  mappeAutoritativ: "Original — nur lesbar",
+  shlLabel: "Laborbefund",                                 // U2-ADR-047 — Default-Label im shlink:/-Payload
   importIdentitaetLabel: "Identitäts-Angaben einlesen",
   importFinanzenLabel: "Finanz-Angaben einlesen",
   importSozialversicherungLabel: "Sozialversicherungs-Angaben einlesen",
@@ -3716,8 +3728,7 @@ const SEKTOREN = Object.freeze([
     // Operationen folgt als Template-Feld (voroperationen) mit dem Andock-Auftrag, nicht als Modul-Kern.
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
     einfuehrungstext: 'Allergien, Medikamente, Blutgruppe — im Notfall sofort zur Hand.',
-    exporte: [{ format: 'fhir-ips', label: STRINGS.fhirExportLabel },     // §5.4 / T3.4 — herausholen als FHIR-IPS
-               { format: 'fhir-lab', label: STRINGS.fhirLabExportLabel }],  // Stufe 2 — Laborbericht (HL7 Europe Lab)
+    exporte: [{ format: 'fhir-ips', label: STRINGS.fhirExportKurz }],   // §5.4 / T3.4 — herausholen als FHIR-IPS (Kurz-Label ②). U2-ADR-046 ③: fhir-lab (self-erzeugter Laborbericht) aus dem Chooser gezogen — self-erzeugt ist NICHT eu-lab-konform (Validator: performer=Patient); der konforme Weg ist der autoritative Import (U2-ADR-045/047). Generator + Format-Registry (fhir-lab) bleiben dormant.
     // Geführter Einstieg: Anamnese-Wizard (anamwiz) und Pflege-Übernahme-Wizard (pflwiz, B5-Teil).
     // Startknöpfe datenlage-adaptiv.
     wizards: ['anamwiz', 'pflwiz'],
@@ -5306,7 +5317,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 23,
+    schemaVersion: 24,                       // Schema 24 (U2-ADR-045): autoritative Original-Ablage am Mappe-Eintrag (autoritativ/aussteller/importDatum/gepruefteIG)
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -8029,6 +8040,15 @@ const IMPORT_FORMATE = Object.freeze([
 
     erkennen: (t) => /"vivodepot-klartext-export"|"sektoren"\s*:/.test(t),
     parse: (text) => { const d = _vollDepotParsen(text); return d ? _vollDepotFelder(d) : null; } },
+  // U2-ADR-045/048 — Laborbefund (eu-lab) ODER Entlassbrief (eu-hdr), type=document, VERBATIM als autoritativer
+  // Mappe-Eintrag (nicht flach). MUSS vor fhir-ips stehen: importFormatErkennen nimmt den ERSTEN Treffer, und fhir-ips.erkennen matcht
+  // jedes Bundle. autoritativDoc lenkt die Import-UI in den Ablage-Zweig (flowImportAutoritativ) statt in
+  // die Feld-Vorschau. `parse` liefert null (kein Feld-Plan) — nur Absicherung, falls je regulär aufgerufen.
+  { id: 'fhir-lab', kategorie: 'sektor', sektor: 'gesundheit', nurImport: true, autoritativDoc: true,
+    label: STRINGS.importFhirLabLabel,
+    akzeptiert: '.json,application/fhir+json,application/json',
+    erkennen: (t) => _istAutoritativesMedDokument(t),
+    parse: () => null },
   // Umkehrung von fhirIpsBundle (§5.4 / T3.4).
   { id: 'fhir-ips', kategorie: 'sektor', sektor: 'gesundheit', label: STRINGS.importFhirLabel,
     akzeptiert: '.json,application/fhir+json,application/json',
@@ -8147,6 +8167,177 @@ function importFormateFuerSektor(sektorId) {
   return sektorF.concat(depotF);
 }
 
+/* ── U2-ADR-045: Autoritative Original-Ablage (eu-lab-Laborbefund verbatim) ────────────
+   Ein extern ausgestelltes, konformes type=document-Bündel (HL7 Europe Laboratory Report,
+   Bundle-eu-lab) wird NICHT durch _fhirIpsFelder in flache Bürgerfelder geflacht — das
+   verlöre die Provenienz (performer = ausstellendes Labor) und damit die Konformität.
+   Stattdessen landet es VERBATIM als autoritativer Mappe-Eintrag (inhalt = Roh-Bündel als
+   base64-Data-URL, mime application/fhir+json), read-only (mappeEntfernen sperrt). Ein
+   späterer SHL-Share reicht `inhalt` unverändert aus — das erhält den echten performer.
+   Kein Krypto-Block-Bezug; die Ablage fährt mit encryptDepot/decryptDepot wie jede Mappe. */
+const FHIR_LAB_DOC_IG = 'hl7.fhir.eu.laboratory#2.0.0';   // deklarierte Ziel-IG Labor (Gazelle/CI validiert hart; der Browser validiert nicht)
+const FHIR_HDR_DOC_IG = 'hl7.fhir.eu.hdr#0.1.0-ballot';   // deklarierte Ziel-IG Entlassbrief (HL7 Europe Hospital Discharge Report)
+const FHIR_IPS_DOC_IG = 'hl7.fhir.uv.ips#2.0.0';          // deklarierte Ziel-IG Patientenkurzakte (International Patient Summary)
+
+// U2-ADR-048/049: die anerkannten autoritativen med. Dokument-Typen — Profil-Muster (case-insensitiv, weil eu-lab
+// „Bundle-eu-lab" groß, eu-hdr „bundle-eu-hdr" klein schreibt), abgeleitete Ziel-IG + Bürger-Label. Ablage (045)
+// und SHL (047) sind profil-agnostisch → ein weiterer Dokument-Typ ist EIN Registry-Eintrag hier, kein Neubau.
+// U2-ADR-049: ein PROFILIERTES IPS-type=document landet damit VERBATIM-autoritativ (dieser Erkenner steht vor
+// fhir-ips) — der generische fhir-ips-Flatten-Import bleibt für UNprofilierte Bündel, die Selbst-Erzeugung
+// (fhirIpsBundle) ist unberührt.
+const MED_DOK_TYPEN = Object.freeze([
+  { typ: 'lab', muster: /laboratory\/StructureDefinition\/Bundle-eu-lab/i, ig: FHIR_LAB_DOC_IG, label: STRINGS.importAutoritativBeschriftung },
+  { typ: 'hdr', muster: /hdr\/StructureDefinition\/bundle-eu-hdr/i,        ig: FHIR_HDR_DOC_IG, label: STRINGS.importHdrBeschriftung },
+  { typ: 'ips', muster: /uv\/ips\/StructureDefinition\/Bundle-uv-ips/i,    ig: FHIR_IPS_DOC_IG, label: STRINGS.importIpsBeschriftung, uebernahmeFormat: 'fhir-ips' },   // U2-ADR-049: Feld-Übernahme über den bestehenden fhir-ips-Mapper (_fhirIpsFelder); lab/hdr haben keinen Bürgerfeld-Mapper
+]);
+
+// Erkennt den Typ eines autoritativen med. type=document-Bündels am Bundle-Profil. Liefert 'lab' | 'hdr' | null.
+function _autoritativesMedDokumentTyp(text) {
+  let o; try { o = JSON.parse(String(text == null ? '' : text)); } catch (e) { return null; }
+  if (!o || o.resourceType !== 'Bundle' || o.type !== 'document' || !o.meta || !Array.isArray(o.meta.profile)) return null;
+  const profile = o.meta.profile.map(p => String(p));
+  for (const d of MED_DOK_TYPEN) { if (profile.some(p => d.muster.test(p))) return d.typ; }
+  return null;
+}
+// Reine Prüfung, kein Seiteneffekt: ein von uns anerkanntes autoritatives Dokument (eu-lab ODER eu-hdr)?
+function _istAutoritativesMedDokument(text) { return _autoritativesMedDokumentTyp(text) !== null; }
+
+// Best-effort: ausstellenden Akteur (Labor/Klinik/Arzt) aus dem Bündel lesen. Leerer String, wenn nicht auffindbar.
+function _medDokAussteller(bundle) {
+  const entries = Array.isArray(bundle && bundle.entry) ? bundle.entry : [];
+  const res = entries.map(e => e && e.resource).filter(Boolean);
+  const org = res.find(r => r.resourceType === 'Organization' && r.name);
+  if (org) return String(org.name).trim();
+  const pr = res.find(r => r.resourceType === 'Practitioner' && Array.isArray(r.name) && r.name[0]);
+  if (pr) { const n = pr.name[0]; return String([(n.given || []).join(' '), n.family].filter(Boolean).join(' ')).trim(); }
+  const comp = res.find(r => r.resourceType === 'Composition');
+  if (comp && Array.isArray(comp.author) && comp.author[0] && comp.author[0].display) return String(comp.author[0].display).trim();
+  return '';
+}
+
+// UTF-8-sichere base64-Data-URL aus Roh-Text (application/fhir+json). Kein Krypto-Block-Bezug.
+function _fhirTextZuDataUrl(text) {
+  const bytes = new TextEncoder().encode(String(text == null ? '' : text));
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return 'data:application/fhir+json;base64,' + btoa(bin);
+}
+
+// Legt ein erkanntes autoritatives med. type=document-Bündel (eu-lab ODER eu-hdr) VERBATIM als Mappe-Eintrag
+// ab (nicht durch _fhirIpsFelder geflacht). Label + gepruefteIG aus dem erkannten Typ. Liefert die Mappe-id
+// — oder null, wenn nicht erkannt.
+function importAutoritativDokument(text) {
+  const typ = _autoritativesMedDokumentTyp(text);
+  if (!typ) return null;
+  if (!data) throw new Error('Kein offenes Depot.');
+  let bundle; try { bundle = JSON.parse(String(text)); } catch (e) { return null; }
+  const def = MED_DOK_TYPEN.find(d => d.typ === typ);
+  const roh = String(text);
+  const dataUrl = _fhirTextZuDataUrl(roh);
+  return mappeEintragHinzufuegen({
+    beschriftung: def.label,
+    bereich: 'gesundheit',
+    dateiname: String(def.label || 'Dokument').replace(/\s+/g, '') + '.json',
+    mime: 'application/fhir+json',
+    groesse: dataUrlGroesse(dataUrl),
+    inhalt: dataUrl,
+    autoritativ: true,
+    aussteller: _medDokAussteller(bundle),
+    importDatum: new Date().toISOString().slice(0, 10),
+    gepruefteIG: def.ig,
+  });
+}
+
+// UI-Zweig: autoritatives Dokument verbatim ablegen, KEINE Feld-Vorschau. Danach Mappe-Übersicht.
+function flowImportAutoritativ(formatId, text) {
+  let id = null;
+  try { id = importAutoritativDokument(text); } catch (e) { id = null; }
+  if (!id) { ui.toast(STRINGS.importUngueltig, 'fehler'); return; }
+  if (ui && ui.toast) ui.toast(STRINGS.importAutoritativFertig, 'ok');
+  if (typeof oeffneMappe === 'function') oeffneMappe();
+}
+
+/* ── U2-ADR-047: SHL-Provider (Offline-Teil) — SMART Health Links aus dem autoritativen Original ─────
+   Baut aus einem autoritativen Mappe-Eintrag eine verschlüsselte JWE-Datei + den shlink:/-Payload nach
+   SMART-Health-Links-Spec (VCI / hl7.org SMART Health Cards & Links). U-Flag = Direkt-GET, KEIN Manifest-
+   Server. Klartext = das VERBATIM importierte Bündel (aus `inhalt` decodiert — KEIN Neubau aus Feldern).
+   Die Erzeugung ist REIN LOKAL (WebCrypto crypto.subtle/getRandomValues; NICHT der VdCrypto-Pin-Block) —
+   kein Netz, `connect-src 'none'` unberührt. Der Ablage-/Upload-Schritt (WER hostet die verschlüsselte
+   Datei) ist eine bewusst OFFENE Schnittstelle (shlDateiHochladen, TODO); bis der Host geklärt ist, gibt
+   es keinen vollständigen Share-Weg — alles davor ist echter Offline-Kern. NEUE sicherheitskritische
+   Krypto → eigene Krypto-Review-Runde empfohlen (separat). */
+const SHL_URI_PRAEFIX = 'shlink:/';
+const SHL_STANDARD_TTL_SEK = 7 * 24 * 3600;   // Default-Ablauf, wenn kein exp übergeben wird (single-use, time-limited)
+
+// JWE compact (RFC 7516): alg:dir, enc:A256GCM. keyBytes = 32-Byte-Schlüssel. Async, WebCrypto (kein Block).
+async function _jweCompactDir(klartext, keyBytes) {
+  const kopf = { alg: 'dir', enc: 'A256GCM', cty: 'application/fhir+json' };
+  const protHdr = _jwsB64uFromString(JSON.stringify(kopf));                  // BASE64URL(UTF8(protected header))
+  const iv = crypto.getRandomValues(new Uint8Array(12));                     // 96-bit-GCM-Nonce
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['encrypt']);
+  const aad = new TextEncoder().encode(protHdr);                            // RFC 7516 §5.1: AAD = ASCII(protected)
+  const roh = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv, additionalData: aad, tagLength: 128 }, key, new TextEncoder().encode(klartext)));
+  const tag = roh.slice(roh.length - 16);                                    // WebCrypto hängt das 128-bit-Tag hinten an
+  const cipher = roh.slice(0, roh.length - 16);
+  return [protHdr, '', _jwsB64uFromBytes(iv), _jwsB64uFromBytes(cipher), _jwsB64uFromBytes(tag)].join('.');
+}
+
+// Verbatim-Klartext aus dem autoritativen Eintrag: base64-Data-URL → Original-Bytes (KEIN Neubau). null bei Fehler.
+function _autoritativKlartext(eintrag) {
+  const du = String((eintrag && eintrag.inhalt) || '');
+  const i = du.indexOf('base64,');
+  if (i < 0) return null;
+  try { return new TextDecoder().decode(Uint8Array.from(atob(du.slice(i + 7)), c => c.charCodeAt(0))); }
+  catch (e) { return null; }
+}
+
+// OFFLINE: autoritativer Eintrag → { jwe, key(b64u,43), keyBytes, flag:'U', label, exp }. OHNE `url`
+// (die kommt erst nach dem Upload). Rein lokal, kein Netz. Wirft, wenn der Eintrag nicht autoritativ ist.
+async function shlProviderPayload(mappeId, opts) {
+  const eintrag = mappeEintrag(mappeId);
+  if (!eintrag || !eintrag.autoritativ) throw new Error('SHL: nur autoritative Original-Einträge sind teilbar.');
+  const klartext = _autoritativKlartext(eintrag);
+  if (klartext == null) throw new Error('SHL: inhalt nicht lesbar.');
+  const o = opts || {};
+  const keyBytes = crypto.getRandomValues(new Uint8Array(32));               // 256-bit-Schlüssel
+  const jwe = await _jweCompactDir(klartext, keyBytes);
+  return {
+    keyBytes,
+    key: _jwsB64uFromBytes(keyBytes),                                        // 43 Zeichen (base64url, ohne Padding)
+    flag: 'U',                                                              // Direkt-GET, kein Manifest-Server
+    label: String(o.label || STRINGS.shlLabel || 'Laborbefund').slice(0, 80),
+    exp: Number.isFinite(o.exp) ? Math.floor(o.exp) : (Math.floor(Date.now() / 1000) + SHL_STANDARD_TTL_SEK),
+    jwe,
+  };
+}
+
+// Setzt den finalen shlink:/-Payload zusammen, sobald die HTTPS-`url` (Ablageort der JWE-Datei) feststeht.
+// Rein lokal. `teile` aus shlProviderPayload. url max 128 Zeichen (Spec).
+function shlUriBauen(teile, url) {
+  if (!teile || typeof url !== 'string' || !url) throw new Error('SHL: url fehlt.');
+  if (url.length > 128) throw new Error('SHL: url zu lang (>128).');
+  const payload = { url: url, key: teile.key, flag: teile.flag || 'U', label: teile.label };
+  if (Number.isFinite(teile.exp)) payload.exp = teile.exp;
+  return SHL_URI_PRAEFIX + _jwsB64uFromString(JSON.stringify(payload));
+}
+
+// OFFENE SCHNITTSTELLE — bewusst NICHT implementiert. Nimmt die verschlüsselte JWE-Datei entgegen und
+// liefert die HTTPS-URL, unter der ein SHL-Empfänger sie per GET (U-Flag) abruft. WER hostet, ist offen.
+// TODO: Host offen, xShare-Klärung. Bis dahin kein realer Ablage-/Share-Weg; die Erzeugung oben bleibt
+// rein lokal/offline (der Kern lädt wegen `connect-src 'none'` selbst nichts hoch).
+async function shlDateiHochladen(jweCompact, optionen) {   // eslint-disable-line no-unused-vars
+  throw new Error('SHL-Upload nicht angebunden — TODO: Host offen, xShare-Klärung (U2-ADR-047).');
+}
+
+// Voller Provider-Weg (Erzeugung → Upload → URI). Blockiert derzeit BEWUSST am Upload-Stub; der Offline-
+// Teil davor (shlProviderPayload/shlUriBauen) ist fertig und getestet.
+async function shlProviderErzeugen(mappeId, opts) {
+  const teile = await shlProviderPayload(mappeId, opts);
+  const url = await shlDateiHochladen(teile.jwe, { einmalGebrauch: true });   // TODO: Host offen, xShare-Klärung
+  return { uri: shlUriBauen(teile, url), jwe: teile.jwe };
+}
+
 // Format-Erkennung am INHALT (nicht nur an der Dateiendung): nutzt die erkennen()-Prädikate der
 // Registry. Formate des aktuellen Bereichs werden zuerst geprüft (bei Mehrdeutigkeit gewinnt der
 // Kontext); danach der Rest. Liefert die Format-ID oder null, wenn nichts greift.
@@ -8218,7 +8409,7 @@ function _templateFeldZuModell(g, jetztSchema) {
   if (!sektorId) return { verworfen: true, grund: 'bereich', name: name || (g && g.bereich) || '(ohne Namen)' };
   const feldId = _tplFeldId(name);
   const def = {
-    schemaVersion: (typeof jetztSchema === 'number' ? jetztSchema : 23),
+    schemaVersion: (typeof jetztSchema === 'number' ? jetztSchema : 24),
     sektorId, feldId,
     abschnitt: (g && g.gruppe) ? String(g.gruppe) : (name || feldId),   // mitgebrachte Gruppe = Abschnittsname
     typ: (g && g.feldtyp === 'jaNein') ? 'auswahl' : (g && g.feldtyp ? String(g.feldtyp) : 'text'),
@@ -8813,6 +9004,8 @@ function flowImportAuto(sektorId) {
       const teil = _importEingabeAufteilen(text);   // 1B: 2b-Bundle aufteilen (sonst unverändert)
       const fid = importFormatErkennen(teil.text, sektorId);
       if (!fid) { ui.toast(STRINGS.importNichtErkannt, 'fehler'); return; }
+      const _defA = IMPORT_FORMAT_BY_ID[fid];   // U2-ADR-045: autoritatives Dokument → Ablage-Zweig (keine Feld-Vorschau)
+      if (_defA && _defA.autoritativDoc) { schliessen(); flowImportAutoritativ(fid, teil.text); return; }
       let plan;
       // Ebene 3a: signierte Anbieter-Zertifikate werden hier kryptografisch geprüft (importPlanGeprueft);
       // unsignierte Formate laufen unverändert durch. Claims kommen nie ungeprüft herein.
@@ -8838,6 +9031,8 @@ function flowImportDatei(formatId) {
       let text;
       try { text = await datei.text(); } catch (e) { ui.toast(STRINGS.importUngueltig, 'fehler'); return; }
       const teil = _importEingabeAufteilen(text);   // 1B: 2b-Bundle aufteilen (sonst unverändert)
+      const _defD = IMPORT_FORMAT_BY_ID[formatId];   // U2-ADR-045: autoritatives Dokument → Ablage-Zweig (keine Feld-Vorschau)
+      if (_defD && _defD.autoritativDoc) { schliessen(); flowImportAutoritativ(formatId, teil.text); return; }
       let plan;
       // Ebene 3a: signierte Anbieter-Zertifikate werden hier kryptografisch geprüft (importPlanGeprueft);
       // unsignierte Formate laufen unverändert durch. Claims kommen nie ungeprüft herein.
@@ -9828,6 +10023,12 @@ function mappeEintragHinzufuegen(patch) {
     sensibel: !!p.sensibel,
     inhalt: String(p.inhalt || ''),                          // Data-URL (Base64) — inline, mitverschlüsselt
     hinzugefuegtAm: new Date().toISOString().slice(0, 10),   // nur das Datum (kein „wer", U2-ADR-013)
+    // Schema 24 (U2-ADR-045) — autoritative Original-Ablage: ein verbatim eingelesenes, extern
+    // ausgestelltes Dokument (z. B. eu-lab-Laborbefund). autoritativ:true ⇒ read-only (mappeEntfernen sperrt).
+    autoritativ: !!p.autoritativ,
+    aussteller: String(p.aussteller || ''),
+    importDatum: String(p.importDatum || ''),
+    gepruefteIG: String(p.gepruefteIG || ''),
   };
   data.mappe.push(eintrag);
   return id;
@@ -9849,6 +10050,9 @@ function mappeName(refObj) {
 // darum trifft das nur Mappen-Refs.
 function mappeEntfernen(id) {
   if (!data || !Array.isArray(data.mappe)) return false;
+  // Schema 24 (U2-ADR-045): autoritative Original-Einträge sind read-only — nicht entfernbar.
+  const _ziel = data.mappe.find(m => m && m.id === id);
+  if (_ziel && _ziel.autoritativ) return false;
   const vorher = data.mappe.length;
   data.mappe = data.mappe.filter(m => m.id !== id);
   const entfernt = data.mappe.length < vorher;
@@ -11952,7 +12156,10 @@ function depotNormalisieren(d) {
   // geht verloren. schemaVersion ist informativ (kein Lade-Gate prüft sie) -> ein 22-App liest ein
   // 23-Depot weiter und ignoriert nur die unbekannten Felder.
   if (!Array.isArray(ziel.feldDefinitionen)) ziel.feldDefinitionen = [];
-  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 23) ziel.schemaVersion = 23;
+  // Schema 23 -> 24 (U2-ADR-045): autoritative Original-Ablage am Mappe-Eintrag. Bestehende Einträge
+  // sind Selbst-Ablage (autoritativ:false) — additiv, idempotent, kein Datenverlust.
+  if (Array.isArray(ziel.mappe)) { for (const m of ziel.mappe) { if (m && typeof m === 'object' && m.autoritativ === undefined) m.autoritativ = false; } }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 24) ziel.schemaVersion = 24;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -13841,7 +14048,8 @@ function mappeListeHTML(liste) {
     html += '<div class="mappe-eintrag" role="button" tabindex="0" data-mappe-id="' + escapeHTML(e.id) + '">' + vorn +
       '<div class="mappe-eintrag-text">' +
         '<div class="mappe-eintrag-titel">' + escapeHTML(e.beschriftung || e.dateiname || '—') +
-          (e.sensibel ? ' <span class="sensibel-marker">' + escapeHTML(STRINGS.mappeSensibel) + '</span>' : '') + '</div>' +
+          (e.sensibel ? ' <span class="sensibel-marker">' + escapeHTML(STRINGS.mappeSensibel) + '</span>' : '') +
+          (e.autoritativ ? ' <span class="autoritativ-marker">' + escapeHTML(STRINGS.mappeAutoritativ) + '</span>' : '') + '</div>' +
         '<div class="mappe-eintrag-meta">' + escapeHTML(mappeBereichLabel(e.bereich)) +
           ' · ' + escapeHTML(groesseLesbar(e.groesse)) +
           (e.hinzugefuegtAm ? ' · ' + escapeHTML(datumKurz(e.hinzugefuegtAm)) : '') + '</div>' +
@@ -13895,6 +14103,27 @@ function renderMappe() {
   }
 }
 // Vorschau eines Eintrags: Bild im Modal, PDF im Browser-Viewer (iframe), sonst Hinweis.
+// U2-ADR-049: Feld-Übernahme aus einem autoritativen Original. Nur Typen MIT `uebernahmeFormat` (heute IPS —
+// der bestehende fhir-ips-Mapper _fhirIpsFelder). Liest das verbatim Original READ-ONLY und baut den bestehenden
+// Import-Plan (neu/gleich/konflikt). Liefert den Plan — oder null (kein Mapper / nicht autoritativ / unlesbar).
+function medDokFelderPlan(mappeId) {
+  const e = mappeEintrag(mappeId);
+  if (!e || !e.autoritativ) return null;
+  const def = MED_DOK_TYPEN.find(d => d.ig === e.gepruefteIG);
+  if (!def || !def.uebernahmeFormat) return null;   // Lab/HDR: kein Bürgerfeld-Mapper → keine Übernahme
+  const text = _autoritativKlartext(e);
+  if (text == null) return null;
+  return importPlan(def.uebernahmeFormat, text);
+}
+
+// UI: „Werte übernehmen" — additive Feld-Übernahme in die flachen Felder über die BESTEHENDE Vorschau
+// (neu/gleich/konflikt + Anwenden). Das autoritative Original bleibt read-only und unberührt (nur gelesen).
+function flowMappeWerteUebernehmen(mappeId) {
+  const plan = medDokFelderPlan(mappeId);
+  if (!plan || plan.ungueltig) { ui.toast(STRINGS.importUngueltig, 'fehler'); return; }
+  flowImportVorschau(plan);
+}
+
 function flowMappeVorschau(id) {
   const e = mappeEintrag(id);
   if (!e) return;
@@ -13907,7 +14136,21 @@ function flowMappeVorschau(id) {
   } else {
     koerperHTML = '<div class="hinweis-box">' + escapeHTML(STRINGS.mappeKeineVorschau) + '</div>';
   }
+  // U2-ADR-049: bei einem autoritativen Original eines Typs MIT Feld-Mapper (heute IPS) und in bearbeitbarem
+  // Modus optional „Werte übernehmen" anbieten — additiv in die flachen Felder, Original bleibt read-only.
+  const _mDef = (e.autoritativ && Modus.darfBearbeiten()) ? MED_DOK_TYPEN.find(d => d.ig === e.gepruefteIG) : null;
+  const _uebernahme = !!(_mDef && _mDef.uebernahmeFormat);
+  if (_uebernahme) {
+    koerperHTML += '<p class="einst-hint">' + escapeHTML(STRINGS.mappeUebernehmenHinweis) + '</p>' +
+      '<button type="button" class="btn btn-sek" data-mappe-uebernehmen="' + escapeHTML(id) + '">' +
+      svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.mappeUebernehmenKnopf) + '</button>';
+  }
   ui.modal({ titel, koerperHTML, primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true });
+  if (_uebernahme) {
+    const box = document.getElementById('modal-inhalt');
+    const b = (box && box.querySelector) ? box.querySelector('[data-mappe-uebernehmen]') : null;
+    if (b) b.onclick = () => flowMappeWerteUebernehmen(id);
+  }
 }
 
 /* ── Mappe Upload-Flow (U2-ADR-013 Schritt 3) ────────────────────────────────────
