@@ -2823,11 +2823,7 @@ const STRINGS = Object.freeze({
   fhirGeburtsdatumTitel: "Geburtsdatum benötigt",
   fhirGeburtsdatumText: "Für den medizinischen Export (Patientenkurzakte) wird dein Geburtsdatum benötigt. Möchtest du es jetzt ergänzen?",
   fhirGeburtsdatumCta: "Jetzt ergänzen",
-  fhirLabExportLabel: "Laborbericht als maschinenlesbare Datei",   // FHIR-Lab-Export-Knopf (Stufe 2)
-  fhirLabExportiert: "Laborbericht als maschinenlesbare Datei gespeichert.",
-  fhirLabLeerTitel: "Noch keine Laborwerte",
-  fhirLabLeerText: "Für den Laborbericht wird mindestens ein Laborwert (Hämoglobin, Kreatinin oder CRP) oder eine bekannte Blutgruppe benötigt. Tragen Sie zuerst einen Wert im Bereich Gesundheit ein.",
-  fhirLabLeerCta: "Verstanden",
+  // fhirLab*-Strings (self-erzeugter Laborbericht-Export) entfernt — E3, Datenmodell-Konzept v1.2 §3.
   depotAktiv: "aktiv",                                    // Marker für das gerade geöffnete Depot
   gruppeEintragen: "Eintragen",                           // Sidebar-Gruppe (Struktur-Spec §4, Achse Eintragen) — die elf Bereiche
   gruppeHerausholen: "Herausholen",                       // Sidebar-Gruppe (Achse Parat haben)
@@ -3723,12 +3719,12 @@ const SEKTOREN = Object.freeze([
       ] },
     ] },
   { id: 'gesundheit',        label: 'Gesundheit',           format: SEKTOR_FORMATE.FHIR_IPS,   icon: 'heartPulse',
-    // text+code-Felder tragen `codeListe`-Marker (allergien, krankheiten, medikamente, impfungen,
-    // implantate — fünf Felder). Andock kommt mit dem text+code-Auftrag (Gesundheits-Sektor).
-    // Operationen folgt als Template-Feld (voroperationen) mit dem Andock-Auftrag, nicht als Modul-Kern.
+    // text+code-Felder tragen `codeListe`-Marker (allergien, krankheiten, medikamente — DREI Felder).
+    // E2 (Datenmodell-Konzept v1.2 §3): impfungen/implantate gaben ihre Stub-Slots ab — Code-Slot nur
+    // mit lesendem Generator. Stub-Registrierungen + SBOM bleiben, bis Code-Listen im Template-Vertrag reisen.
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
     einfuehrungstext: 'Allergien, Medikamente, Blutgruppe — im Notfall sofort zur Hand.',
-    exporte: [{ format: 'fhir-ips', label: STRINGS.fhirExportKurz }],   // §5.4 / T3.4 — herausholen als FHIR-IPS (Kurz-Label ②). U2-ADR-046 ③: fhir-lab (self-erzeugter Laborbericht) aus dem Chooser gezogen — self-erzeugt ist NICHT eu-lab-konform (Validator: performer=Patient); der konforme Weg ist der autoritative Import (U2-ADR-045/047). Generator + Format-Registry (fhir-lab) bleiben dormant.
+    exporte: [{ format: 'fhir-ips', label: STRINGS.fhirExportKurz }],   // §5.4 / T3.4 — herausholen als FHIR-IPS (Kurz-Label ②). U2-ADR-046 ③ zog fhir-lab aus dem Chooser; E3 (Datenmodell-Konzept v1.2 §3) wickelte Generator + Export-Format ganz ab — der konforme Laborweg ist der autoritative Import (U2-ADR-045/047).
     // Geführter Einstieg: Anamnese-Wizard (anamwiz) und Pflege-Übernahme-Wizard (pflwiz, B5-Teil).
     // Startknöpfe datenlage-adaptiv.
     wizards: ['anamwiz', 'pflwiz'],
@@ -3754,13 +3750,12 @@ const SEKTOREN = Object.freeze([
           { id: 'medikamente',        label: 'Medikamente (laufend)',                        typ: 'text', beispiel: 'Ramipril 5 mg morgens, Metformin 1000 mg 2× täglich', codeListe: 'atc' },
           { id: 'kv_nummer',          label: 'Versichertennummer',                           typ: 'text', beispiel: 'A123456789',
             hint: 'Steht auf der Krankenkassenkarte.' },
-          { id: 'implantate',         label: 'Implantate / Prothesen / Schrittmacher',       typ: 'text', beispiel: 'Hüft-TEP rechts (Stryker), seit 2019', codeListe: 'snomedImplantat',
+          { id: 'implantate',         label: 'Implantate / Prothesen / Schrittmacher',       typ: 'text', beispiel: 'Hüft-TEP rechts (Stryker), seit 2019',
             hint: 'Wichtig für MRT-Eignung und Narkose.' },
           // Modul
-          { id: 'koerpergroesse',     label: 'Körpergröße (cm)',                             typ: 'text', ebene: 'modul', beispiel: '172',
-            hint: 'Wird für den BMI-Export verwendet.' },
-          { id: 'koerpergewicht',     label: 'Körpergewicht (kg)',                           typ: 'text', ebene: 'modul', beispiel: '68',
-            hint: 'Wird für den BMI-Export verwendet.' },
+          // E1 (Datenmodell-Konzept v1.2 §3): BMI-Hint gestrichen — er versprach einen Export, den kein Generator baut.
+          { id: 'koerpergroesse',     label: 'Körpergröße (cm)',                             typ: 'text', ebene: 'modul', beispiel: '172' },
+          { id: 'koerpergewicht',     label: 'Körpergewicht (kg)',                           typ: 'text', ebene: 'modul', beispiel: '68' },
           { id: 'impfbuch_ort',       label: 'Impfbuch — Ablageort',                         typ: 'text', ebene: 'modul', beispiel: 'Schreibtisch oben links' },
           { id: 'hauptpflegeperson',  label: 'Hauptpflegeperson',                            typ: 'ref', entitaet: 'person', rolle: 'pflegeperson', ebene: 'modul',
             hint: 'Wer kümmert sich im Notfall? Für Arztberichte und Entlassungsplanung.' },
@@ -3783,7 +3778,7 @@ const SEKTOREN = Object.freeze([
             { wert: 'maess',   label: 'gelegentlich, maßvoll' },
             { wert: 'taegl',   label: 'täglich' },
           ] },
-          { id: 'impfungen',          label: 'Impfungen',                                    typ: 'text', ebene: 'modul', beispiel: 'Tetanus 2022, Grippe jährlich', codeListe: 'snomedImpfstoff' },
+          { id: 'impfungen',          label: 'Impfungen',                                    typ: 'text', ebene: 'modul', beispiel: 'Tetanus 2022, Grippe jährlich' },
           // operationen: NICHT als Modul-Feld — die Spec führt Operationen als Template-Feld
           // (voroperationen, impfungen_detail) im Andock-Mechanismus. Kommt mit dem Andock-Auftrag.
           { id: 'arztberichte_stick', label: 'Befunde auf USB-Stick?',                       typ: 'text', ebene: 'modul', beispiel: 'Stick im Schrank, Fach „Gesundheit"' },
@@ -3798,27 +3793,10 @@ const SEKTOREN = Object.freeze([
           { id: 'familienanamnese',   label: 'Familienanamnese',                             typ: 'textarea', ebene: 'modul', beispiel: 'Vater Herzinfarkt mit 60; Mutter Diabetes Typ 2',
             hint: 'Erkrankungen in der nahen Familie — wichtig für Vorsorge und ärztliche Einschätzung.' },
         ] },
-      // Laborwerte (Stufe 2 — HL7 Europe Laboratory Report). Mehrwertige Liste, UI bewusst auf
-      // Hb/Kreatinin/CRP begrenzt; die Blutgruppe bleibt oben im Notfall-Abschnitt (keine Dublette).
-      // Speist fhirLabBundle → Bundle-eu-lab (Export „fhir-lab").
-      { id: 'labor', label: 'Laborwerte',
-        hint: 'Ausgewählte Laborwerte für den maschinenlesbaren Laborbericht (Hb, Kreatinin, CRP; Blutgruppe steht im Notfall-Abschnitt).',
-        felder: [
-          { id: 'laborwerte', label: 'Laborwerte (Hb, Kreatinin, CRP)', typ: 'liste',
-            hint: 'Je Messung: Laborwert wählen, dann Messwert, Einheit, Referenzbereich und Datum. Mehrere Messungen möglich (Verlauf).',
-            unterFelder: [
-              { id: 'analyt',   label: 'Laborwert',            typ: 'auswahl', optionen: [
-                { wert: 'hb',        label: 'Hämoglobin (Hb)' },
-                { wert: 'kreatinin', label: 'Kreatinin' },
-                { wert: 'crp',       label: 'CRP (C-reaktives Protein)' },
-              ] },
-              { id: 'wert',     label: 'Messwert',             typ: 'text', inputmode: 'decimal', beispiel: '14,2' },
-              { id: 'einheit',  label: 'Einheit',              typ: 'text', beispiel: 'g/dL' },
-              { id: 'ref_low',  label: 'Referenzbereich von',  typ: 'text', inputmode: 'decimal', beispiel: '12' },
-              { id: 'ref_high', label: 'Referenzbereich bis',  typ: 'text', inputmode: 'decimal', beispiel: '16' },
-              { id: 'datum',    label: 'Datum der Messung',    typ: 'datum' },
-            ] },
-        ] },
+      // Sektion 'labor' entfernt (E3, Datenmodell-Konzept v1.2 §3): Hand-Eingabe von Referenzbereichen
+      // ist klinische Arbeit; der konforme Laborweg ist der autoritative Import (U2-ADR-045/047, Klasse 4).
+      // Bestehende laborwerte-Werte bleiben unsichtbar im Depot erhalten (Verwaisungs-Regel, Schema 25).
+      // Wert-Verfolgung liefert künftig ein Template vollständig selbst (`liste` bleibt als Feld-Format reserviert).
       // Sektion 'pflegegrad-sek' aufgelöst (U2-ADR-019): Pflegegrad/-seit zogen mit U2-ADR-018,
       // Pflegedienst & Pflegegeld jetzt mit hierher → sozialversicherung/renten-pflege-soz.
     ] },
@@ -5047,7 +5025,7 @@ const WIZARDS = Object.freeze([
         feld: { id: 'voroperationen', label: 'Operationen / Eingriffe', typ: 'text', beispiel: 'Blinddarm 2008; Hüft-TEP rechts 2019' } },
       { frage: 'Welche Impfungen sind bei Ihnen bekannt?',
         hilfetext: 'Falls Sie ein Impfbuch haben, genügt eine Kurzfassung der wichtigsten Impfungen.',
-        feld: { id: 'impfungen', label: 'Impfungen', typ: 'text', codeListe: 'snomedImpfstoff', beispiel: 'Tetanus 2022, Grippe jährlich' } },
+        feld: { id: 'impfungen', label: 'Impfungen', typ: 'text', beispiel: 'Tetanus 2022, Grippe jährlich' } },
       { frage: 'Gibt es Erkrankungen in Ihrer nahen Familie?',
         hilfetext: 'Erkrankungen bei Eltern und Geschwistern — wichtig für Vorsorge und ärztliche Einschätzung.',
         feld: { id: 'familienanamnese', label: 'Familienanamnese', typ: 'textarea', beispiel: 'Vater Herzinfarkt mit 60; Mutter Diabetes Typ 2' } },
@@ -5317,7 +5295,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 24,                       // Schema 24 (U2-ADR-045): autoritative Original-Ablage am Mappe-Eintrag (autoritativ/aussteller/importDatum/gepruefteIG)
+    schemaVersion: 26,                       // Schema 26 (U2-ADR-051): data.codeListen[] — mitgereiste Template-Code-Listen (Reise-als-Daten). Schema 25 (E1–E3): laborwerte/Stub-Slots entfallen + Verwaisungs-Regel. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -5373,6 +5351,7 @@ function leeresDepot() {
     // (Alt-Depots: [] via depotNormalisieren). Definition lebt im Depot → Feld bleibt rendierbar
     // auch ohne das Template (Daten-Verbleib auf Render-Ebene).
     feldDefinitionen: [],
+    codeListen: [],                          // data.codeListen[] — mitgereiste Template-Code-Listen (U2-ADR-051, tpl_-Namensraum; Boot-Registrierung via _codeListenAusDepotAnmelden)
   };
 }
 
@@ -5491,6 +5470,8 @@ async function depotLaden(umschlag, password) {
   // Idempotent/additiv/verlustfrei — migriert data.erinnerungen → data.dokumente[],
   // ohne data.erinnerungen zu löschen. Arbeitet auf dem bereits entschlüsselten obj.
   try { depotNormalisieren(data); } catch (e) { /* Normalisierung darf das Laden nie brechen */ }
+  // U2-ADR-051: mitgereiste Template-Code-Listen in die Laufzeit-Registry heben (tpl_-Namensraum).
+  try { _codeListenAusDepotAnmelden(data); } catch (e) { /* Registry-Aufbau darf das Laden nie brechen */ }
   // Etappe 5: der geladene Stand trägt seine Klartext-Zeitmarke (Datei: Geschwisterfeld;
   // interner Stand: wird in depotAusIdbLaden aus dem Record überschrieben).
   _aktuellerStandGespeichertAm = (umschlag && typeof umschlag.gespeichert_am === 'string') ? umschlag.gespeichert_am : null;
@@ -6101,6 +6082,9 @@ function codeListeAnmelden(systemId, daten) {
   }));
   CODE_LISTEN[systemId] = Object.freeze({
     systemId,
+    // teilliste: die Liste ist ein AUSSCHNITT eines größeren Code-Systems — ihr kuerzel/uri benennt
+    // das Muttersystem und darf als Oberbegriff NICHT auf sie aufgelöst werden (Stufe-0-Regel C2).
+    teilliste: !!(daten && daten.teilliste),
     uri: (daten && daten.uri) || '',
     version: (daten && daten.version) || '',
     kuerzel: (daten && daten.kuerzel) || systemId,
@@ -6110,6 +6094,27 @@ function codeListeAnmelden(systemId, daten) {
   return CODE_LISTEN[systemId];
 }
 function liesCodeListe(systemId) { return CODE_LISTEN[systemId] || null; }
+
+// U2-ADR-051 — Boot-Registrierung der MITGEREISTEN Code-Listen (Reise-als-Daten, Datenmodell-
+// Konzept v1.2 §4). data.codeListen[] hält Listen, die ein signiertes Template mitbrachte; beim
+// Laden werden sie hier in die Laufzeit-Registry gehoben (analog der @vd-codeliste-Blöcke, nur
+// daten- statt quelltext-getragen). Präfix-Disziplin auch hier: NUR tpl_-systemIds werden
+// registriert — eine Depot-Liste kann eine der fest eingebauten App-Listen nie beschatten.
+// Defekte Einträge werden übersprungen; der Aufbau darf das Laden nie brechen.
+function _codeListenAusDepotAnmelden(d) {
+  const ziel = d || data;
+  const liste = (ziel && Array.isArray(ziel.codeListen)) ? ziel.codeListen : [];
+  let n = 0;
+  for (const cl of liste) {
+    if (!cl || typeof cl.systemId !== 'string' || cl.systemId.indexOf('tpl_') !== 0) continue;
+    if (!Array.isArray(cl.eintraege) || !cl.eintraege.length) continue;
+    try {
+      codeListeAnmelden(cl.systemId, { uri: cl.uri, version: cl.version, kuerzel: cl.kuerzel, lizenz: cl.lizenz, daten: cl.eintraege });
+      n++;
+    } catch (e) { /* defekte Liste blockiert das Laden nie */ }
+  }
+  return n;
+}
 
 // Autocomplete-Suche (F-2/F-3): Treffer nach Anzeige-Name, Code oder Synonym (case-insensitiv).
 function codeListeSuche(systemId, query, max) {
@@ -6250,178 +6255,11 @@ function fhirIpsBundle(jetzt) {
   };
 }
 
-/* ── FHIR-Lab-Bundle — HL7 Europe Laboratory Report (hl7.fhir.eu.laboratory#0.1.1) ──────────
-   Baut aus den Laborwerten (data.sektoren.gesundheit.laborwerte — mehrwertige Liste: Hb/Kreatinin/
-   CRP) plus der Blutgruppe (bestehendes Feld) ein Bundle-eu-lab: Composition (zuerst) + GENAU EIN
-   DiagnosticReport-eu-lab + je Messung eine Observation-resultslab-eu-lab + eine Specimen-eu-lab.
-   Muster wie fhirIpsBundle: lege() vergibt urn:uuid, Composition ist entry[0], read-only über die
-   Datenpfade, fasst die Krypto NIE an. Konformität gegen die Profile prüft der HL7-Validator in CI
-   (verpflichtender Lauf gegen 0.1.1 = Fertig-Kriterium). Canonicals: _LAB(name). */
-const LAB_ANALYTE = Object.freeze({
-  hb:        { label: 'Hämoglobin (Hb)', loinc: '718-7',  loincText: 'Hemoglobin [Mass/volume] in Blood',                    ucum: 'g/dL',  refLow: '12',  refHigh: '16' },
-  kreatinin: { label: 'Kreatinin',       loinc: '2160-0', loincText: 'Creatinine [Mass/volume] in Serum or Plasma',          ucum: 'mg/dL', refLow: '0.6', refHigh: '1.2' },
-  crp:       { label: 'CRP',             loinc: '1988-5', loincText: 'C reactive protein [Mass/volume] in Serum or Plasma',  ucum: 'mg/L',  refLow: '0',   refHigh: '5' },
-});
-// Blutgruppe (ABO+Rh) → SNOMED CT (Hierarchie „Blood group [ABO] Rh(D) [positive|negative]" unter 278147001).
-const _BLUTGRUPPE_SNOMED = Object.freeze({
-  '0+':  { code: '278147001', display: 'Blood group O Rh(D) positive' },
-  '0-':  { code: '278148006', display: 'Blood group O Rh(D) negative' },
-  'A+':  { code: '278149003', display: 'Blood group A Rh(D) positive' },
-  'A-':  { code: '278150003', display: 'Blood group A Rh(D) negative' },
-  'B+':  { code: '278151004', display: 'Blood group B Rh(D) positive' },
-  'B-':  { code: '278152006', display: 'Blood group B Rh(D) negative' },
-  'AB+': { code: '278153001', display: 'Blood group AB Rh(D) positive' },
-  'AB-': { code: '278154007', display: 'Blood group AB Rh(D) negative' },
-});
-const _LAB = (name) => 'http://hl7.eu/fhir/laboratory/StructureDefinition/' + name;
-function fhirLabBundle(jetzt) {
-  const g  = (data && data.sektoren && data.sektoren.gesundheit) || {};
-  const id = (data && data.sektoren && data.sektoren.identitaet) || {};
-  const ts = (jetzt && typeof jetzt.getTime === 'function' && !isNaN(jetzt)) ? jetzt : new Date();
-  const stamp = ts.toISOString();
-  const eintraege = [];
-  const lege = (resource) => { const fullUrl = 'urn:uuid:' + uuidV4(); eintraege.push({ fullUrl, resource }); return fullUrl; };
-  const _q = (wert, ucum) => ({ value: wert, unit: ucum, system: 'http://unitsofmeasure.org', code: ucum });
-
-  // Patient (aus Identität) — KEIN eigenes meta.profile: `Patient-eu-lab` existiert in 2.0.0-alpha nicht
-  // (Gazelle-Befund 01.07.: „definition could not be found"). Bundle-eu-lab bindet den Patienten über die
-  // Entry-Slice (wohl an patient-eu-core aus eu.base) — plain Patient reicht, kein toter Profil-Verweis.
-  const patient = { resourceType: 'Patient' };
-  if (id.vorname || id.nachname) {
-    const n = {};
-    if (id.nachname) n.family = id.nachname;
-    if (id.vorname)  n.given  = [id.vorname];
-    patient.name = [n];
-  }
-  const gMap = { m: 'male', maennlich: 'male', w: 'female', weiblich: 'female', d: 'other', divers: 'other' };
-  if (id.geschlecht) patient.gender = gMap[id.geschlecht] || 'unknown';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(id.geburtsdatum || '')) patient.birthDate = id.geburtsdatum;
-  patient.text = _ipsNarrative([id.vorname, id.nachname].filter(Boolean).join(' ') || 'Patient');
-  const patientRef = lege(patient);
-
-  // Eine Blutprobe für alle Laborwerte.
-  const specimenRef = lege({
-    resourceType: 'Specimen', meta: { profile: [_LAB('Specimen-eu-lab')] },
-    type: { coding: [{ system: 'http://snomed.info/sct', code: '119297000', display: 'Blood specimen' }], text: 'Blutprobe' },
-    subject: { reference: patientRef },
-    text: _ipsNarrative('Blutprobe'),
-  });
-
-  // Observation.category:laboratory ist im eu-lab-Profil fix und Pflicht (1..*).
-  const laborKategorie = [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/observation-category', code: 'laboratory', display: 'Laboratory' }] }];
-  // performer (1..*) ist Pflicht — Bürger-App: der Patient selbst (Selbstauskunft).
-  const performer = [{ reference: patientRef }];
-  const resultRefs = [];
-
-  // Numerische Analyten (Hb/Kreatinin/CRP) aus der mehrwertigen Liste laborwerte.
-  const werte = Array.isArray(g.laborwerte) ? g.laborwerte : [];
-  for (const w of werte) {
-    const def = LAB_ANALYTE[w && w.analyt];
-    if (!def) continue;
-    const zahl = parseFloat(String(w.wert == null ? '' : w.wert).replace(',', '.'));
-    if (!isFinite(zahl)) continue;
-    const ucum      = def.ucum;                              // UCUM-Code immer kanonisch (gültige Einheit garantiert)
-    const anzeige   = (typeof w.einheit === 'string' && w.einheit.trim()) ? w.einheit.trim() : ucum;
-    const obs = {
-      resourceType: 'Observation', status: 'final',
-      meta: { profile: [_LAB('Observation-resultslab-eu-lab')] },
-      category: laborKategorie,
-      code: { coding: [{ system: 'http://loinc.org', code: def.loinc, display: def.loincText }], text: def.label },
-      subject: { reference: patientRef },
-      effectiveDateTime: /^\d{4}-\d{2}-\d{2}$/.test(w.datum || '') ? w.datum : stamp,
-      performer: performer,
-      valueQuantity: { value: zahl, unit: anzeige, system: 'http://unitsofmeasure.org', code: ucum },
-      specimen: { reference: specimenRef },
-      text: _ipsNarrative(def.label + ': ' + zahl + ' ' + anzeige),
-    };
-    const lo = parseFloat(String(w.ref_low  == null ? '' : w.ref_low ).replace(',', '.'));
-    const hi = parseFloat(String(w.ref_high == null ? '' : w.ref_high).replace(',', '.'));
-    const rr = {};
-    if (isFinite(lo)) rr.low  = _q(lo, ucum);
-    if (isFinite(hi)) rr.high = _q(hi, ucum);
-    if (rr.low || rr.high) obs.referenceRange = [rr];
-    resultRefs.push(lege(obs));
-  }
-
-  // Blutgruppe (bestehendes Feld) — kategorial, valueCodeableConcept (SNOMED CT). „unbekannt"/leer → keine Observation.
-  const bg = _BLUTGRUPPE_SNOMED[g.blutgruppe];
-  if (bg) {
-    resultRefs.push(lege({
-      resourceType: 'Observation', status: 'final',
-      meta: { profile: [_LAB('Observation-resultslab-eu-lab')] },
-      category: laborKategorie,
-      code: { coding: [{ system: 'http://loinc.org', code: '882-1', display: 'ABO and Rh group [Type] in Blood' }], text: 'Blutgruppe' },
-      subject: { reference: patientRef },
-      effectiveDateTime: stamp,
-      performer: performer,
-      valueCodeableConcept: { coding: [{ system: 'http://snomed.info/sct', code: bg.code, display: bg.display }], text: 'Blutgruppe ' + g.blutgruppe },
-      specimen: { reference: specimenRef },
-      text: _ipsNarrative('Blutgruppe: ' + g.blutgruppe),
-    }));
-  }
-
-  // Gemeinsamer Business-Identifier — DiagnosticReport und Composition MÜSSEN mindestens einen teilen (eu-lab-Ausrichtung).
-  const gemeinsamerIdent = { system: 'urn:ietf:rfc:3986', value: 'urn:uuid:' + uuidV4() };
-  // Gemeinsamer Typ-Code — Composition.type und DiagnosticReport.code MÜSSEN mindestens ein Coding teilen.
-  const typCode = { coding: [{ system: 'http://loinc.org', code: '11502-2', display: 'Laboratory report' }], text: 'Laborbericht' };
-  const compFullUrl = 'urn:uuid:' + uuidV4();
-
-  // DiagnosticReport (genau einer) — verweist auf alle Observations + die Probe, verlinkt die Composition
-  // über die Pflicht-Extension DiagnosticReport.composition (R5-Backport).
-  const diagnosticReport = {
-    resourceType: 'DiagnosticReport', status: 'final',
-    meta: { profile: [_LAB('DiagnosticReport-eu-lab')] },
-    extension: [{ url: 'http://hl7.org/fhir/5.0/StructureDefinition/extension-DiagnosticReport.composition', valueReference: { reference: compFullUrl } }],
-    identifier: [gemeinsamerIdent],
-    code: typCode,
-    subject: { reference: patientRef },
-    effectiveDateTime: stamp,
-    issued: stamp,
-    specimen: [{ reference: specimenRef }],
-    result: resultRefs.map(r => ({ reference: r })),
-    text: _ipsNarrative('Laborbericht — ' + resultRefs.length + ' Ergebnis(se).'),
-  };
-  const drFullUrl = lege(diagnosticReport);
-
-  // Composition (zuerst) — Subject/Identifier/Typ auf den DiagnosticReport ausgerichtet; Sektion referenziert die
-  // Observations. Der Vorwärts-Link Composition→DiagnosticReport läuft über die PFLICHT-Slice-Extension
-  // composition-diagnosticReportReference — Canonical liegt im Laboratory-IG (`_LAB(...)`), NICHT unter
-  // /fhir/extensions/ (Gazelle-Befund 01.07.: Slice matcht nur bei dieser exakten URL). Der DR trägt zusätzlich
-  // die Pflicht-Rückverknüpfung DiagnosticReportCompositionR5 (1..1); beide Richtungen fordert eu-lab 2.0.0-alpha.
-  const composition = {
-    resourceType: 'Composition', status: 'final',
-    meta: { profile: [_LAB('Composition-eu-lab')] },
-    extension: [{ url: _LAB('composition-diagnosticReportReference'), valueReference: { reference: drFullUrl } }],
-    identifier: gemeinsamerIdent,
-    type: typCode,
-    subject: { reference: patientRef },
-    date: stamp,
-    author: [{ reference: patientRef }],   // Bürger-App: selbst zusammengestellt
-    title: 'Laborbericht',
-    section: [{
-      title: 'Laborergebnisse',
-      code: { coding: [{ system: 'http://loinc.org', code: '26436-6', display: 'Laboratory studies (set)' }] },
-      entry: resultRefs.map(r => ({ reference: r })),
-      text: _ipsNarrative('Laborergebnisse — ' + resultRefs.length + ' Wert(e).'),
-    }],
-    text: _ipsNarrative('Laborbericht (HL7 Europe Laboratory Report).'),
-  };
-  return {
-    resourceType: 'Bundle', type: 'document',
-    meta: { profile: [_LAB('Bundle-eu-lab')] },
-    identifier: { system: 'urn:ietf:rfc:3986', value: 'urn:uuid:' + uuidV4() },
-    timestamp: stamp,
-    entry: [{ fullUrl: compFullUrl, resource: composition }].concat(eintraege),   // Composition MUSS erster Eintrag sein
-  };
-}
-// Hat das Depot mindestens einen Laborwert oder eine (bekannte) Blutgruppe? — Gate fürs Lab-Bundle
-// (ohne Ergebnisse wäre die Composition-Sektion leer → kein sinnvoller Bericht).
-function depotHatLaborwerte() {
-  const g = (data && data.sektoren && data.sektoren.gesundheit) || {};
-  const werte = Array.isArray(g.laborwerte) ? g.laborwerte : [];
-  const numerisch = werte.some(w => w && LAB_ANALYTE[w.analyt] && isFinite(parseFloat(String(w.wert == null ? '' : w.wert).replace(',', '.'))));
-  return numerisch || !!_BLUTGRUPPE_SNOMED[g.blutgruppe];
-}
+/* ── FHIR-Lab-Maschine entfernt (E3, Datenmodell-Konzept v1.2 §3) ──────────────────────────
+   fhirLabBundle/LAB_ANALYTE & Co. bauten einen SELBST-attestierten Laborbericht — strukturell
+   nie eu-lab-konform (Validator: performer=Patient, CI-Probe 03.07.). Der konforme Laborweg ist
+   der autoritative Import des Original-Befunds (U2-ADR-045/047/048, Klasse 4). Das IMPORT-Format
+   'fhir-lab' (Klasse-4-Erkennung, IMPORT_FORMATE) lebt weiter — von dieser Abwicklung unberührt. ── */
 
 // Download „Gesundheitsdaten als maschinenlesbare Datei" (FHIR-IPS-Bundle als JSON). Geht durch die
 // Transparenz-Übersicht (Bereich Gesundheit); wird `optionen` direkt übergeben, überspringen wir sie.
@@ -6451,46 +6289,10 @@ function flowGesundheitFhirExport(optionen) {
   }
   ausgeben();
 }
-// Download „Laborbericht als maschinenlesbare Datei" (FHIR Lab-Bundle, HL7 Europe Laboratory Report).
-// Wie flowGesundheitFhirExport, aber mit Labor-Daten-Gate: ohne Laborwert/Blutgruppe wäre der Bericht leer.
-function flowGesundheitLabExport(optionen) {
-  const ausgeben = () => {
-    const bundle = kernAPI.exportiere('fhir-lab');
-    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/fhir+json' });
-    dateiAusgeben(blob, 'Vivodepot_Laborbericht.json', 'application/fhir+json').then((weg) => {
-      if (weg !== 'abgebrochen' && weg !== 'vorschau' && typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.fhirLabExportiert, 'ok');
-    });
-  };
-  // Ohne Laborwerte/Blutgruppe kein sinnvoller Bericht — freundlicher Hinweis, kein Export.
-  if (!depotHatLaborwerte() && typeof ui !== 'undefined' && ui.modal) {
-    ui.modal({
-      titel: STRINGS.fhirLabLeerTitel,
-      koerperHTML: '<p class="einst-hint">' + escapeHTML(STRINGS.fhirLabLeerText) + '</p>',
-      primaerLabel: STRINGS.fhirLabLeerCta,
-    });
-    return;
-  }
-  // Geburtsdatum: das eu-lab-Patient-Profil erwartet es (wie IPS). Fehlt es → Hinweis, kein Export.
-  if (!depotHatGeburtsdatum() && typeof ui !== 'undefined' && ui.modal) {
-    ui.modal({
-      titel: STRINGS.fhirGeburtsdatumTitel,
-      koerperHTML: '<p class="einst-hint">' + escapeHTML(STRINGS.fhirGeburtsdatumText) + '</p>',
-      primaerLabel: STRINGS.fhirGeburtsdatumCta,
-      onPrimaer: (schliessen) => { schliessen(); flowFhirGeburtsdatumErgaenzen(); },
-    });
-    return;
-  }
-  if (optionen !== undefined) { ausgeben(); return; }
-  if (typeof flowExportUebersicht === 'function' && typeof ui !== 'undefined' && ui.modal) {
-    return flowExportUebersicht({ sektorId: 'gesundheit', titel: STRINGS.fhirLabExportLabel, aufFortfahren: () => ausgeben() });
-  }
-  ausgeben();
-}
 // Dispatcher für sektor-deklarierte Export-Knöpfe (s.exporte).
 function flowSektorExport(format) {
-  if (EXPORT_FORMAT_BY_ID[format] && format !== 'fhir-ips' && format !== 'fhir-lab') return flowFormatExport(format);   // Teil 3 — Registry-Formate
+  if (EXPORT_FORMAT_BY_ID[format] && format !== 'fhir-ips') return flowFormatExport(format);   // Teil 3 — Registry-Formate
   if (format === 'fhir-ips') return flowGesundheitFhirExport();
-  if (format === 'fhir-lab') return flowGesundheitLabExport();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -6595,10 +6397,8 @@ const EXPORT_FORMATE = Object.freeze([
   { id: 'fhir-ips', kategorie: 'sektor', sektor: 'gesundheit', label: STRINGS.fhirExportLabel,
     mime: 'application/fhir+json', endung: 'json', dateibasis: 'Vivodepot_Gesundheit_IPS',
     toast: STRINGS.fhirExportiert, baue: (opt) => fhirIpsBundle(opt && opt.jetzt) },
-  // Stufe 2 — Laborbericht als HL7 Europe Laboratory Report (Bundle-eu-lab).
-  { id: 'fhir-lab', kategorie: 'sektor', sektor: 'gesundheit', label: STRINGS.fhirLabExportLabel, nurExport: true,
-    mime: 'application/fhir+json', endung: 'json', dateibasis: 'Vivodepot_Laborbericht',
-    toast: STRINGS.fhirLabExportiert, baue: (opt) => fhirLabBundle(opt && opt.jetzt) },   // nurExport: medizinischer Interchange-OUT (kein Reimport)
+  // Export-Format 'fhir-lab' (self-erzeugter Laborbericht) entfernt — E3, Datenmodell-Konzept v1.2 §3.
+  // Das gleichnamige IMPORT-Format (IMPORT_FORMATE, Klasse-4-Erkennung) bleibt: gleicher Name, anderes Schicksal.
   // 3.5 — je ein Format-Profil pro Bereich (Format-Tag der Inhalts-Spec). Bereich 1 (Identität)
   // als vollständiger Muster-Fall (SD-JWT-VC), Bereich 9 (Verwaltung, XÖV) und Bereich 6 (Bildung,
   // EDCI) als Definition. Der Bürger sieht nur das Label, nie „SD-JWT"/„Claim"/„XÖV".
@@ -8154,8 +7954,12 @@ const IMPORT_FORMATE = Object.freeze([
         .map(e => ({ sektorId: e.sektor, feldId: e.feld, wert: e.wert }));
       // U2-ADR-037 Stufe 2: Feld-Definitionen aus dem (Stufe 1) durchgereichten Template uebersetzen
       // (Generator-Vokabular -> Feld-Modell). Bereich-Label-Fehler werden namentlich verworfen.
-      const u = _templateFelderUebersetzen(cs.template, 23);
-      return { felder, feldDefinitionen: u.feldDefinitionen, verworfeneFelder: u.verworfeneFelder };
+      // U2-ADR-051: MITGEBRACHTE Code-Listen zuerst uebersetzen (tpl_-Namensraum) — ihre map speist
+      // die Feld-Aufloesung (eigene Liste hat Vorrang vor der App-Registry).
+      const cl = _templateCodeListenUebersetzen(cs.template);
+      const u = _templateFelderUebersetzen(cs.template, 23, cl.map);
+      return { felder, feldDefinitionen: u.feldDefinitionen, verworfeneFelder: u.verworfeneFelder,
+               codeListen: cl.codeListen, verworfeneCodeListen: cl.verworfeneCodeListen };
     } },
 ]);
 const IMPORT_FORMAT_BY_ID = Object.freeze(Object.fromEntries(IMPORT_FORMATE.map(f => [f.id, f])));
@@ -8396,20 +8200,69 @@ function _codeSystemId(name) {
   if (liesCodeListe(s)) return s;                          // exakte angedockte systemId (Praezisionsfall)
   const treffer = Object.keys(CODE_LISTEN).filter(id => {  // sonst per Kuerzel/URI — aber NUR wenn eindeutig
     const l = CODE_LISTEN[id];
-    return l && (l.kuerzel === s || l.uri === s);
+    // Teil-Listen sind vom Oberbegriff-Matching ausgenommen (C2): ihr kuerzel/uri benennt das
+    // Muttersystem, nicht die Liste — der Oberbegriff bleibt bewusst unauflösbar.
+    return l && !l.teilliste && (l.kuerzel === s || l.uri === s);
   });
   // Mehrdeutig (ein Oberbegriff, den sich mehrere praezise Listen unter gleichem Kuerzel teilen) -> NICHT
   // aufloesen (Stufe-0-Regel C2). Genau ein Treffer -> aufloesen; null sonst -> Code faellt weg, Feld bleibt Text.
   return (treffer.length === 1) ? treffer[0] : null;
 }
+// U2-ADR-051 — Template-Code-Listen (Reise-als-Daten, Datenmodell-Konzept v1.2 §4).
+// Namensraum-Disziplin wie bei den Feld-Definitionen: jede mitgebrachte Liste bekommt die
+// tpl_-systemId — eine Template-Liste kann eine der fest eingebauten App-Listen strukturell
+// NIE beschatten (dasselbe Präfix-Muster wie _tplFeldId).
+function _tplCodeListeId(systemId) {
+  const slug = String(systemId == null ? '' : systemId).toLowerCase()
+    .replace(/[äöüß]/g, m => ({ 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss' }[m]))
+    .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return _TEMPLATE_FELDID_PRAEFIX + (slug || 'codeliste');
+}
+// Übersetzt template.codeListen (Generator-Vokabular: eintraege[{code, anzeige, synonym?}]) in
+// Registry-Definitionen (anzeigeName/synonyme) unter der tpl_-systemId. Kollision INNERHALB eines
+// Templates (zwei Listen -> derselbe Slug): erste gewinnt, zweite namentlich verworfen — wie die
+// Slug-Kollision der feldIds. `map` (Original-systemId -> tpl_-systemId) speist die Feld-Auflösung.
+function _templateCodeListenUebersetzen(template) {
+  const roh = (template && Array.isArray(template.codeListen)) ? template.codeListen : [];
+  const codeListen = [], verworfeneCodeListen = [], map = {};
+  for (const l of roh) {
+    if (!l || typeof l.systemId !== 'string' || l.systemId.trim() === '') {
+      verworfeneCodeListen.push({ name: '(ohne systemId)', grund: 'systemid' }); continue;
+    }
+    const tplId = _tplCodeListeId(l.systemId);
+    if (map[l.systemId] !== undefined || codeListen.some(c => c.systemId === tplId)) {
+      verworfeneCodeListen.push({ name: l.systemId, grund: 'id-kollision' }); continue;
+    }
+    const eintraege = (Array.isArray(l.eintraege) ? l.eintraege : [])
+      .filter(e => e && typeof e.code === 'string' && e.code !== '')
+      .map(e => {
+        const d = { code: String(e.code), anzeigeName: String(e.anzeige != null && e.anzeige !== '' ? e.anzeige : e.code) };
+        if (e.synonym != null && e.synonym !== '') d.synonyme = [String(e.synonym)];
+        return d;
+      });
+    if (!eintraege.length) { verworfeneCodeListen.push({ name: l.systemId, grund: 'leer' }); continue; }
+    codeListen.push({
+      systemId: tplId, quellSystemId: String(l.systemId),
+      uri: (typeof l.uri === 'string' && l.uri) ? l.uri : ('urn:vivodepot:tpl-codeliste:' + tplId),
+      version: (typeof l.version === 'string') ? l.version : '',
+      kuerzel: (typeof l.kuerzel === 'string' && l.kuerzel) ? l.kuerzel : String(l.systemId),
+      lizenz: (typeof l.lizenz === 'string') ? l.lizenz : '',
+      eintraege,
+    });
+    map[l.systemId] = tplId;
+  }
+  return { codeListen, verworfeneCodeListen, map };
+}
 // Uebersetzt EIN Generator-Template-Feld -> Feld-Modell-Definition ODER Verwerfung {grund,name}.
-function _templateFeldZuModell(g, jetztSchema) {
+// `eigeneListen` (U2-ADR-051): Original-systemId -> tpl_-systemId der MITGEBRACHTEN Listen — sie
+// haben Vorrang vor der App-Registry (deklarierte Absicht des Templates).
+function _templateFeldZuModell(g, jetztSchema, eigeneListen) {
   const name = (g && g.feldname != null) ? String(g.feldname) : '';
   const sektorId = g && _BEREICH_SEKTOR[g.bereich];
   if (!sektorId) return { verworfen: true, grund: 'bereich', name: name || (g && g.bereich) || '(ohne Namen)' };
   const feldId = _tplFeldId(name);
   const def = {
-    schemaVersion: (typeof jetztSchema === 'number' ? jetztSchema : 24),
+    schemaVersion: (typeof jetztSchema === 'number' ? jetztSchema : 26),
     sektorId, feldId,
     abschnitt: (g && g.gruppe) ? String(g.gruppe) : (name || feldId),   // mitgebrachte Gruppe = Abschnittsname
     typ: (g && g.feldtyp === 'jaNein') ? 'auswahl' : (g && g.feldtyp ? String(g.feldtyp) : 'text'),
@@ -8422,7 +8275,8 @@ function _templateFeldZuModell(g, jetztSchema) {
   } else if (g && Array.isArray(g.codeWerte) && g.codeWerte.length && (g.feldtyp === 'auswahl' || g.feldtyp === 'mehrfachauswahl')) {
     def.optionen = g.codeWerte.map(c => ({ wert: String(c.code), label: String(c.anzeige != null ? c.anzeige : c.code) }));
   }
-  const csid = _codeSystemId(g && g.codeSystem);
+  const eigenes = (eigeneListen && g && g.codeSystem != null) ? eigeneListen[String(g.codeSystem)] : undefined;
+  const csid = eigenes || _codeSystemId(g && g.codeSystem);
   if (csid) {
     def.codeSystemId = csid;
     if (g && Array.isArray(g.codeWerte) && g.codeWerte.length) {
@@ -8436,12 +8290,12 @@ function _templateFeldZuModell(g, jetztSchema) {
   return { def };
 }
 // Uebersetzt alle template.felder -> { feldDefinitionen:[...], verworfeneFelder:[{name,grund}] }.
-function _templateFelderUebersetzen(template, jetztSchema) {
+function _templateFelderUebersetzen(template, jetztSchema, eigeneListen) {
   const felder = (template && Array.isArray(template.felder)) ? template.felder : [];
   const feldDefinitionen = [], verworfeneFelder = [];
   const vergeben = new Set();
   for (const g of felder) {
-    const r = _templateFeldZuModell(g, jetztSchema);
+    const r = _templateFeldZuModell(g, jetztSchema, eigeneListen);
     if (r.verworfen) { verworfeneFelder.push({ name: r.name, grund: r.grund }); continue; }
     // Slug-Kollision: zwei verschiedene feldnames -> dieselbe tpl_-feldId. Die zweite NICHT in
     // feldDefinitionen aufnehmen (sie teilte sonst still den Wert-Slot der ersten), sondern an der
@@ -8524,7 +8378,10 @@ function _planAusRoh(formatId, def, roh) {
   // U2-ADR-037 Stufe 2: uebersetzte Feld-Definitionen + namentlich verworfene Felder durchreichen.
   const feldDefinitionen = Array.isArray(roh.feldDefinitionen) ? roh.feldDefinitionen : [];
   const verworfeneFelder = Array.isArray(roh.verworfeneFelder) ? roh.verworfeneFelder : [];
-  return Object.assign(basis, { ungueltig: false, zeilen, listen, register, feldDefinitionen, verworfeneFelder });
+  // U2-ADR-051: mitgereiste Code-Listen (bereits tpl_-namespaced) + namentlich verworfene durchreichen.
+  const codeListen = Array.isArray(roh.codeListen) ? roh.codeListen : [];
+  const verworfeneCodeListen = Array.isArray(roh.verworfeneCodeListen) ? roh.verworfeneCodeListen : [];
+  return Object.assign(basis, { ungueltig: false, zeilen, listen, register, feldDefinitionen, verworfeneFelder, codeListen, verworfeneCodeListen });
 }
 function importPlan(formatId, text) {
   const def = IMPORT_FORMAT_BY_ID[formatId];
@@ -8573,6 +8430,21 @@ function validateTemplate(tpl) {
       if (!Array.isArray(f.codeWerte) || f.codeWerte.length === 0) return 'auswahl/mehrfachauswahl ohne codeWerte';
       for (const c of f.codeWerte) {
         if (!c || typeof c.code !== 'string' || c.code === '' || typeof c.anzeige !== 'string' || c.anzeige === '') return 'codeWerte unvollständig';
+      }
+    }
+  }
+  // U2-ADR-051: mitgebrachte Code-Listen (optional, additiv) — L3-Formprüfung wie codeWerte.
+  // Größe deckelt der Gesamt-Cap oben; hier nur Form: systemId + nicht-leere eintraege {code, anzeige}.
+  if (tpl.codeListen != null) {
+    if (!Array.isArray(tpl.codeListen)) return 'codeListen ist keine Liste';
+    if (tpl.codeListen.length > 20) return 'zu viele codeListen (' + tpl.codeListen.length + ')';
+    for (const l of tpl.codeListen) {
+      if (!l || typeof l !== 'object') return 'codeListe ist kein Objekt';
+      if (typeof l.systemId !== 'string' || l.systemId.trim() === '') return 'codeListe ohne systemId';
+      if (l.systemId.length > 120) return 'codeListe-systemId zu lang';
+      if (!Array.isArray(l.eintraege) || l.eintraege.length === 0) return 'codeListe ohne eintraege: ' + l.systemId;
+      for (const c of l.eintraege) {
+        if (!c || typeof c.code !== 'string' || c.code === '' || typeof c.anzeige !== 'string' || c.anzeige === '') return 'codeListe-eintraege unvollständig: ' + l.systemId;
       }
     }
   }
@@ -8940,7 +8812,35 @@ function importAnwenden(plan, optionen) {
     data.feldDefinitionen.push(def);
     defGesetzt++;
   }
-  return { gesetzt, uebersprungen, listen, konflikteOffen, register, defGesetzt, defVerworfen };
+  // U2-ADR-051 — mitgereiste Code-Listen additiv aufnehmen (Reise-als-Daten, wie feldDefinitionen).
+  //   Präfix-Schicht (strukturell): jede Template-Liste MUSS die tpl_-systemId tragen — eine
+  //     fest eingebaute App-Liste ist damit strukturell unerreichbar.
+  //   Template-gegen-Template: erste gewinnt (kein stilles Überschreiben), namentlich gemeldet;
+  //     dasselbe Template (gleiche quelle) darf seine EIGENE Liste ersetzen (Update, idempotent).
+  //   Nach der Ablage sofort in die Laufzeit-Registry heben (datalist funktioniert ohne Neu-Laden);
+  //     beim nächsten Laden übernimmt _codeListenAusDepotAnmelden.
+  if (!Array.isArray(data.codeListen)) data.codeListen = [];
+  let codeListenGesetzt = 0;
+  const codeListenVerworfen = (Array.isArray(plan.verworfeneCodeListen) ? plan.verworfeneCodeListen.slice() : []);
+  for (const cl of (plan.codeListen || [])) {
+    if (!cl || typeof cl !== 'object' || typeof cl.systemId !== 'string' || !Array.isArray(cl.eintraege) || !cl.eintraege.length) continue;
+    if (cl.systemId.indexOf(_TEMPLATE_FELDID_PRAEFIX) !== 0) {
+      codeListenVerworfen.push({ name: cl.quellSystemId || cl.systemId, grund: 'praefix' }); continue;
+    }
+    const vorhanden = data.codeListen.findIndex(x => x && x.systemId === cl.systemId);
+    const eintrag = Object.assign({}, cl, { quelle: plan.quelleLabel || '' });
+    if (vorhanden !== -1) {
+      if ((data.codeListen[vorhanden].quelle || '') !== (plan.quelleLabel || '')) {
+        codeListenVerworfen.push({ name: cl.quellSystemId || cl.systemId, grund: 'doppelt' }); continue;   // erste gewinnt
+      }
+      data.codeListen[vorhanden] = eintrag;   // eigenes Update (gleiche quelle)
+    } else {
+      data.codeListen.push(eintrag);
+    }
+    try { codeListeAnmelden(cl.systemId, { uri: cl.uri, version: cl.version, kuerzel: cl.kuerzel, lizenz: cl.lizenz, daten: cl.eintraege }); } catch (e) { /* Registry darf das Anwenden nie brechen */ }
+    codeListenGesetzt++;
+  }
+  return { gesetzt, uebersprungen, listen, konflikteOffen, register, defGesetzt, defVerworfen, codeListenGesetzt, codeListenVerworfen };
 }
 
 /* ── UI: „Daten einlesen" (Spiegelbild zu flowHerausgeben) ───────────────────── */
@@ -12160,6 +12060,22 @@ function depotNormalisieren(d) {
   // sind Selbst-Ablage (autoritativ:false) — additiv, idempotent, kein Datenverlust.
   if (Array.isArray(ziel.mappe)) { for (const m of ziel.mappe) { if (m && typeof m === 'object' && m.autoritativ === undefined) m.autoritativ = false; } }
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 24) ziel.schemaVersion = 24;
+  // Schema 24 -> 25 (E1–E3, Datenmodell-Konzept v1.2 §3): impfungen/implantate verloren ihre
+  // Stub-Code-Slots (E2) — falls je ein codierter Wert entstand (praktisch unmöglich, die Listen
+  // waren leere Stubs), wird er verlustfrei auf seinen anzeigeName-Klartext geflacht (defensiv).
+  // laborwerte (E3) wird NICHT angefasst: Verwaisungs-Regel — Bürgerdaten werden durch Migration
+  // nie gelöscht; der Wert bleibt unsichtbar im Depot und überlebt Sicherung/Round-Trip.
+  const _g25 = ziel.sektoren && ziel.sektoren.gesundheit;
+  if (_g25 && typeof _g25 === 'object') {
+    for (const fid of ['impfungen', 'implantate']) {
+      if (istCodierterWert(_g25[fid])) _g25[fid] = _g25[fid].anzeigeName;
+    }
+  }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 25) ziel.schemaVersion = 25;
+  // Schema 25 -> 26 (U2-ADR-051): data.codeListen[] — mitgereiste Template-Code-Listen (Reise-als-
+  // Daten, Datenmodell-Konzept v1.2 §4). Additiv & rückwärts-tolerant wie feldDefinitionen (23er-Muster).
+  if (!Array.isArray(ziel.codeListen)) ziel.codeListen = [];
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 26) ziel.schemaVersion = 26;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -19663,6 +19579,7 @@ codeListeAnmelden("atc", {
 /* @vd-codeliste snomedAllergen — Sample/Seed, SNOMED-Lizenz beachten — nur kleines Allergen-Sample */
 codeListeAnmelden("snomedAllergen", {
   uri: "http://snomed.info/sct", version: "SEED-2026-05", kuerzel: "SNOMED",
+  teilliste: true,
   lizenz: "SNOMED CT, IHTSDO/SNOMED International — Lizenz erforderlich (Affiliate); nur kleines Sample ausgeliefert",
   daten: [
     {"code":"91936005","anzeigeName":"Allergie gegen Penicillin","synonyme":["Penicillin","Penicillinallergie"],"kategorie":"Medikament"},
@@ -19701,26 +19618,6 @@ codeListeAnmelden("loinc", {
     {"code":"8867-4","anzeigeName":"Herzfrequenz","synonyme":["Puls"],"kategorie":"Vitalwert"},
     {"code":"85354-9","anzeigeName":"Blutdruck (Panel)","synonyme":["Blutdruck","RR"],"kategorie":"Vitalwert"}
   ]
-});
-</script>
-
-<!-- @vd-codeliste systemId="snomedImpfstoff" — STUB, Seed-Codes ausstehend (keine erfundenen Codes) -->
-<script>
-/* @vd-codeliste snomedImpfstoff — STUB, Seed-Codes ausstehend (keine erfundenen Codes) */
-codeListeAnmelden("snomedImpfstoff", {
-  uri: "http://snomed.info/sct", version: "STUB-2026-05", kuerzel: "SNOMED",
-  lizenz: "SNOMED CT — Lizenz erforderlich; Impfstoff-Sample am Mac aus geprüfter Quelle ergänzen",
-  daten: []
-});
-</script>
-
-<!-- @vd-codeliste systemId="snomedImplantat" — STUB, Seed-Codes ausstehend (keine erfundenen Codes) -->
-<script>
-/* @vd-codeliste snomedImplantat — STUB, Seed-Codes ausstehend (keine erfundenen Codes) */
-codeListeAnmelden("snomedImplantat", {
-  uri: "http://snomed.info/sct", version: "STUB-2026-05", kuerzel: "SNOMED",
-  lizenz: "SNOMED CT — Lizenz erforderlich; Device-Sample am Mac aus geprüfter Quelle ergänzen",
-  daten: []
 });
 </script>
 
