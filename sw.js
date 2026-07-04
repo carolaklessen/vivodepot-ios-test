@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v6';  // v6 (2026-07-05): Schema 26 — E1-E3 (U2-ADR-050) + Template-Code-Listen (U2-ADR-051)
+const CACHE = 'vivodepot-shell-v7';  // v7 (2026-07-05): wie v6 (Schema 26) + skipWaiting fürs Test-Harness (sofort-aktiv)
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird
@@ -47,8 +47,11 @@ self.addEventListener('install', (e) => {
       Promise.all(SCHALE.map((url) => cache.add(url).catch(() => undefined)))
     )
   );
-  // KEIN automatisches skipWaiting — der Schalen-Wechsel ist ein bewusster Schnitt
-  // (kein Datenbruch; IndexedDB bleibt ohnehin unberührt). Aktivierung über activate.
+  // NUR im iOS-TEST-HARNESS: skipWaiting — der neue SW aktiviert sofort, statt auf das
+  // Schließen aller alten Tabs zu warten. So schlägt jede Test-Runde mit EINEM Neuladen durch
+  // (der Produktiv-Stick behält den bewussten Schnitt ohne skipWaiting — das hier ist NICHT
+  // für Produktion). IndexedDB bleibt unberührt; nur die Schale wird getauscht.
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
