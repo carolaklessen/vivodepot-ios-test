@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v10';  // v10 (2026-07-05): Bug-1-Nachschaerfung (U2-ADR-054, f294184) — Rueckkehr-Kontext beim Wizard-Start; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v11';  // v11 (2026-07-05): A/B/C + bereich-neutrale Rein/Raus-Tueren (U2-ADR-055/056/057, 6ea2af7) — Knopf-Flut/Einlese-Dichte aufgeraeumt, Wizards als „Gefuehrt ausfuellen"; skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird

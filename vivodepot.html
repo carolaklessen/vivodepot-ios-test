@@ -993,6 +993,18 @@
      Basis-.bereich-aktionen NUR in diesem Block; auf Mobil war der Stapel ohnehin so. */
   .zusatz-aktionen .bereich-aktionen { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: var(--space-2); }
   .zusatz-aktionen .bereich-aktionen .btn { width: 100%; justify-content: flex-start; text-align: left; }
+  /* Knopf-Flut-Inventur 05.07.: geführte Einstiege ab zwei Stück hinter einer Aufklapp-Zeile bündeln.
+     Die <summary> sieht aus wie eine ruhige Knopf-Zeile; der native Marker ist unterdrückt (iOS-Safari
+     zeigt sonst ein doppeltes Dreieck), ein eigener ▾-Pfeil rechts signalisiert das Auf-/Zuklappen. */
+  .zusatz-aktionen .wizard-gruppe { margin: 0 0 var(--space-2); }
+  .zusatz-aktionen .wizard-gruppe > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: var(--space-2);
+    width: 100%; padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md);
+    background: var(--white); color: var(--ink2); font-weight: 600; font-size: var(--fs-base); }
+  .zusatz-aktionen .wizard-gruppe > summary::-webkit-details-marker { display: none; }
+  .zusatz-aktionen .wizard-gruppe > summary::after { content: '▾'; margin-left: auto; color: var(--ink3); transition: transform 0.15s ease; }
+  .zusatz-aktionen .wizard-gruppe[open] > summary::after { transform: rotate(180deg); }
+  .zusatz-aktionen .wizard-gruppe[open] > summary { margin-bottom: var(--space-2); }
+  .zusatz-aktionen .wizard-gruppe .bereich-aktionen:last-child { margin-bottom: 0; }
   /* QR-Export (Teil 3.3) — Notfall-Code zum Ausdrucken. */
   .qr-box { display: flex; justify-content: center; padding: var(--space-4); background: var(--white); border-radius: var(--radius-md); }
   .qr-box img { width: 220px; height: 220px; image-rendering: pixelated; }
@@ -3199,6 +3211,9 @@ const STRINGS = Object.freeze({
   // Sammel-Überschrift für die Zusatz-Aktionen UNTER dem Bereichs-Inhalt (Carolas IA-Befund:
   // erst die Daten/das Eintragen, dann geführte Wizards und — sofern Daten da sind — die Exporte).
   zusatzAktionenTitel: "Weitere Möglichkeiten",
+  // Aufklapp-Zeile, die ab ZWEI geführten Einstiegen den Knopf-Stapel bündelt (Knopf-Flut-Inventur
+  // 05.07.: Vorsorge trug sieben Startknöpfe untereinander). Ein einzelner Wizard bleibt Direkt-Knopf.
+  wizardGruppeTitel: "Geführt ausfüllen",
 
   // ── Format-Export (Teil 3) — „herausholen" in offene/maschinenlesbare Formate ──
   einstAbschnittExport: "Daten mitnehmen",
@@ -3282,6 +3297,11 @@ const STRINGS = Object.freeze({
   herausgebenKnopf: "Herausgeben",
   herausgebenTitel: "Herausgeben",
   herausgebenHinweis: "In welcher Form möchten Sie diesen Bereich herausgeben?",
+  // Zentrale Tür (Hauptnavigation): bereich-neutral — fragt „Woraus herausgeben?" statt fix aus
+  // Gesundheit zu geben (U2-ADR-057, Spiegel zu U2-ADR-056). Angeboten: die Bereiche mit Daten.
+  herausgebenWoherTitel: "Woraus herausgeben?",
+  herausgebenWoherHinweis: "Wählen Sie den Bereich, aus dem Sie Daten herausgeben möchten.",
+  herausgebenWoherLeer: "Noch nichts hinterlegt, das herausgegeben werden könnte. Tragen Sie zuerst in einem Bereich etwas ein.",
   herausgebenPdf: "Als PDF (zum Lesen & Drucken)",
   herausgebenMaschinell: "Maschinenlesbar",
   herausgebenQr: "Als QR-Code (zum Scannen)",
@@ -3297,6 +3317,11 @@ const STRINGS = Object.freeze({
   einlesenBereichKnopf: "In diesen Bereich einlesen",    // bereichslokale Tür in „Weitere Möglichkeiten" (Finding 3) — sagt, WOHIN eingelesen wird
   einlesenTitel: "Daten einlesen",
   einlesenHinweis: "Welche Daten möchten Sie aus einer Datei einlesen?",
+  // Zentrale Tür (Hauptnavigation): bereichs-neutral — fragt „Wohin einlesen?" statt fix nach
+  // Gesundheit zu routen (U2-ADR-056). Bereiche mit eigenem Einlese-Format als Ziele + Auto-Erkennung.
+  einlesenWohinTitel: "Wohin einlesen?",
+  einlesenWohinHinweis: "Wählen Sie den Bereich, in den die Datei gehört — oder lassen Sie sie automatisch am Inhalt erkennen.",
+  einlesenWohinAuto: "Automatisch am Inhalt erkennen",
   importJsonLabel: "Aus einer Vivodepot-Sicherungsdatei übernehmen (mit Vorschau)",   // B6: klarer Wortlaut zur echten Funktion (zusammenführender Import mit Vorschau, kein blindes Überschreiben)
   importFhirLabel: "Gesundheitsdaten einlesen",
   // U2-ADR-045 — autoritative Original-Ablage (eu-lab-Laborbefund verbatim eingelesen). Bürger-Wörter.
@@ -8883,6 +8908,36 @@ function flowEinlesen(sektorId) {
     if (autoBtn) autoBtn.onclick = () => flowImportAuto(autoBtn.getAttribute('data-i-auto'));
   }
 }
+
+// Zentrale Tür (Hauptnavigation) — BEREICH-NEUTRAL (U2-ADR-056). Fragt „Wohin einlesen?", statt fix
+// nach Gesundheit zu routen. Angeboten werden die Bereiche mit EIGENEM (kategorie:'sektor') Einlese-
+// Format als Ziele — dort ist „in diesen Bereich" ehrlich — plus „Automatisch am Inhalt erkennen",
+// das alles Übrige abdeckt (json-Sicherung, b16-Migration, geprüftes Provider-Dokument): die
+// Inhalts-Erkennung routet jedes Format über seine eigene f.sektor-Zuordnung, ohne Bereichs-Vorwahl.
+function flowEinlesenZentral() {
+  const zielSektoren = SEKTOREN.filter(s => IMPORT_FORMATE.some(f => f.kategorie === 'sektor' && f.sektor === s.id));
+  let koerper = '<p class="einst-hint">' + escapeHTML(STRINGS.einlesenWohinHinweis) + '</p><div class="herausgeben-chooser">';
+  for (const s of zielSektoren) {
+    koerper += '<button type="button" class="btn btn-sek" data-iz-sektor="' + escapeHTML(s.id) + '">' +
+      icon(s.icon, 18) + ' ' + escapeHTML(s.label) + '</button>';
+  }
+  // „Automatisch am Inhalt erkennen" zuletzt — der Auffang-Weg ohne Bereichs-Vorwahl.
+  koerper += '<button type="button" class="btn btn-sek" data-iz-auto="1">' +
+    svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.einlesenWohinAuto) + '</button>';
+  koerper += '</div>';
+  ui.modal({
+    titel: STRINGS.einlesenWohinTitel,
+    koerperHTML: koerper, primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true,
+  });
+  const box = document.getElementById('modal-inhalt');
+  if (box && box.querySelectorAll) {
+    // Bereich gewählt → dessen Einlese-Chooser (Formate + Auto) öffnen (überschreibt denselben Modal-Körper).
+    box.querySelectorAll('[data-iz-sektor]').forEach(b => { b.onclick = () => flowEinlesen(b.getAttribute('data-iz-sektor')); });
+    // Automatisch → Inhalts-Erkennung OHNE Bereichs-Vorwahl (self-routing über die Format-Zuordnung).
+    const autoBtn = box.querySelector ? box.querySelector('[data-iz-auto]') : null;
+    if (autoBtn) autoBtn.onclick = () => flowImportAuto();
+  }
+}
 // Datei wählen → Format am INHALT erkennen → Plan → Vorschau. Akzeptiert auch die Welle-2-Formate
 // (CAMT.053, XMeld, ELSTER) unabhängig von der Dateiendung.
 // 1B Bürger-App-Import-UI: Eingabe-Text in (Cert-Text, opts) aufteilen. Ein 2b-Ausliefer-Bundle ist
@@ -13011,13 +13066,14 @@ function renderSidebar() {
   html += '<button class="nav-item' + (aktiveAnsicht === 'prueftermine' ? ' aktiv' : '') + '" data-prueftermine="1">' +
     '<span class="ico">' + icon('clock') + '</span><span class="nav-item-text"><span>' + STRINGS.navPrueftermine + '</span>' +
     '<span class="nav-item-sub">' + STRINGS.navPrueftermineSub + '</span></span></button>';
-  // ── REIN & RAUS (Durchstich, nur Gesundheit verdrahtet) — zwei zentrale, nav-rangige Türen zu den
-  // vorhandenen Choosern (flowHerausgeben/flowEinlesen). „Immer sichtbar" = Nav-Rang im Drawer
-  // (konsistent mit Eintragen/Finden), keine Dauer-Präsenz. Nur bearbeitbare Modi. Zahnrad-Export
-  // bleibt vorerst; Verschieben + Bereichs-Wahl folgen nach dem Geräte-Blick.
+  // ── REIN & RAUS — zwei zentrale, nav-rangige Türen. „Immer sichtbar" = Nav-Rang im Drawer
+  // (konsistent mit Eintragen/Finden), keine Dauer-Präsenz. Nur bearbeitbare Modi.
+  // BEIDE Türen sind BEREICH-NEUTRAL: Einlesen ruft `flowEinlesenZentral` → „Wohin einlesen?"
+  // (U2-ADR-056), Herausgeben ruft `flowHerausgebenZentral` → „Woraus herausgeben?" (U2-ADR-057).
+  // Keine feste Gesundheits-Verdrahtung mehr; die data-Attribute tragen keinen Bereich (Marker „1").
   if (Modus.darfBearbeiten()) {
-    html += '<button class="nav-item" data-weitergeben-zentral="gesundheit"><span class="ico">' + icon('fileDown') + '</span><span>' + STRINGS.navWeitergeben + '</span></button>';
-    html += '<button class="nav-item" data-einlesen-zentral="gesundheit"><span class="ico">' + icon('fileText') + '</span><span>' + STRINGS.einlesenKnopf + '</span></button>';
+    html += '<button class="nav-item" data-weitergeben-zentral="1"><span class="ico">' + icon('fileDown') + '</span><span>' + STRINGS.navWeitergeben + '</span></button>';
+    html += '<button class="nav-item" data-einlesen-zentral="1"><span class="ico">' + icon('fileText') + '</span><span>' + STRINGS.einlesenKnopf + '</span></button>';
   }
   // VERWALTUNG aufgelöst: „Verwaltete Depots" wandert konzeptuell in die Topbar-Depot-Pille (Bruch B,
   // Paket 5). Bis dahin ist die renderVerwalteteDepots-Sicht aus der Sidebar nicht erreichbar — die
@@ -13039,10 +13095,10 @@ function renderSidebar() {
     b.onclick = oeffnePrueftermine;
   });
   sb.querySelectorAll('[data-weitergeben-zentral]').forEach(b => {
-    b.onclick = () => flowHerausgeben(b.getAttribute('data-weitergeben-zentral'));
+    b.onclick = () => flowHerausgebenZentral();   // bereich-neutral: „Woraus herausgeben?" (U2-ADR-057)
   });
   sb.querySelectorAll('[data-einlesen-zentral]').forEach(b => {
-    b.onclick = () => flowEinlesen(b.getAttribute('data-einlesen-zentral'));
+    b.onclick = () => flowEinlesenZentral();   // bereich-neutral: „Wohin einlesen?" (U2-ADR-056)
   });
 }
 
@@ -14376,10 +14432,21 @@ function renderSektor(sektorOrId) {
       // Bereich nur EINEN Startknopf erzeugen. (Unterschiedliche Wizards bleiben erhalten und werden
       // über wizardStartHTML eindeutig beschriftet.)
       const gesehen = new Set();
+      const startHtml = [];
       for (const wid of wizListe) {
         if (gesehen.has(wid) || !WIZARD_BY_ID[wid]) continue;
         gesehen.add(wid);
-        zusatzInhalt += wizardStartHTML(wid);
+        startHtml.push(wizardStartHTML(wid));
+      }
+      // Knopf-Flut-Inventur 05.07.: ab ZWEI geführten Einstiegen (z. B. Vorsorge mit sieben) die
+      // Startknöpfe hinter einer Aufklapp-Zeile „Geführt ausfüllen" bündeln — ein ruhiger Einstieg
+      // statt eines Knopf-Stapels. Ein einzelner Wizard bleibt als direkter Knopf (kein Klick für nichts).
+      if (startHtml.length >= 2) {
+        zusatzInhalt += '<details class="wizard-gruppe"><summary>' +
+          svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.wizardGruppeTitel) + '</summary>' +
+          startHtml.join('') + '</details>';
+      } else {
+        zusatzInhalt += startHtml.join('');
       }
     }
     // „Herausgeben"-Knopf pro Bereich (Export-Durchgang): ein Knopf, der einen kleinen Chooser
@@ -14394,32 +14461,22 @@ function renderSektor(sektorOrId) {
     // „Daten einlesen"-Knopf pro Bereich (Import-Welle 1, Spiegelbild zum Herausgeben). NICHT
     // datenlage-adaptiv: gerade ein LEERER Bereich profitiert vom Einlesen (er soll gefüllt werden).
     // Nur in bearbeitbaren Modi (Anker/Sub) — read-only Sichten (Notfall) lesen nichts ein.
-    if (Modus.darfBearbeiten() && importFormateFuerSektor(sektorId).length) {
+    // Einlese-Dichte-Inventur 05.07.: die bereichslokale Tür erscheint nur, wenn dieser Bereich ein
+    // EIGENES (kategorie:'sektor') Einlese-Format trägt. Die depot-weiten Formate (json-Wiederher-
+    // stellung, b16-Migration, geprüftes Provider-Dokument) sind KEIN Bereichs-Vorgang — sie bleiben
+    // über die zentrale Tür + Inhalts-Erkennung erreichbar (importFormatErkennen filtert nicht nach
+    // Bereich, jedes Format routet über seine eigene f.sektor-Zuordnung). Ohne diesen Guard verspräche
+    // die Tür auf mobilitaet/wohnen/persoenliches „in diesen Bereich", böte aber nur Depot-Weites.
+    if (Modus.darfBearbeiten() && importFormateFuerSektor(sektorId).some(f => f.kategorie === 'sektor')) {
       zusatzInhalt += '<div class="bereich-aktionen einlesen-block">' +
         '<button class="btn btn-sek" data-einlesen="' + escapeHTML(sektorId) + '">' +
         svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.einlesenBereichKnopf) + '</button></div>';   // Finding 3: bereichslokal „In diesen Bereich einlesen" (zentrale Sidebar-Tür bleibt „Daten einlesen")
     }
-    // Sektor-Exporte (data-driven, s.exporte) — „Daten herausgeben" als maschinenlesbare Datei.
-    // DATENLAGE-ADAPTIV (Carolas Befund): bei LEEREM Bereich gibt es nichts herauszugeben — dann
-    // KEINE Export-Knöpfe. Sie erscheinen erst, sobald der Bereich Daten trägt (analog zur Wizard-
-    // „erstellen/bearbeiten"-Logik). Sub-Modus-Filter: Formate mit nurAnker bleiben im Sub-Kontext aus.
-    if (Array.isArray(s.exporte) && s.exporte.length && sektorHatDaten(s, sektorDaten)) {
-      const sichtbar = s.exporte.filter(ex => {
-        const def = EXPORT_FORMAT_BY_ID[ex.format];
-        return !(imSubKontext() && def && def.nurAnker);
-      });
-      if (sichtbar.length) {
-        zusatzInhalt += '<div class="bereich-aktionen sektor-exporte">';
-        for (const ex of sichtbar) {
-          zusatzInhalt += '<button class="btn btn-sek" data-export-format="' + escapeHTML(ex.format) + '">' + svgIcon(ICONS.fileDown) + ' ' + escapeHTML(ex.label) + '</button>';
-        }
-        // Word/docx (Welle 2) — nur sichtbar, wenn die docx-Bibliothek inline vorhanden ist (3.2-Gate).
-        if (typeof window !== 'undefined' && window.docx) {
-          zusatzInhalt += '<button class="btn btn-sek" data-export-docx="' + escapeHTML(sektorId) + '">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.exportDocxLabel) + '</button>';
-        }
-        zusatzInhalt += '</div>';
-      }
-    }
+    // Knopf-Flut-Inventur 05.07.: die freistehenden Sektor-Export-Knöpfe (s.exporte + docx) sind
+    // ENTFALLEN — sie dupliziert der Herausgeben-Chooser (flowHerausgeben) bereits als
+    // „Maschinenlesbar — <Label>" bzw. Word-Datei, mit derselben Klick-Route (flowSektorExport/
+    // flowDocxExport). Ein Knopf („Daten herausgeben") führt in den Chooser; die Formate leben dort
+    // an EINER Stelle statt zusätzlich als loser Stapel in „Weitere Möglichkeiten".
     // Klar benannter Sammel-Bereich — nur wenn wirklich Aktionen vorliegen.
     if (zusatzInhalt) {
       zusatzHTML = '<div class="zusatz-aktionen"><h3 class="zusatz-titel">' +
@@ -14572,14 +14629,9 @@ function renderSektor(sektorOrId) {
   c.querySelectorAll('[data-einlesen]').forEach(b => {
     b.onclick = () => flowEinlesen(b.getAttribute('data-einlesen'));
   });
-  // Sektor-Export-Knöpfe (s.exporte) verdrahten — z. B. FHIR-IPS herausholen.
-  c.querySelectorAll('[data-export-format]').forEach(b => {
-    b.onclick = () => flowSektorExport(b.getAttribute('data-export-format'));
-  });
-  // Word/docx-Knopf (Welle 2, gated) verdrahten.
-  c.querySelectorAll('[data-export-docx]').forEach(b => {
-    b.onclick = () => flowDocxExport(b.getAttribute('data-export-docx'));
-  });
+  // (Knopf-Flut-Inventur 05.07.: die freistehenden Sektor-Export-/docx-Knöpfe sind entfallen — die
+  //  maschinenlesbaren Formate + Word leben jetzt im Herausgeben-Chooser, dort verdrahtet. Kein
+  //  data-export-format/data-export-docx mehr in renderSektor.)
   // Geführter Einstieg (Schnitt 2.2): Startknopf → Wizard starten.
   c.querySelectorAll('[data-wizard-start]').forEach(b => {
     b.onclick = () => wizardLauf(b.getAttribute('data-wizard-start'));
@@ -15598,6 +15650,34 @@ async function _eudiwAusgeben(sektorId, optionen) {
   }
 }
 
+// Zentrale Tür (Hauptnavigation) — BEREICH-NEUTRAL (U2-ADR-057, Spiegel zu U2-ADR-056/flowEinlesenZentral).
+// Fragt „Woraus herausgeben?", statt fix aus Gesundheit zu geben. Angeboten werden die Bereiche, die
+// DATEN tragen — Herausgeben ist datenlage-adaptiv: ein leerer Bereich hat nichts herzugeben. Jede Wahl
+// öffnet den bestehenden Bereichs-Chooser (flowHerausgeben: PDF / maschinenlesbar / Word / QR).
+function flowHerausgebenZentral() {
+  const zielSektoren = SEKTOREN.filter(s => sektorHatDaten(s, (data && data.sektoren && data.sektoren[s.id]) || {}));
+  let koerper = '<p class="einst-hint">' + escapeHTML(STRINGS.herausgebenWoherHinweis) + '</p>';
+  if (!zielSektoren.length) {
+    koerper += '<p class="einst-hint">' + escapeHTML(STRINGS.herausgebenWoherLeer) + '</p>';
+  } else {
+    koerper += '<div class="herausgeben-chooser">';
+    for (const s of zielSektoren) {
+      koerper += '<button type="button" class="btn btn-sek" data-hz-sektor="' + escapeHTML(s.id) + '">' +
+        icon(s.icon, 18) + ' ' + escapeHTML(s.label) + '</button>';
+    }
+    koerper += '</div>';
+  }
+  ui.modal({
+    titel: STRINGS.herausgebenWoherTitel,
+    koerperHTML: koerper, primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true,
+  });
+  const box = document.getElementById('modal-inhalt');
+  if (box && box.querySelectorAll) {
+    // Bereich gewählt → dessen Herausgeben-Chooser öffnen (überschreibt denselben Modal-Körper).
+    box.querySelectorAll('[data-hz-sektor]').forEach(b => { b.onclick = () => flowHerausgeben(b.getAttribute('data-hz-sektor')); });
+  }
+}
+
 /* ── „Herausgeben"-Chooser pro Bereich (Export-Durchgang Teil 2) ────────────────
    Ein Knopf je Bereich öffnet einen kleinen Chooser: PDF / maschinenlesbar / QR. PDF und QR
    gibt es für jeden Bereich; „maschinenlesbar" nur, wo ein Format deklariert ist (s.exporte),
@@ -15616,6 +15696,11 @@ function flowHerausgeben(sektorId) {
   for (const ex of formate) {
     koerper += '<button type="button" class="btn btn-sek" data-h-format="' + escapeHTML(ex.format) + '">' +
       svgIcon(ICONS.fileDown) + ' ' + escapeHTML(STRINGS.herausgebenMaschinell + ' — ' + ex.label) + '</button>';
+  }
+  // Word/docx (Welle 2) — im Chooser gebündelt (Knopf-Flut-Inventur 05.07.: kein freistehender Knopf
+  // mehr in „Weitere Möglichkeiten"). Nur sichtbar, wenn die docx-Bibliothek inline vorhanden ist (3.2-Gate).
+  if (typeof window !== 'undefined' && window.docx) {
+    koerper += '<button type="button" class="btn btn-sek" data-h-docx="1">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.exportDocxLabel) + '</button>';
   }
   koerper += '<button type="button" class="btn btn-sek" data-h-qr="1">' + svgIcon(ICONS.qrCode) + ' ' + escapeHTML(STRINGS.herausgebenQr) + '</button>';
   // „An EUDI-Wallet übergeben" — nur für Bereiche mit SD-JWT-VC-Format (Identität, Finanzen).
@@ -15637,6 +15722,8 @@ function flowHerausgeben(sektorId) {
     if (pdf) pdf.onclick = () => flowBereichPdf(sektorId);
     const qr = box.querySelector('[data-h-qr]');
     if (qr) qr.onclick = () => flowBereichQr(sektorId);
+    const docx = box.querySelector('[data-h-docx]');
+    if (docx) docx.onclick = () => flowDocxExport(sektorId);
     const eudiw = box.querySelector('[data-h-eudiw]');
     if (eudiw) eudiw.onclick = () => flowEudiwUebergabe(sektorId);
     box.querySelectorAll('[data-h-format]').forEach(b => {
