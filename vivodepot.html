@@ -422,7 +422,10 @@
     border-left: 3px solid transparent;
   }
   .nav-item:hover { background: var(--salbei-mid); }
-  .nav-item.aktiv { background: var(--salbei-dunkel); border-left-color: var(--salbei-light); color: var(--white); }
+  /* Finding 12: Aktiv-Markierung war unsichtbar — `background: --salbei-dunkel` = Sidebar-Fläche.
+     Jetzt ein aufgehellter Streifen (transluzentes Weiß über der dunklen Fläche) + fetter + Akzent-Rand:
+     klar vom Hover (--salbei-mid) und von der Ruhe-Fläche unterscheidbar. Weißer Text bleibt AA. */
+  .nav-item.aktiv { background: rgba(255,255,255,0.14); border-left-color: var(--salbei-light); color: var(--white); font-weight: 600; }
   .nav-item .ico { flex: 0 0 auto; opacity: 0.9; }
   /* Zweizeiliger Nav-Eintrag (Label + dezenter Untertitel, z. B. „Prüftermine / Was wann erneuern"). */
   .nav-item-text { display: flex; flex-direction: column; line-height: 1.25; }
@@ -708,6 +711,8 @@
   /* Gruppen-Trennung über zusätzlichen Weißraum statt Linie/Rahmen (minimal). */
   .sektion--eingabe { margin-top: var(--space-5); }
   .feld-zeile { display: grid; grid-template-columns: 200px 1fr; gap: var(--space-3); padding: var(--space-2) 0; border-top: 1px solid var(--salbei-light); align-items: baseline; }
+  .feld-zeile--mehrzeilig { align-items: start; }   /* Finding 9: Label oben am mehrzeiligen Textfeld, nicht vertikal zentriert */
+  .feld-zeile--mehrzeilig .feld-label { padding-top: var(--space-1); }   /* optische Grundlinie zur ersten Textzeile */
   .feld-zeile:first-of-type { border-top: none; }
   .feld-label { color: var(--ink2); font-size: var(--fs-sm); }
   .feld-wert { color: var(--ink); }
@@ -959,8 +964,10 @@
   .wizard-balken { flex: 1 1 auto; height: 6px; background: var(--salbei-light); border-radius: 999px; overflow: hidden; }
   .wizard-balken-fuell { display: block; height: 100%; background: var(--salbei-dunkel); border-radius: 999px; transition: width .25s ease; }
   .wizard-schritt { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-5); box-shadow: var(--shadow-soft); }
-  .wizard-frage { font-family: var(--font-narrativ); font-size: var(--fs-xl); color: var(--salbei-dunkel); margin: 0 0 var(--space-2) 0; line-height: 1.3; }
+  .wizard-frage { font-family: var(--font-narrativ); font-size: var(--fs-lg); color: var(--salbei-dunkel); margin: 0 0 var(--space-2) 0; line-height: 1.3; }   /* Findings 6/10/11 — von --fs-xl auf Kern-nähere --fs-lg gesenkt (Frage-Titel wirkte zu wuchtig) */
   .wizard-hilfe { margin: 0 0 var(--space-3) 0; }
+  /* Finding 13: Zielbereiche vor Schritt 1 — dezente, sachliche Zeile (kein Alarm). */
+  .wizard-ziele { font-size: var(--fs-sm); color: var(--ink2); margin: 0 0 var(--space-4); }
   .wizard-eingabe input, .wizard-eingabe textarea, .wizard-eingabe select { width: 100%; }
   .feld-fehler { color: #9a3412; font-size: var(--fs-sm); margin: var(--space-2) 0 0 0; font-weight: 600; }
   .wizard-aktionen { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-5); flex-wrap: wrap; }
@@ -981,6 +988,11 @@
   .zusatz-titel { font-family: var(--font-inter); color: var(--ink2); font-size: var(--fs-md); font-weight: 600; margin: 0 0 var(--space-3); }
   .zusatz-aktionen .wizard-start:last-child,
   .zusatz-aktionen .bereich-aktionen:last-child { margin-bottom: 0; }
+  /* Finding 2: „Weitere Möglichkeiten" als ruhiges Raster — gleiche Knopfbreiten, linksbündig
+     gestapelt (statt rechtsbündig, content-breit, ungleichmäßig). Überschreibt das flex-end der
+     Basis-.bereich-aktionen NUR in diesem Block; auf Mobil war der Stapel ohnehin so. */
+  .zusatz-aktionen .bereich-aktionen { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: var(--space-2); }
+  .zusatz-aktionen .bereich-aktionen .btn { width: 100%; justify-content: flex-start; text-align: left; }
   /* QR-Export (Teil 3.3) — Notfall-Code zum Ausdrucken. */
   .qr-box { display: flex; justify-content: center; padding: var(--space-4); background: var(--white); border-radius: var(--radius-md); }
   .qr-box img { width: 220px; height: 220px; image-rendering: pixelated; }
@@ -3002,7 +3014,7 @@ const STRINGS = Object.freeze({
   angLeer: "Hier ist nichts hinterlegt.",                 // Block ohne Werte
   crossSektorTitel: "Auch in anderen Bereichen hinterlegt",  // U2-ADR-008: Titel der Cross-Sektor-Lese-Sicht (Tabelle bisher leer)
   leerZustand: "nicht hinterlegt",          // UX-Spec V/4.6: die EINZIGE Leer-Phrase, kleingeschrieben, kursiv (CSS .leer)
-  pausenErlaubnis: "Sie können jederzeit pausieren. Ihre Eingaben bleiben in dieser Sitzung erhalten — zum dauerhaften Sichern den Speichern-Knopf nutzen.",  // D41: ehrlich — RAM ist nicht die Datei (U2-ADR-011)
+  pausenErlaubnis: "Solange dieses Fenster offen ist, bleiben Ihre Eingaben erhalten. Zum echten Speichern auf Ihr Gerät den Speichern-Knopf drücken.",  // D41 / Test 04.07. Finding 1: ehrlich — RAM ist nicht die Datei (U2-ADR-011)
   tocTitel: "Auf dieser Seite",                        // UX-Spec VII: Inhaltsverzeichnis ab drei Sektionen
   mehrLabel: "mehr",                                   // U2-ADR-009: Summary des mehr-Blocks (Modul-Felder)
   mehrEingetragen: "eingetragen",                      // Badge-Suffix für mehr-Block, wenn mind. ein Modul-Feld gefüllt
@@ -3182,6 +3194,8 @@ const STRINGS = Object.freeze({
   wizStartErstellen: "Geführt ausfüllen",                 // Startknopf, wenn noch nichts hinterlegt ist
   wizStartBearbeiten: "Geführt bearbeiten",               // Startknopf, wenn schon Daten vorliegen
   wizPauseHinweis: "Sie können jederzeit abbrechen — was Sie eingetragen haben, bleibt gespeichert.",
+  wizZieleVorspann: "Diese Angaben werden eingetragen in:",   // Test 04.07. Finding 13 (Transparenz aus Finding 15): vor Schritt 1 stehen die Zielbereiche
+  wizZieleUnd: "und",                                         // Listen-Verbinder vor dem letzten Bereich („A, B und C")
   // Sammel-Überschrift für die Zusatz-Aktionen UNTER dem Bereichs-Inhalt (Carolas IA-Befund:
   // erst die Daten/das Eintragen, dann geführte Wizards und — sofern Daten da sind — die Exporte).
   zusatzAktionenTitel: "Weitere Möglichkeiten",
@@ -3279,7 +3293,8 @@ const STRINGS = Object.freeze({
   // ── Import-Welle 1: „Daten einlesen" (Spiegelbild zu „Herausgeben") ──
   // Jedes Format, das herausgegeben werden kann, kann auch wieder eingelesen werden.
   // Bürger-Sprache in den Labels — nie die Format-Abkürzung (kein „vCard"/„SD-JWT"/„FHIR").
-  einlesenKnopf: "Daten einlesen",
+  einlesenKnopf: "Daten einlesen",                       // zentrale Tür (Sidebar) — bleibt so (Test 04.07. Finding 3)
+  einlesenBereichKnopf: "In diesen Bereich einlesen",    // bereichslokale Tür in „Weitere Möglichkeiten" (Finding 3) — sagt, WOHIN eingelesen wird
   einlesenTitel: "Daten einlesen",
   einlesenHinweis: "Welche Daten möchten Sie aus einer Datei einlesen?",
   importJsonLabel: "Aus einer Vivodepot-Sicherungsdatei übernehmen (mit Vorschau)",   // B6: klarer Wortlaut zur echten Funktion (zusammenführender Import mit Vorschau, kein blindes Überschreiben)
@@ -3311,7 +3326,7 @@ const STRINGS = Object.freeze({
   importBetaLabel: "Aus der alten Vivodepot-App übernehmen (Beta-Version)",
   importBetaQuelle: "Vivodepot Beta 16",
   // Ebene 3a (Krypto-Gutachten/Trust-Ebenen): signiertes Anbieter-Zertifikat des Vivodepot-Vertrauenskreises.
-  importProviderLabel: "Signiertes Anbieter-Zertifikat einlesen (geprüft)",
+  importProviderLabel: "Geprüftes Dokument einer Einrichtung einlesen",   // Test 04.07. Finding 8 — bürgernäher (früher „Signiertes Anbieter-Zertifikat einlesen (geprüft)")
   importProviderQuelle: "Geprüftes Anbieter-Zertifikat",
   importProviderAbgelehnt: "Dieses Anbieter-Zertifikat konnte nicht bestätigt werden — die Signatur passt nicht zur Vivodepot-Vertrauensstelle. Es wurde nichts übernommen.",
   importBetaNichtZugeordnet: "Aus der alten Vivodepot-App übernommen — diese Angaben hatten in der neuen App kein eigenes Feld und sind hier gesammelt, damit nichts verloren geht:",
@@ -13141,6 +13156,26 @@ function oeffneSituation(situationId) {
 function wizardSchrittZiel(def, schritt) {
   return (schritt && schritt.ziel) ? schritt.ziel : (def && def.ziel);
 }
+// Finding 13 (Transparenz): die DISTINKTEN Zielbereiche eines Wizards, in Schritt-Reihenfolge — die
+// Bürger-Labels, in die der Wizard einträgt (bereichsübergreifend, feste Ziele je Schritt). Reine
+// Lese-Ableitung aus den Schritt-Zielen; Situations-Ziele tragen ihren Situations-Titel.
+function wizardZielBereichNamen(def) {
+  const namen = [], gesehen = new Set();
+  for (const s of (def && Array.isArray(def.schritte) ? def.schritte : [])) {
+    const ziel = wizardSchrittZiel(def, s);
+    let label = null;
+    if (ziel && ziel.sektor && SEKTOR_BY_ID[ziel.sektor]) label = SEKTOR_BY_ID[ziel.sektor].label;
+    else if (ziel && ziel.situation && typeof SITUATION_BY_ID !== 'undefined' && SITUATION_BY_ID[ziel.situation]) label = SITUATION_BY_ID[ziel.situation].titel;
+    if (label && !gesehen.has(label)) { gesehen.add(label); namen.push(label); }
+  }
+  return namen;
+}
+// Deutsche Aufzählung: [A] → „A"; [A,B] → „A und B"; [A,B,C] → „A, B und C".
+function _wizZieleSatz(namen) {
+  if (!namen.length) return '';
+  if (namen.length === 1) return namen[0];
+  return namen.slice(0, -1).join(', ') + ' ' + STRINGS.wizZieleUnd + ' ' + namen[namen.length - 1];
+}
 // Liest die Daten-Tasche EINES Ziels (read-only) — Sektor- oder Situations-Namespace.
 function wizardTascheLesen(ziel) {
   if (!ziel) return {};
@@ -13570,6 +13605,12 @@ function renderWizard() {
     '<span class="wizard-balken" aria-hidden="true"><span class="wizard-balken-fuell" style="width:' + prozent + '%"></span></span>' +
     '</div>';
   if (idx === 0 && def.einleitung) html += '<p class="sektor-intro">' + escapeHTML(def.einleitung) + '</p>';
+  // Finding 13/15 (Transparenz): VOR Schritt 1 die Zielbereiche nennen — ein bereichsübergreifender
+  // Wizard trägt an feste Ziele ein, das steht dem Bürger jetzt vorab da (nicht erst im Abschluss-Toast).
+  if (idx === 0) {
+    const _ziele = wizardZielBereichNamen(def);
+    if (_ziele.length) html += '<p class="wizard-ziele">' + escapeHTML(STRINGS.wizZieleVorspann + ' ' + _wizZieleSatz(_ziele) + '.') + '</p>';
+  }
   html += '<div class="wizard-schritt">';
   html += '<div class="wizard-frage">' + escapeHTML(schritt.frage) + '</div>';
   if (schritt.hilfetext) html += '<p class="feld-hint wizard-hilfe">' + escapeHTML(schritt.hilfetext) + '</p>';
@@ -14320,7 +14361,7 @@ function renderSektor(sektorOrId) {
     if (Modus.darfBearbeiten() && importFormateFuerSektor(sektorId).length) {
       zusatzInhalt += '<div class="bereich-aktionen einlesen-block">' +
         '<button class="btn btn-sek" data-einlesen="' + escapeHTML(sektorId) + '">' +
-        svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.einlesenKnopf) + '</button></div>';
+        svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.einlesenBereichKnopf) + '</button></div>';   // Finding 3: bereichslokal „In diesen Bereich einlesen" (zentrale Sidebar-Tür bleibt „Daten einlesen")
     }
     // Sektor-Exporte (data-driven, s.exporte) — „Daten herausgeben" als maschinenlesbare Datei.
     // DATENLAGE-ADAPTIV (Carolas Befund): bei LEEREM Bereich gibt es nichts herauszugeben — dann
@@ -15892,7 +15933,10 @@ function feldZeileHTML(feld, roh, sektorId, darf) {
   // („nicht herausgeben") ist in die Export-Übersicht „Das wird herausgegeben" gewandert.
   // Die Markierungs-Tabelle (data.sensibelFelder) und alle Export-Wege bleiben unverändert;
   // nur das Eingabe-/Lese-UI rendert hier keinen Schloss-Knopf und keinen Marker mehr.
-  let h = '<div class="feld-zeile' + (_leerZeile ? ' feld-zeile--leer' : '') +
+  // Finding 9: mehrzeilige Felder (textarea) richten das Label OBEN aus, nicht auf der Grundlinie
+  // der (hohen) Eingabe — sonst „schwebt" das Label mittig neben dem Textfeld.
+  const _mehrzeilig = (feld.typ === 'textarea');
+  let h = '<div class="feld-zeile' + (_leerZeile ? ' feld-zeile--leer' : '') + (_mehrzeilig ? ' feld-zeile--mehrzeilig' : '') +
     '"><div class="feld-label">' + escapeHTML(feld.label) + pflichtMarker + '</div>';
   h += '<div class="feld-wert" data-feld="' + escapeHTML(feld.id) + '">';
   // Immer-editierbar (Umbau „Lesemodus abschaffen"): das Schreibrecht-Gate ist allein darf
