@@ -964,7 +964,7 @@
   .wizard-balken { flex: 1 1 auto; height: 6px; background: var(--salbei-light); border-radius: 999px; overflow: hidden; }
   .wizard-balken-fuell { display: block; height: 100%; background: var(--salbei-dunkel); border-radius: 999px; transition: width .25s ease; }
   .wizard-schritt { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-5); box-shadow: var(--shadow-soft); }
-  .wizard-frage { font-family: var(--font-narrativ); font-size: var(--fs-lg); color: var(--salbei-dunkel); margin: 0 0 var(--space-2) 0; line-height: 1.3; }   /* Findings 6/10/11 — von --fs-xl auf Kern-nähere --fs-lg gesenkt (Frage-Titel wirkte zu wuchtig) */
+  .wizard-frage { font-family: var(--font-narrativ); font-size: var(--fs-base); color: var(--salbei-dunkel); margin: 0 0 var(--space-2) 0; line-height: 1.3; }   /* Findings 6/10/11 → Nacharbeit 05.07.: von --fs-xl über --fs-lg auf Kern-Größe --fs-base (Carola will flacher) */
   .wizard-hilfe { margin: 0 0 var(--space-3) 0; }
   /* Finding 13: Zielbereiche vor Schritt 1 — dezente, sachliche Zeile (kein Alarm). */
   .wizard-ziele { font-size: var(--fs-sm); color: var(--ink2); margin: 0 0 var(--space-4); }
@@ -13329,7 +13329,12 @@ function wizardAbbrechen() {
   aktiverWizardId = null;
   wizardSchrittIndex = 0;
   wizardFehlerGrund = null;
-  geheZuZuhause();
+  // Bug 1 (iOS-Test 05.07.): Abbrechen kehrt in den AUSGANGSBEREICH zurück — den Sektor, aus dem der
+  // Wizard gestartet wurde (aktiverSektorId bleibt über wizardLauf hinweg erhalten). Früher führte
+  // geheZuZuhause auf die Welcome-Page (renderWelcome = „aus der App heraus"), was Nutzer aus dem
+  // Kontext riss. Fallback: Zuhause, falls kein gültiger Ausgangs-Sektor bekannt ist.
+  if (aktiverSektorId && SEKTOR_BY_ID[aktiverSektorId]) oeffneSektor(aktiverSektorId);
+  else geheZuZuhause();
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -13630,6 +13635,18 @@ function renderWizard() {
   const ab = document.getElementById('wiz-abbr');    if (ab) ab.onclick = wizardAbbrechen;
   const zu = document.getElementById('wiz-zurueck'); if (zu) zu.onclick = wizardZurueck;
   const we = document.getElementById('wiz-weiter');  if (we) we.onclick = wizardWeiter;
+
+  // Bug 2 (iOS-Test 05.07.): Auf den FOLGE-Schritten den Fokus aufs Schritt-Eingabefeld setzen —
+  // die Sicht bleibt am Schritt und die Tastatur folgt der Eingabe, statt nach oben zu springen.
+  // Schritt 1 bleibt fokusfrei (Einleitung + Zielbereiche sollen erst lesbar sein). Best-effort;
+  // im headless Harness ein no-op. preventScroll aus → der Browser holt das Feld sanft in die Sicht.
+  if (idx > 0 && c.querySelector) {
+    try {
+      const box = c.querySelector('.wizard-eingabe');
+      const el = box && box.querySelector ? box.querySelector('input, select, textarea') : null;
+      if (el && typeof el.focus === 'function') el.focus();
+    } catch (_) { /* Fokus ist Komfort — nie kritisch */ }
+  }
 
   // Ref-Schritt: Inline-Anlage „+ Neue Person/Institution" wie im Sektor-Edit-Modus.
   if (schritt.feld.typ === 'ref' && c.querySelector) {
@@ -13944,7 +13961,16 @@ function renderContent() {
     const cP = document.getElementById('content');
     if (cP && cP.classList) cP.classList.toggle('sicht-bereich', aktiveAnsicht === 'sektor' && !imSubKontext());
   }
-  inhaltNachObenScrollen();   // Sicht beginnt oben am Titel
+  // Bug 2 (iOS-Test 05.07.): Der Wizard managt seine Sicht selbst. Der aggressive Mehrfach-Reset
+  // (inhaltNachObenScrollen mit rAF/setTimeout-Wiederholungen) riss auf den Folge-Schritten die
+  // Sicht + Tastatur nach ganz oben, sobald ein Schritt mit leerem Feld (z. B. PLZ/Ort) gerendert
+  // wurde. Nur beim EINSTIEG (Schritt 1) von oben zeigen (Titel + Einleitung); danach bleibt die
+  // Sicht am Schritt — renderWizard fokussiert das Eingabefeld.
+  if (aktiveAnsicht === 'wizard') {
+    if (wizardSchrittIndex === 0) inhaltNachObenScrollen();
+  } else {
+    inhaltNachObenScrollen();   // Sicht beginnt oben am Titel
+  }
 }
 function renderContentInner() {
   if (Modus.aktuell() === 'notfall') { renderNotfall(); return; }
