@@ -5242,6 +5242,7 @@ let aktiveAkutId = null;          // Angehörigen-Modus: offene Akut-Situation (
 let aktiverWizardId = null;       // null = kein Wizard aktiv; sonst id aus WIZARD_BY_ID
 let wizardSchrittIndex = 0;       // 0-basiert; Anzeige „Schritt X von Y" addiert 1
 let wizardFehlerGrund = null;     // null | 'datum' | 'zahl' | 'auswahl' | … (feldValidieren-Grund)
+let wizardRueckkehr = null;       // Bug 1: Rückkehr-Kontext, beim START festgehalten ({ansicht,sektorId,situationId})
 // Notfall-Dreiklang (Teil 4.1): der ohne Passwort geladene Sanitäter-Cache (Stufe 1). null =
 // keiner geladen → renderNotfall baut live aus dem offenen Depot. { stand, zeilen:[{label,wert}] }.
 let notfallStufe1 = null;
@@ -13295,6 +13296,11 @@ function wizardLauf(wizardId) {
   if (imVorschau()) { flowDepotAnlegen(); return false; }
   if (!Modus.darfBearbeiten()) { ui.toast(STRINGS.notfallHinweis, 'info'); return false; }
   bearbeitungSpeichern();          // offene Sektor-Edits zuerst sichern
+  // Bug 1 (iOS-Test 05.07., robust): Rückkehr-Kontext JETZT festhalten — solange die aktuelle Sicht
+  // noch die Startsicht ist (Sektor ODER Situationsblatt/Anlass). Beim Abbrechen wird genau hierher
+  // zurückgekehrt, statt aktiverSektorId erst beim Abbrechen zu lesen (der kann sich über den Lauf
+  // ändern; vom Anlass-Weg ist er ohnehin nicht der Ausgangsbereich).
+  wizardRueckkehr = { ansicht: aktiveAnsicht, sektorId: aktiverSektorId, situationId: aktiveSituationId };
   aktiverWizardId = wizardId;
   wizardSchrittIndex = 0;
   wizardFehlerGrund = null;
@@ -13329,11 +13335,15 @@ function wizardAbbrechen() {
   aktiverWizardId = null;
   wizardSchrittIndex = 0;
   wizardFehlerGrund = null;
-  // Bug 1 (iOS-Test 05.07.): Abbrechen kehrt in den AUSGANGSBEREICH zurück — den Sektor, aus dem der
-  // Wizard gestartet wurde (aktiverSektorId bleibt über wizardLauf hinweg erhalten). Früher führte
+  // Bug 1 (iOS-Test 05.07., robust): zurück GENAU dorthin, wo der Wizard gestartet wurde — der
+  // Kontext wurde beim Start (wizardLauf) gesnapshottet. Situationsblatt/Anlass, falls von dort
+  // gestartet; sonst der Ausgangs-Sektor. Fallback: aktiverSektorId bzw. Zuhause. Früher führte
   // geheZuZuhause auf die Welcome-Page (renderWelcome = „aus der App heraus"), was Nutzer aus dem
-  // Kontext riss. Fallback: Zuhause, falls kein gültiger Ausgangs-Sektor bekannt ist.
-  if (aktiverSektorId && SEKTOR_BY_ID[aktiverSektorId]) oeffneSektor(aktiverSektorId);
+  // Kontext riss.
+  const r = wizardRueckkehr; wizardRueckkehr = null;
+  if (r && r.ansicht === 'situation' && r.situationId && SITUATION_BY_ID[r.situationId]) oeffneSituation(r.situationId);
+  else if (r && r.sektorId && SEKTOR_BY_ID[r.sektorId]) oeffneSektor(r.sektorId);
+  else if (aktiverSektorId && SEKTOR_BY_ID[aktiverSektorId]) oeffneSektor(aktiverSektorId);
   else geheZuZuhause();
 }
 
