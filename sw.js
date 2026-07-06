@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v12';  // v12 (2026-07-05): Ganzes Depot (U2-ADR-058) + Notfall-Stelle/Fachpfad-Schnitt/Ganzes-Depot-direkt (U2-ADR-059, ba971e9) — Sidebar-Notfall (Sicht+Karte+QR), provider/beta raus aus Bereich-Einlese; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v13';  // v13 (2026-07-06): Angehörigen-Modus fünf Situationsblätter (U2-ADR-060, 86251cf) — Notarzt raus, Tod-Split → Beerdigung + Behörden/Nachlass (voller 23er erb_*), Meine Menschen eigenes Blatt, 7 Pflege-Delta; skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird

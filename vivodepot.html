@@ -4675,42 +4675,22 @@ const SITUATIONEN = Object.freeze([
 ]);
 const SITUATION_BY_ID = Object.freeze(Object.fromEntries(SITUATIONEN.map(s => [s.id, s])));
 
-/* ── Angehörigen-Modus (U2-ADR-012 §3 / CC-Auftrag 30.05.) — vier Akut-Situationen ──
+/* ── Angehörigen-Modus (U2-ADR-012 §3 · ADR-061v3 · Carola-Freigabe 05.07.) — fünf Situationsblätter ──
    Read-only: eine Vertrauensperson liest, was die Eigentümerin hinterlegt hat. Deklarative
-   Registry analog zu SITUATIONEN; jede Situation zieht Felder aus dem ECHTEN Sektor
-   (read-only, kein Click-Through, kein Schreiben) plus den hinterlegten Brief. „Meine
-   Menschen" (menschen-Liste) ist Datenquelle, kein eigenes Blatt. Kein `arzt` hier.
-   Feld-IDs gegen das clean-rebuild-Schema abgeglichen (nicht still angelegt): Produktiv-
-   Felder, die hier fehlen, sind ausgelassen und in docs/spec/Offene-Punkte-Angehoerigen-
-   Felder.md für den Template-/Andock-Schritt vermerkt. */
+   Registry analog zu SITUATIONEN; jede Situation zieht Felder aus dem ECHTEN Sektor bzw.
+   (für den Nachlass-Satz) aus data.situationen['erbfall'] via quelle 'sit:erbfall'
+   (read-only, kein Click-Through, kein Schreiben) plus den hinterlegten Brief.
+   Fünf Blätter (ADR-061v3): Krankenhaus, Pflegeheim-Aufnahme, Beerdigung und Nachlass,
+   Behörden und Nachlass, Meine Menschen. „Notarzt" ist hier entfallen — die Akut-Sicht für
+   Rettungskräfte liegt im Notfall-Modus (rot). „Meine Menschen" (data.menschen[]) ist jetzt
+   EIGENES Blatt (5), nicht nur Datenquelle. Feld-IDs gegen das Schema-26-Feldmodell
+   abgeglichen (keine b16-Waisen): der b16-erb_*-Satz / eu_nachlass / rentenversicherungen[] /
+   testamentsvollstrecker existieren in Schema 26 NICHT — Blatt 4 nutzt den echten 23er
+   erb_*-Satz aus dem Bürger-Blatt 'erbfall'. Ausgelassenes in docs/spec/Offene-Punkte-
+   Angehoerigen-Felder.md (Feier-Detailschicht = Template-Stoff Bereich 10). */
 const _ANG_SITUATIONEN = Object.freeze([
-  // 1. Notarzt — die schnellste Sicht. (Vollständig; organspende real aus Vorsorge.)
-  { id: 'notarzt', titel: 'Notarzt', icon: 'alertTriangle',
-    einfuehrung: 'Was Rettungskräfte und Angehörige im akuten Moment brauchen.',
-    bloecke: [
-      { titel: 'Aus Gesundheit', eintraege: [
-        { quelle: 'gesundheit', feld: 'blutgruppe' },
-        { quelle: 'gesundheit', feld: 'allergien' },
-        { quelle: 'gesundheit', feld: 'krankheiten' },          // ← erkrankungen
-        { quelle: 'gesundheit', feld: 'medikamente' },
-        { quelle: 'gesundheit', feld: 'implantate' },
-        { quelle: 'gesundheit', feld: 'behandlung_aktuell' },
-        { quelle: 'vorsorge',   feld: 'organspende' },          // real in Vorsorge
-      ] },
-      { titel: 'Aus Vorsorge', eintraege: [
-        { quelle: 'vorsorge', feld: 'patientenverf_vorhanden' },
-        { quelle: 'vorsorge', feld: 'patientenverf_ort' },
-        { quelle: 'vorsorge', feld: 'patientenverf_wunsch' },
-        { quelle: 'vorsorge', feld: 'palliativ_wunsch' },
-      ] },
-      { titel: 'Meine Menschen', eintraege: [
-        { quelle: 'meine-menschen', feld: 'menschen' },
-      ] },
-      { titel: 'Hinterlegter Brief', eintraege: [
-        { quelle: 'persoenliches', feld: 'brief_notarzt' },
-      ] },
-    ] },
-  // 2. Krankenhaus — Aufnahme und längerer Aufenthalt. (voroperationen entfällt.)
+  // Blatt 1 — Krankenhaus. Aufnahme und längerer Aufenthalt. (voroperationen bleibt
+  //   Template-Andock, s. Offene-Punkte-Angehoerigen-Felder.md.)
   { id: 'krankenhausakut', titel: 'Krankenhaus', icon: 'heartPulse',
     einfuehrung: 'Aufnahme und längerer Aufenthalt — was die Klinik wissen muss.',
     bloecke: [
@@ -4739,8 +4719,10 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'persoenliches', feld: 'brief_krankenhaus' },
       ] },
     ] },
-  // 3. Pflegeheim — Einzug und Übergabe an die Pflege. (Vollständig.)
-  { id: 'pflegeheimakut', titel: 'Pflegeheim', icon: 'shield',
+  // Blatt 2 — Pflegeheim-Aufnahme. Einzug und Übergabe an die Pflege. + 7 Pflege-Delta-Felder
+  //   (Carola-Freigabe 05.07., ADR-061v3): pflegegrad_seit/_befristet_bis, pflegekasse/_nr/_tel,
+  //   pflegedienst (Sozialversicherung) + patientenverf_ort (Vorsorge). hauptpflegeperson war schon drin.
+  { id: 'pflegeheimakut', titel: 'Pflegeheim-Aufnahme', icon: 'shield',
     einfuehrung: 'Einzug und Übergabe an die Pflege.',
     bloecke: [
       { titel: 'Aus Gesundheit', eintraege: [
@@ -4748,12 +4730,21 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'medikamente' },
         { quelle: 'vorsorge',   feld: 'hilfsmittel' },          // real in Vorsorge
         { quelle: 'gesundheit', feld: 'allergien' },
+      ] },
+      { titel: 'Pflege & Versicherung', eintraege: [
         { quelle: 'sozialversicherung', feld: 'pflegegrad' },   // U2-ADR-018: Pflegegrad zog nach Sozialversicherung
+        { quelle: 'sozialversicherung', feld: 'pflegegrad_seit' },
+        { quelle: 'sozialversicherung', feld: 'pflegegrad_befristet_bis' },
+        { quelle: 'sozialversicherung', feld: 'pflegekasse' },
+        { quelle: 'sozialversicherung', feld: 'pflegekasse_nr' },
+        { quelle: 'sozialversicherung', feld: 'pflegekasse_tel' },
+        { quelle: 'sozialversicherung', feld: 'pflegedienst' },  // typ:'ref' → Institution
       ] },
       { titel: 'Aus Vorsorge', eintraege: [
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
         { quelle: 'vorsorge', feld: 'vollmacht_person' },
         { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
+        { quelle: 'vorsorge', feld: 'patientenverf_ort' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_koerper' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_ernaehrung' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_alltag' },
@@ -4761,29 +4752,23 @@ const _ANG_SITUATIONEN = Object.freeze([
       ] },
       { titel: 'Meine Menschen', eintraege: [
         { quelle: 'meine-menschen', feld: 'menschen' },
-        { quelle: 'gesundheit',     feld: 'hauptpflegeperson' },  // real in Gesundheit
+        { quelle: 'gesundheit',     feld: 'hauptpflegeperson' },  // typ:'ref' → Person, real in Gesundheit
       ] },
       { titel: 'Hinterlegter Brief', eintraege: [
         { quelle: 'persoenliches', feld: 'brief_pflegeheim' },
       ] },
     ] },
-  // 4. Tod — Beerdigung, Nachlass, Behörden zusammengeführt. Dünn, aber nützlich: das
-  //    Dringende (Testament, Vollmacht, Bestattung, wen informieren, Brief) ist da; die
-  //    Feier-Detailschicht (Redner/Blumen/Atmosphäre) kommt mit den Templates.
-  { id: 'tod', titel: 'Tod', icon: 'fileText',
-    einfuehrung: 'Was im Trauerfall zuerst zählt — Testament, Vollmacht, Bestattung, wen informieren.',
+  // Blatt 3 — Beerdigung und Nachlass (Death-Split A). Das „Dringende" im Trauerfall:
+  //   Bestattungswünsche + hinterlegter Brief. Feier-Detailschicht (Redner/Blumen/Atmosphäre)
+  //   = Template-Stoff Bereich 10, s. Offene-Punkte-Angehoerigen-Felder.md.
+  { id: 'beerdigung', titel: 'Beerdigung und Nachlass', icon: 'fileText',
+    einfuehrung: 'Was für die Bestattung zuerst zählt — Wünsche, Unternehmen, Ort, hinterlegter Brief.',
     bloecke: [
-      { titel: 'Aus Vorsorge', eintraege: [
-        { quelle: 'vorsorge', feld: 'testament_vorhanden' },
-        { quelle: 'vorsorge', feld: 'testament_ort' },
-        { quelle: 'vorsorge', feld: 'erben' },
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmacht_person' },
-      ] },
       { titel: 'Bestattung', eintraege: [
         { quelle: 'persoenliches', feld: 'bestattung_art' },
         { quelle: 'persoenliches', feld: 'bestattung_unternehmen' },
         { quelle: 'persoenliches', feld: 'bestattung_ort' },
+        { quelle: 'persoenliches', feld: 'bestattung_voraus' },
         { quelle: 'persoenliches', feld: 'bestattung_vorsorge_nachweis' },
       ] },
       { titel: 'Meine Menschen', eintraege: [
@@ -4791,6 +4776,69 @@ const _ANG_SITUATIONEN = Object.freeze([
       ] },
       { titel: 'Hinterlegter Brief', eintraege: [
         { quelle: 'persoenliches', feld: 'brief_todesfall' },
+      ] },
+    ] },
+  // Blatt 4 — Behörden und Nachlass (Death-Split B). Der VOLLE Nachlass-Satz read-only
+  //   (Carola-Freigabe 05.07.: alle 23 erb_*): erste Schritte, Originale, Versicherungen,
+  //   Konten/Vermögen, Verträge, Kontakte — plus der schon hinterlegte Vorsorge-Stand.
+  //   Die erb_*-Werte liegen in data.situationen['erbfall'] → quelle 'sit:erbfall' (kein Sektor-Feld).
+  { id: 'behoerden_nachlass', titel: 'Behörden und Nachlass', icon: 'scale',
+    einfuehrung: 'Was Angehörige bei Behörden und im Nachlass regeln müssen — geordnet, mit Ablageorten und Kontakten.',
+    bloecke: [
+      { titel: 'Aus Vorsorge', eintraege: [
+        { quelle: 'vorsorge', feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge', feld: 'testament_ort' },
+        { quelle: 'vorsorge', feld: 'erben' },
+        { quelle: 'vorsorge', feld: 'zvr_nummer' },
+        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
+        { quelle: 'vorsorge', feld: 'vollmacht_person' },
+      ] },
+      { titel: 'Die ersten Schritte', eintraege: [
+        { quelle: 'sit:erbfall', feld: 'erb_sterbeurkunde' },
+        { quelle: 'sit:erbfall', feld: 'erb_erbschein' },
+        { quelle: 'sit:erbfall', feld: 'erb_testament_eroeffnung' },
+        { quelle: 'sit:erbfall', feld: 'erb_nachlassgericht' },
+      ] },
+      { titel: 'Wo die Originale liegen', eintraege: [
+        { quelle: 'sit:erbfall', feld: 'erb_originaldokumente' },
+        { quelle: 'sit:erbfall', feld: 'erb_stammbuch' },
+        { quelle: 'sit:erbfall', feld: 'erb_personenstand' },
+      ] },
+      { titel: 'Versicherungen', eintraege: [
+        { quelle: 'sit:erbfall', feld: 'erb_lebensversicherung' },
+        { quelle: 'sit:erbfall', feld: 'erb_sterbegeld' },
+        { quelle: 'sit:erbfall', feld: 'erb_unfallversicherung' },
+        { quelle: 'sit:erbfall', feld: 'erb_versicherungen_kuendigen' },
+      ] },
+      { titel: 'Konten & Vermögen', eintraege: [
+        { quelle: 'sit:erbfall', feld: 'erb_konten' },
+        { quelle: 'sit:erbfall', feld: 'erb_geldanlagen' },
+        { quelle: 'sit:erbfall', feld: 'erb_immobilien' },
+        { quelle: 'sit:erbfall', feld: 'erb_schulden' },
+        { quelle: 'sit:erbfall', feld: 'erb_wertgegenstaende' },
+      ] },
+      { titel: 'Verträge & laufende Zahlungen', eintraege: [
+        { quelle: 'sit:erbfall', feld: 'erb_vertraege_kuendigen' },
+        { quelle: 'sit:erbfall', feld: 'erb_wohnung' },
+        { quelle: 'sit:erbfall', feld: 'erb_renten' },
+        { quelle: 'sit:erbfall', feld: 'erb_digitales' },
+      ] },
+      { titel: 'Kontakte fürs Erbe', eintraege: [
+        { quelle: 'sit:erbfall', feld: 'erb_notar' },
+        { quelle: 'sit:erbfall', feld: 'erb_steuerberater' },
+        { quelle: 'sit:erbfall', feld: 'erb_zu_informieren' },
+      ] },
+      { titel: 'Meine Menschen', eintraege: [
+        { quelle: 'meine-menschen', feld: 'menschen' },
+      ] },
+    ] },
+  // Blatt 5 — Meine Menschen. Das ganze Personen-Register read-only (ADR-095, data.menschen[]).
+  //   Eigenes Blatt (ADR-061v3), nicht nur Datenquelle je Situation.
+  { id: 'meine_menschen', titel: 'Meine Menschen', icon: 'users',
+    einfuehrung: 'Alle hinterlegten Menschen — Angehörige, Ärzte, Notar, Vertrauenspersonen — mit Kontakt und Rolle.',
+    bloecke: [
+      { titel: 'Menschen', eintraege: [
+        { quelle: 'meine-menschen', feld: 'menschen' },
       ] },
     ] },
 ]);
@@ -13809,11 +13857,23 @@ function angBannerHTML() {
     '</div>';
 }
 
-// U2-ADR-022: löst eine Cross-Ref/Situations-Quelle zu {feld, roh} auf. Sonderfall: Bereich-2
-// „Meine Menschen" zieht aus dem Register data.menschen[] (EIN Topf), nicht aus einem Sektor-Feld.
+// U2-ADR-022: löst eine Cross-Ref/Situations-Quelle zu {feld, roh} auf. Sonderfälle: Bereich-2
+// „Meine Menschen" zieht aus dem Register data.menschen[] (EIN Topf), nicht aus einem Sektor-Feld;
+// eine Quelle 'sit:<id>' (ADR-061v3, Blatt 4) zieht ein inline-Anlass-Feld aus data.situationen[<id>]
+// (z. B. der 23er erb_*-Satz aus 'erbfall') statt aus einem Sektor. Read-only, kein Schreibpfad.
 function crossRefFeldUndRoh(quelle, feldId) {
   if (quelle === 'meine-menschen' && feldId === 'menschen') {
     return { feld: MENSCHEN_REGISTER_FELD, roh: (data && Array.isArray(data.menschen) ? data.menschen : []) };
+  }
+  if (typeof quelle === 'string' && quelle.startsWith('sit:')) {
+    const sitId = quelle.slice(4);
+    const sit = SITUATION_BY_ID[sitId];
+    const feld = sit && (sit.bloecke || [])
+      .flatMap(b => (b.eintraege || []))
+      .map(e => e.feld)
+      .find(f => f && typeof f === 'object' && f.id === feldId);
+    const roh = ((data && data.situationen && data.situationen[sitId]) || {})[feldId];
+    return { feld, roh };
   }
   const qS = SEKTOR_BY_ID[quelle];
   const feld = qS && qS.sektionen.flatMap(s2 => s2.felder || []).find(f => f.id === feldId);
@@ -13826,7 +13886,9 @@ function akutZeileHTML(quelleSektorId, feldId) {
   const sek = SEKTOR_BY_ID[quelleSektorId];
   const { feld, roh } = crossRefFeldUndRoh(quelleSektorId, feldId);
   const label = (feld && feld.label) || feldId;
-  const quelle = (sek && sek.label) || quelleSektorId;
+  const quelle = (typeof quelleSektorId === 'string' && quelleSektorId.startsWith('sit:'))
+    ? ((SITUATION_BY_ID[quelleSektorId.slice(4)] || {}).titel || quelleSektorId.slice(4))
+    : ((sek && sek.label) || quelleSektorId);
   return '<div class="feld-zeile">' +
     '<div class="feld-label">' + escapeHTML(label) + ' <span class="quelle-tag">(' + escapeHTML(quelle) + ')</span></div>' +
     '<div class="feld-wert">' + feldWertHTML(feld || { typ: 'text' }, roh) + '</div></div>';
