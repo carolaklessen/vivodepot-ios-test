@@ -24,7 +24,7 @@
      Geprüft: kein fetch(), kein <form>, kein eval/new Function im Kern. -->
 <meta http-equiv="Content-Security-Policy"
       content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self' data:; connect-src 'none'; worker-src 'self'; manifest-src 'self' data:; form-action 'none'; base-uri 'none'; frame-ancestors 'none'">
-<title>Vivodepot · Clean-Slate-Kern · v0.1</title>
+<title>Vivodepot · v1.0-rc</title>
 <!-- Web-App-Meta (zum Home-Bildschirm hinzufügen / als App öffnen). Alles inline — die
      Datei bleibt vollständig offline; nichts wird zur Laufzeit nachgeladen. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2453,7 +2453,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
-const BUILD_DATUM = '2026-06-03';
+const BUILD_DATUM = '2026-07-06';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 
@@ -2954,7 +2954,7 @@ const STRINGS = Object.freeze({
   einstBuildDatum: "Stand der App",
   einstVersionAktuell: "Diese App-Version ist aktuell.",
   einstVersionAltHinweis: "Diese App-Version ist von {datum}. Schauen Sie gelegentlich, ob es eine neuere gibt — Ihre Daten bleiben dabei unberührt.",
-  einstVersionSuchenKnopf: "Nach neuer Version suchen",
+  einstVersionSuchenKnopf: "Nach Aktualisierung suchen",
   einstVersionSuchenHinweis: "Öffnet die Vivodepot-Website in einem neuen Tab. Erst dann gehen Sie online — die App selbst lädt nie etwas aus dem Internet nach.",
   einstUpdateAnleitungTitel: "So holen Sie eine neue Version",
   einstUpdateSchritt1: "Neue App-Datei von der Website laden.",
@@ -3441,7 +3441,7 @@ const STRINGS = Object.freeze({
   exportBereichQrLeer: "Es ist nichts zum Verschlüsseln in einen QR-Code hinterlegt.",
 
   // ── An EUDI-Wallet übergeben (Best-Effort, vorläufig) — Bürger-Sprache, nie „SD-JWT"/„Claim" ──
-  eudiwKnopf: "An EUDI-Wallet übergeben (vorläufig)",
+  eudiwKnopf: "An EUDI-Wallet übergeben (experimentell)",
   eudiwTitel: "An EUDI-Wallet übergeben",
   // Ehrlicher Hinweis: experimentell, Annahme durch eine konkrete Wallet noch nicht gesichert.
   eudiwWarnung: "Vorläufig und experimentell: Dies bereitet Ihre Daten so auf, wie eine EUDI-Wallet sie aufnehmen KÖNNTE. Ob eine bestimmte Wallet sie tatsächlich annimmt, ist noch nicht gesichert — das muss vor einem echten Einsatz mit der Ziel-Wallet abgestimmt werden. Kein Versprechen garantierter Kompatibilität.",
@@ -15310,6 +15310,29 @@ function pdfFussText(meta) {
   return [meta.anlass, erstellt, STRINGS.dokFussHaftung, meta.datum].filter(Boolean).join('   ·   ');
 }
 
+// Zeichnet die Fuß-Zeile auf JEDE Seite: links Provenienz + VERBATIM-Haftung (U2-ADR-025, nie gekürzt),
+// rechts „Seite X/Y". Fix (Kosmetik 06.07.): der linke Text ist auf die Breite VOR der Seitenzahl-Spalte
+// begrenzt und bricht bei Bedarf nach oben um — so überlappt die lange Haftung die rechtsbündige
+// Seitenzahl nicht mehr. Geteilt von allen PDF-Generatoren (Situations-, Bereichs-, Voll-Depot-PDF).
+function pdfFussZeichnen(doc, meta, SB, SH, RAND) {
+  const GRAU = [120, 120, 120];
+  const SEITE_SPALTE = 80;                                       // feste rechte Spalte für „Seite X/Y" (reicht bis „Seite 999/999" @8pt)
+  const seiten = doc.internal.getNumberOfPages();
+  const fy = SH - 28, lh = 10;
+  doc.setFont('times', 'normal'); doc.setFontSize(8);
+  const linksBreite = Math.max(40, (SB - 2 * RAND) - SEITE_SPALTE);   // linke Spalte endet vor der Seitenzahl
+  const ll = doc.splitTextToSize(pdfFussText(meta), linksBreite);     // verbatim-Haftung bricht um, wird NIE gekürzt
+  const topY = fy - (ll.length - 1) * lh;                             // mehrzeilig nach oben stapeln, letzte Zeile auf fy
+  for (let p = 1; p <= seiten; p++) {
+    doc.setPage(p);
+    doc.setDrawColor(GRAU[0], GRAU[1], GRAU[2]); doc.setLineWidth(0.5);
+    doc.line(RAND, topY - 12, SB - RAND, topY - 12);
+    doc.setTextColor(GRAU[0], GRAU[1], GRAU[2]);
+    ll.forEach((zeile, i) => doc.text(zeile, RAND, topY + i * lh));   // linke Spalte
+    doc.text(STRINGS.pdfSeite + ' ' + p + '/' + seiten, SB - RAND, fy, { align: 'right' });   // Seitenzahl, eigene Spalte
+  }
+}
+
 // Zeichnet Modell + Meta in ein jsPDF-Dokument. Kopf (Wortzug Gold + Anlass Salbei), Datenzeilen
 // schwarz auf weiß mit Serif-Anmutung ('times'), Fuß je Seite (Anlass · Generierer · © · Datum · Seite).
 function zeichneSituationPdf(doc, modell, meta) {
@@ -15344,16 +15367,7 @@ function zeichneSituationPdf(doc, modell, meta) {
     y += 6;
   }
 
-  const seiten = doc.internal.getNumberOfPages();
-  for (let p = 1; p <= seiten; p++) {
-    doc.setPage(p);
-    const fy = SH - 28;
-    doc.setDrawColor(GRAU[0], GRAU[1], GRAU[2]); doc.setLineWidth(0.5); doc.line(RAND, fy - 12, SB - RAND, fy - 12);
-    doc.setFont('times', 'normal'); doc.setFontSize(8); doc.setTextColor(GRAU[0], GRAU[1], GRAU[2]);
-    const links = pdfFussText(meta);   // Teil 5.3 — Sub-Kontext-Provenienz im Fuß
-    doc.text(links, RAND, fy);
-    doc.text(STRINGS.pdfSeite + ' ' + p + '/' + seiten, SB - RAND, fy, { align: 'right' });
-  }
+  pdfFussZeichnen(doc, meta, SB, SH, RAND);   // Fuß je Seite (verbatim-Haftung bricht vor der Seitenzahl um, keine Überlappung)
 }
 
 // Auslöser: Situationsblatt als PDF herunterladen. jsPDF ist der inline 3. Skript-Block;
@@ -15488,15 +15502,7 @@ function zeichneVollDepotPdf(doc, modell, meta) {
   // gegatet (window.qrcode) — fehlt die Lib, erscheint kein Fake, sondern eine ehrliche Zeile.
   zeichnePdfSelbstverifQr(doc, modell, meta);
 
-  const seiten = doc.internal.getNumberOfPages();
-  for (let p = 1; p <= seiten; p++) {
-    doc.setPage(p);
-    const fy = SH - 28;
-    doc.setDrawColor(GRAU[0], GRAU[1], GRAU[2]); doc.setLineWidth(0.5); doc.line(RAND, fy - 12, SB - RAND, fy - 12);
-    doc.setFont('times', 'normal'); doc.setFontSize(8); doc.setTextColor(GRAU[0], GRAU[1], GRAU[2]);
-    doc.text(pdfFussText(meta), RAND, fy);   // Teil 5.3 — Sub-Kontext-Provenienz im Fuß
-    doc.text(STRINGS.pdfSeite + ' ' + p + '/' + seiten, SB - RAND, fy, { align: 'right' });
-  }
+  pdfFussZeichnen(doc, meta, SB, SH, RAND);   // Fuß je Seite (inkl. QR-Seiten; verbatim-Haftung ohne Überlappung)
 }
 
 /* ── Selbst-Verifikations-QR auf dem PDF (Export-Durchgang Teil 3.2) ────────────
