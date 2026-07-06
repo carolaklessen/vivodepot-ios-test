@@ -15907,6 +15907,13 @@ function flowBereichQr(sektorId, optionen) {
 const EUDIW_SD_JWT_TYP = 'dc+sd-jwt';                 // aktueller IETF-Entwurf (vormals vc+sd-jwt) — ANNAHME, vor Pilot zu bestätigen
 const EUDIW_SD_HASH_ALG = 'sha-256';                  // SD-JWT-Digest-Algorithmus
 const EUDIW_MIME = 'application/dc+sd-jwt';
+// SICHTBARKEIT der „An EUDI-Wallet übergeben"-Aktion (nur UI). Der GESAMTE Übergabe-Code bleibt
+// erhalten (Serialisierung, Flow, Tests laufen weiter) — nur der Knopf im Herausgeben-Chooser ist
+// ausgeblendet, solange es keine echte EUDI-Wallet gibt, die den Ausschnitt annimmt.
+// ⇢ REAKTIVIERUNG bei EUDIW-Rollout: hier auf `true` setzen (EU Digital Identity Wallet produktiv
+//   verfügbar + Kompatibilität mit einer Ziel-Wallet bestätigt). Dann greifen Knopf + Warndialog
+//   wieder unverändert. Siehe backlog-eudiw-knopf-reaktivierung (VD-lokal/Gedächtnis).
+const EUDIW_SICHTBAR = false;
 
 // Eine Disclosure: base64url(JSON([salt, name, wert])). Salt = 128 bit Zufall (base64url).
 function _eudiwDisclosure(name, wert) {
@@ -16128,9 +16135,10 @@ function flowHerausgeben(sektorId) {
     koerper += '<button type="button" class="btn btn-sek" data-h-docx="1">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.exportDocxLabel) + '</button>';
   }
   koerper += '<button type="button" class="btn btn-sek" data-h-qr="1">' + svgIcon(ICONS.qrCode) + ' ' + escapeHTML(STRINGS.herausgebenQr) + '</button>';
-  // „An EUDI-Wallet übergeben" — nur für Bereiche mit SD-JWT-VC-Format (Identität, Finanzen).
-  // Best-Effort, vorläufig: ehrlicher Hinweis in der Funktion selbst (flowEudiwUebergabe).
-  if (eudiwDefFuerSektor(sektorId)) {
+  // „An EUDI-Wallet übergeben" — nur für Bereiche mit SD-JWT-VC-Format (Identität, Finanzen, Sozialvers.).
+  // AUSGEBLENDET bis EUDIW-Rollout (EUDIW_SICHTBAR, s.o.): der Code bleibt, nur der Knopf ruht — es gibt
+  // noch keine Wallet, die den Ausschnitt sicher annimmt. Reaktivierung = EUDIW_SICHTBAR auf true.
+  if (EUDIW_SICHTBAR && eudiwDefFuerSektor(sektorId)) {
     koerper += '<button type="button" class="btn btn-sek" data-h-eudiw="1">' + svgIcon(ICONS.shield) + ' ' + escapeHTML(STRINGS.eudiwKnopf) + '</button>';
   }
   koerper += '</div>';

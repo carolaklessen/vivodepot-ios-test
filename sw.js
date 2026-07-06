@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v18';  // v18 (2026-07-06): Kosmetik (6f4dea8) — PDF-Fuß-Überlappung behoben, Update-Knopf „Nach Aktualisierung suchen", Titel/BUILD_DATUM v1.0-rc/06.07., EUDI-Marker „(experimentell)"; enthält v17 VP-Härtung + v16 finale Krypto + v15 Stufe-2/Startseite; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v19';  // v19 (2026-07-06): EUDI-„Übergeben"-Knopf ausgeblendet (5d997bd, EUDIW_SICHTBAR=false; Code bleibt, Reaktivierung bei EUDIW-Rollout); enthält v18 Kosmetik + v17 VP-Härtung + v16 finale Krypto + v15 Stufe-2/Startseite; skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird
