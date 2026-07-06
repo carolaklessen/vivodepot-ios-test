@@ -2934,6 +2934,7 @@ const STRINGS = Object.freeze({
   vpOrtLabel: "Wo ist das Passwort physisch hinterlegt?",
   vpOrtPlaceholder: "z. B. Versiegelter Umschlag im Tresor",
   vpFehlerKurz: "Das Vertrauens-Passwort braucht mindestens 8 Zeichen.",
+  vpFehlerSchwach: "Das Vertrauens-Passwort ist zu schwach — bitte länger oder mit mehr Zeichenarten (Groß-/Kleinschreibung, Zahlen, Zeichen).",
   vpFehlerUngleich: "Die beiden Eingaben stimmen nicht überein.",
   vpGesetztToast: "Vertrauens-Zugang gesetzt.",
   vpEntfernenTitel: "Vertrauens-Zugang entfernen",
@@ -13260,6 +13261,7 @@ function flowVertrauenspersonEinrichten() {
       '<p class="einst-hint">' + escapeHTML(aktiv ? STRINGS.vpAktualisierenText : STRINGS.vpEinrichtenText) + '</p>' +
       '<label for="vp-pw">' + escapeHTML(STRINGS.vpPwLabel) + '</label>' +
       '<input id="vp-pw" type="password" autocomplete="new-password" placeholder="' + escapeHTML(STRINGS.vpPwPlaceholder) + '">' +
+      '<div id="vp-pw-staerke" class="pw-staerke" aria-live="polite" hidden></div>' +   // U2-ADR-062: Live-Stärke-Balken (schwach wird blockiert)
       '<label for="vp-pw2">' + escapeHTML(STRINGS.vpPw2Label) + '</label>' +
       '<input id="vp-pw2" type="password" autocomplete="new-password">' +
       '<label for="vp-ort">' + escapeHTML(STRINGS.vpOrtLabel) + '</label>' +
@@ -13273,6 +13275,7 @@ function flowVertrauenspersonEinrichten() {
       const fe = document.getElementById('vp-fehler');
       const zeig = (t) => { if (fe) { fe.textContent = t; fe.hidden = false; } };
       if (pw.length < 8) { zeig(STRINGS.vpFehlerKurz); return; }
+      if (passwortStaerke(pw).stufe === 'schwach') { zeig(STRINGS.vpFehlerSchwach); return; }   // U2-ADR-062: schwach blockieren (Angreifer-Review)
       if (pw !== pw2) { zeig(STRINGS.vpFehlerUngleich); return; }
       await vertrauenspersonEinrichten(pw, ort);
       schliessen();
@@ -13280,6 +13283,7 @@ function flowVertrauenspersonEinrichten() {
       flowEinstellungen();                                   // Einstellungen mit neuem Status neu zeigen
     },
   });
+  pwStaerkeAnzeigeVerdrahten('vp-pw', 'vp-pw-staerke');   // U2-ADR-062: Live-Stärke unter dem VP-Feld (DOM steht nach ui.modal)
 }
 function flowVertrauenspersonEntfernen() {
   ui.modal({
