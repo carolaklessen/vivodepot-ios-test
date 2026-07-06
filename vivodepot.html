@@ -1044,6 +1044,10 @@
      .doku-feld-check, je 0,1,1) gewinnen weiter. Checkbox/Radio bleiben über die Carve-out-Regel auto. */
   input, select, textarea { width: 100%; min-width: 0; }
   input[type="checkbox"], input[type="radio"] { width: auto; }
+  /* Mehrfachauswahl-Feld (U2-ADR-063): Optionen als antippbare Checkbox-Zeilen. */
+  .feld-mehrfach { display: flex; flex-direction: column; gap: var(--space-1); }
+  .feld-mehrfach-opt { display: flex; align-items: flex-start; gap: var(--space-2); font-weight: 400; cursor: pointer; }
+  .feld-mehrfach-opt input[type="checkbox"] { flex: 0 0 auto; margin-top: 0.2em; }
 
   /* ══════════════════════════════════════════════════════════════════════════
      RESPONSIVER DURCHGANG (mobil-first im Verhalten) — der Großteil der Nutzung
@@ -4041,7 +4045,7 @@ const SEKTOREN = Object.freeze([
         // erteilte Vollmacht-Arten (keine gesetzliche Vertretung wie elterliche Sorge — die gehört
         // zur Sub-Depot-Grundlage, nicht hierher). Manuell ausfüllbar UND vom vvwiz gesetzt; dieselben
         // Felder, kein paralleles Datenmodell. Optionsschlüssel = erteilte VERTRETUNGS_GRUNDLAGEN.
-        { id: 'vollmachtsGrundlage',         label: 'Art der erteilten Vollmacht',                     typ: 'auswahl', optionen: [
+        { id: 'vollmachtsGrundlage',         label: 'Art der erteilten Vollmacht',                     typ: 'mehrfachauswahl', optionen: [
           { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
           { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
           { wert: 'bank',       label: 'Bankvollmacht' },
@@ -4963,7 +4967,7 @@ const WIZARDS = Object.freeze([
         feld: { id: 'vollmacht_person', label: 'Bevollmächtigte Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' } },
       { frage: 'Welche Art von Vollmacht haben Sie erteilt?',
         hilfetext: 'Eine Vorsorgevollmacht greift, wenn Sie selbst nicht mehr entscheiden können; eine Generalvollmacht umfasst alle Geschäfte; eine Bankvollmacht nur den Zahlungsverkehr. Gemeint ist nur eine von Ihnen erteilte Vollmacht — nicht die gesetzliche Vertretung (etwa die elterliche Sorge fürs eigene Kind).',
-        feld: { id: 'vollmachtsGrundlage', label: 'Art der erteilten Vollmacht', typ: 'auswahl', optionen: [
+        feld: { id: 'vollmachtsGrundlage', label: 'Art der erteilten Vollmacht', typ: 'mehrfachauswahl', optionen: [
           { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
           { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
           { wert: 'bank',       label: 'Bankvollmacht' },
@@ -5428,7 +5432,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 27,                       // Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: 28,                       // Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -7134,7 +7138,16 @@ function _feldDef(sektorId, feldId) {
 // nicht hierüber (Listen über den eigenen Pfad). Bereits-Objekt (Voll-Depot) bleibt unberührt.
 function _wertAusText(feld, eingabe) {
   if (eingabe == null) return '';
-  if (typeof eingabe === 'object') return eingabe;                 // schon gespeicherte Form (Voll-Depot)
+  if (typeof eingabe === 'object') return eingabe;                 // schon gespeicherte Form (Voll-Depot / Array)
+  if (feld && feld.typ === 'mehrfachauswahl') {
+    // Importierter „Label, Label"-String → Array der Werte (Label ODER Schlüssel akzeptiert). Unbekanntes
+    // bleibt als Freitext erhalten (verlustfrei). Bereits-Array käme oben als object durch.
+    const opts = Array.isArray(feld.optionen) ? feld.optionen : [];
+    return String(eingabe).split(',').map(t => t.trim()).filter(Boolean).map(t => {
+      const o = opts.find(x => x.wert === t || (x.label && String(x.label).toLowerCase() === t.toLowerCase()));
+      return o ? o.wert : t;
+    });
+  }
   if (feld && feld.typ === 'auswahl') {
     const s = String(eingabe).trim();
     const opt = (Array.isArray(feld.optionen) ? feld.optionen : [])
@@ -8560,9 +8573,10 @@ function _templateFelderUebersetzen(template, jetztSchema, eigeneListen) {
 }
 
 /* ════ U2-ADR-037 Stufe 3 — Render der eingewanderten Template-Felder (Kern-Look) ════
-   Implementierte flache Typen; reservierte/unbekannte (mehrfachauswahl, ref, liste, ...) werden beim
-   Rendern uebersprungen — die Definition BLEIBT im Depot (Daten-Verbleib), nur ohne Anzeige. */
-const _TEMPLATE_RENDER_TYPEN = new Set(['text', 'zahl', 'datum', 'auswahl']);
+   Implementierte flache Typen; reservierte/unbekannte (ref, liste, ...) werden beim Rendern
+   uebersprungen — die Definition BLEIBT im Depot (Daten-Verbleib), nur ohne Anzeige.
+   `mehrfachauswahl` ist seit U2-ADR-063 ein echter Render-Typ (Checkboxen, Array-Wert). */
+const _TEMPLATE_RENDER_TYPEN = new Set(['text', 'zahl', 'datum', 'auswahl', 'mehrfachauswahl']);
 // Feld-Modell-Def -> die von feldZeileHTML gelesene Feld-Form (identisches Markup wie Kern-Felder).
 function _templateDefAlsFeld(def) {
   const f = { id: def.feldId, typ: def.typ, label: def.label || def.feldId };
@@ -12471,6 +12485,16 @@ function depotNormalisieren(d) {
   if (typeof ziel.angehoerigenCache === 'undefined') ziel.angehoerigenCache = null;
   if (typeof ziel.angehoerigen_passwort_ort !== 'string') ziel.angehoerigen_passwort_ort = '';
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 27) ziel.schemaVersion = 27;
+  // Schema 27 -> 28 (U2-ADR-063): vorsorge/vollmachtsGrundlage wird `mehrfachauswahl` (Array-Wert).
+  // Ein gespeicherter Skalar-String → 1-Element-Array; VERWAISUNGS-REGEL: der Wert bleibt erhalten,
+  // auch wenn er keiner aktuellen Option entspricht (keine Bürgerdaten-Löschung). Leerer String →
+  // Feld entfällt. Bereits-Array bleibt unberührt (idempotent — ein Array matcht `typeof string` nie).
+  const _v28 = ziel.sektoren && ziel.sektoren.vorsorge;
+  if (_v28 && typeof _v28 === 'object' && typeof _v28.vollmachtsGrundlage === 'string') {
+    const t = _v28.vollmachtsGrundlage.trim();
+    if (t) _v28.vollmachtsGrundlage = [t]; else delete _v28.vollmachtsGrundlage;
+  }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 28) ziel.schemaVersion = 28;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -13556,6 +13580,16 @@ function bearbeitungSpeichern() {
     if (!leer) neu[fid] = w; else delete neu[fid];
     if (JSON.stringify(vorherDaten[fid]) !== JSON.stringify(leer ? undefined : w)) geaendert.push(fid);
   });
+  // d) Mehrfachauswahl (Checkboxen): data-edit-multi nach fid gruppieren → Array der angehakten Werte.
+  const _multiFids = new Set();
+  c.querySelectorAll('[data-edit-multi]').forEach(cb => _multiFids.add(cb.getAttribute('data-edit-multi')));
+  _multiFids.forEach(fid => {
+    const werte = [];
+    c.querySelectorAll('[data-edit-multi="' + fid + '"]').forEach(cb => { if (cb.checked) werte.push(cb.value); });
+    const vorher = Array.isArray(vorherDaten[fid]) ? vorherDaten[fid] : (vorherDaten[fid] != null ? [String(vorherDaten[fid])] : []);
+    if (werte.length) neu[fid] = werte; else delete neu[fid];
+    if (JSON.stringify(vorher) !== JSON.stringify(werte)) geaendert.push(fid);
+  });
   schreib(neu);
   if (aktuellerSitzungsAkteur()) {
     geaendert.forEach(fid => { urheberschaftAnhaengen(stempelNs, fid); codeSlotSicherstellen(stempelNs, fid); });
@@ -13675,14 +13709,17 @@ function wizardSchrittSetzen(wizardId, index, wert) {
   const feld = schritt.feld;
   const istLeer = wert == null
     || (typeof wert === 'string' && wert.trim() === '')
+    || (Array.isArray(wert) && wert.length === 0)                  // mehrfachauswahl: leeres Array = nichts gewählt
     // Objekt-Werte sind eingetragen, wenn sie ein ref/override tragen ODER ein codierter Eintrag
     // (Paket 3) sind — sonst (leeres Ref-Objekt) gelten sie als leer.
-    || (typeof wert === 'object' && !istCodierterWert(wert) && !wert.ref && !(wert.override && String(wert.override).trim()));
+    || (typeof wert === 'object' && !Array.isArray(wert) && !istCodierterWert(wert) && !wert.ref && !(wert.override && String(wert.override).trim()));
   if (istLeer) {
     if (feld.pflicht) return { ok: false, grund: 'pflicht' };
     return null;
   }
-  const norm = (typeof wert === 'string') ? wert.trim() : wert;
+  let norm = (typeof wert === 'string') ? wert.trim() : wert;
+  // mehrfachauswahl: kanonische Form ist ein Array; ein Skalar (Test/Import) wird gewrappt.
+  if (feld.typ === 'mehrfachauswahl') norm = Array.isArray(norm) ? norm : [norm];
   const pruef = feldValidieren(feld, norm);
   if (!pruef.ok) return { ok: false, grund: pruef.grund };
   const stempel = wizardZielSetzen(def, feld.id, norm, schritt);
@@ -13725,6 +13762,11 @@ function _wizardAktuellerWert() {
     const ci = c.querySelector('[data-edit-code="' + feld.id + '"]');
     if (!ci) return undefined;
     return codeWertAus(feld.codeListe, ci.value);
+  }
+  if (feld.typ === 'mehrfachauswahl') {
+    const werte = [];
+    c.querySelectorAll('[data-edit-multi="' + feld.id + '"]').forEach(cb => { if (cb.checked) werte.push(cb.value); });
+    return werte.length ? werte : undefined;
   }
   const inp = c.querySelector('[data-edit="' + feld.id + '"]');
   if (!inp) return undefined;
@@ -15233,6 +15275,13 @@ function feldWertText(feld, roh) {
     const opt = (Array.isArray(feld.optionen) ? feld.optionen : []).find(o => o.wert === roh);
     return (opt && opt.label) || String(roh);
   }
+  if (feld.typ === 'mehrfachauswahl') {
+    // Array gewählter Options-Werte → Labels, „, "-getrennt. NIE das rohe Array anzeigen (Auflage 1).
+    const werte = Array.isArray(roh) ? roh : [roh];
+    const opts = Array.isArray(feld.optionen) ? feld.optionen : [];
+    return werte.map(w => { const o = opts.find(x => x.wert === w); return (o && o.label) || String(w); })
+      .filter(Boolean).join(', ');
+  }
   if (feld.typ === 'liste') {
     if (!Array.isArray(roh) || roh.length === 0) return STRINGS.leerZustand;
     if (!Array.isArray(feld.unterFelder) || !feld.unterFelder.length) {
@@ -16186,6 +16235,13 @@ function feldWertHTML(feld, roh) {
     const opt = (Array.isArray(feld.optionen) ? feld.optionen : []).find(o => o.wert === roh);
     return escapeHTML((opt && opt.label) || String(roh));
   }
+  if (feld.typ === 'mehrfachauswahl') {
+    // Array → Labels, „, "-getrennt und escaped. Nie das rohe Array (Auflage 1).
+    const werte = Array.isArray(roh) ? roh : [roh];
+    const opts = Array.isArray(feld.optionen) ? feld.optionen : [];
+    return escapeHTML(werte.map(w => { const o = opts.find(x => x.wert === w); return (o && o.label) || String(w); })
+      .filter(Boolean).join(', '));
+  }
   if (feld.typ === 'textarea') {
     // Zeilenumbrüche erhalten — escapeHTML wandelt sie nicht, CSS white-space:pre-wrap zeigt sie.
     return '<span class="feld-mehrzeilig">' + escapeHTML(String(roh)) + '</span>';
@@ -16312,6 +16368,12 @@ function feldValidieren(feld, wert) {
       if (!erlaubt.includes(wert)) return { ok: false, grund: 'auswahl' };
       return { ok: true };
     }
+    case 'mehrfachauswahl': {
+      const erlaubt = (Array.isArray(feld.optionen) ? feld.optionen : []).map(o => o.wert);
+      const werte = Array.isArray(wert) ? wert : [wert];
+      for (const w of werte) if (!erlaubt.includes(w)) return { ok: false, grund: 'auswahl' };
+      return { ok: true };
+    }
     case 'ref': {
       if (typeof wert === 'string') return { ok: true };          // toleranter Override-as-string
       if (typeof wert !== 'object') return { ok: false, grund: 'ref' };
@@ -16371,6 +16433,19 @@ function feldInputHTML(feld, roh) {
           escapeHTML(String(o.label)) + '</option>';
       }
       return h + '</select>';
+    }
+    case 'mehrfachauswahl': {
+      // Mehrere Optionen als Checkboxen; gespeicherter Wert = Array der gewählten `wert`. Ein etwaiger
+      // Alt-Skalar (vor Migration) wird als 1-Element-Auswahl vorbelegt (verlustfrei).
+      const optionen = Array.isArray(feld.optionen) ? feld.optionen : [];
+      const gewaehlt = Array.isArray(roh) ? roh : ((roh != null && roh !== '') ? [roh] : []);
+      let h = '<div class="feld-mehrfach" role="group"' + al + '>';
+      for (const o of optionen) {
+        const chk = gewaehlt.indexOf(o.wert) >= 0 ? ' checked' : '';
+        h += '<label class="feld-mehrfach-opt"><input type="checkbox" data-edit-multi="' + fid + '" value="' +
+          String(o.wert).replace(/"/g, '&quot;') + '"' + chk + '> ' + escapeHTML(String(o.label)) + '</label>';
+      }
+      return h + '</div>';
     }
     case 'ref': {
       // U2-ADR-008 Propagation + U2-ADR-010 Render-Schicht: Dropdown der passenden Entitäten plus
