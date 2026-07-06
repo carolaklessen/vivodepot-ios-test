@@ -5611,6 +5611,22 @@ function depotDateiname(jetzt) {
      'abgebrochen' — Teilen-Blatt vom Nutzer abgebrochen (KEINE Datei abgelegt → kein „gespeichert")
      'download'    — klassischer Browser-Download (Desktop)
    Inhalt/Verschlüsselung bleiben unberührt — hier wird nur transportiert. */
+
+// Wann das System-Teilen-Blatt (Web Share) statt des klassischen Downloads? NUR wo `<a download>`
+// unzuverlässig ist: installierte Web-App (Standalone) ODER Touch-Primär-Gerät (iOS/Android,
+// `pointer: coarse`). Grund (U2-ADR-061): Desktop-WebKit (Safari, DuckDuckGo) meldet
+// `canShare({files})=true`, aber sein Teilen-Blatt kennt KEIN „In Dateien sichern" — dort blieb
+// die Datei unspeicherbar hängen. Default (Desktop / headless) = false → Download-Pfad. Stil wie
+// istStandaloneWebApp(): liest window.matchMedia (nicht bare), wirft nie.
+function _teilenBevorzugt() {
+  try {
+    if (istStandaloneWebApp()) return true;
+    if (typeof window !== 'undefined' && window.matchMedia &&
+        window.matchMedia('(pointer: coarse)').matches) return true;
+  } catch (e) { /* ignorieren → Download-Pfad */ }
+  return false;
+}
+
 async function dateiAusgeben(blob, dateiname, mime) {
   // Vorschau-Gate: jeder Datei-Export (Depot-Speichern, Format-/PDF-/DOCX-/Blackbox-Export)
   // läuft hier zusammen. Im passwortlosen Umsehen darf nichts still „heraus" — stattdessen
@@ -5618,9 +5634,11 @@ async function dateiAusgeben(blob, dateiname, mime) {
   // 'vorschau' signalisiert den Aufrufern: keine Erfolgsmeldung zeigen.
   if (imVorschau()) { flowVorschauUebernehmen(); return 'vorschau'; }
   const typ = mime || (blob && blob.type) || 'application/octet-stream';
-  // 1) Web Share mit Dateien (iOS Safari, Standalone-Web-App, moderne Android-Browser).
+  // 1) Web Share mit Dateien — NUR auf Touch/Standalone (iOS Safari, installierte Web-App, Android).
+  //    Desktop-WebKit (Safari/DuckDuckGo) hat canShare({files})=true, aber kein „In Dateien sichern"
+  //    im Teilen-Blatt → dort greift _teilenBevorzugt()=false und der Download-Pfad unten (U2-ADR-061).
   try {
-    if (typeof navigator !== 'undefined' && navigator.canShare && typeof File === 'function') {
+    if (typeof navigator !== 'undefined' && navigator.canShare && typeof File === 'function' && _teilenBevorzugt()) {
       const datei = new File([blob], dateiname, { type: typ });
       if (navigator.canShare({ files: [datei] })) {
         try {
