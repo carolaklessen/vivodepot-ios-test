@@ -2698,6 +2698,13 @@ const STRINGS = Object.freeze({
   // D43 Etappe 5 — interner Eintritt (Stand liegt auf dem Gerät). ENTWURF-Wortlaut.
   cryptoInternAufforderung: "Ihr Vivodepot ist auf diesem Gerät gespeichert. Geben Sie Ihr Passwort ein, um es zu öffnen.",
   cryptoAngehoerige: "Als Angehörige öffnen →",                   // read-only Vertrauenspersonen-Sicht (A-iii, Wortlaut s. Rückbericht)
+  cryptoAngehoerigeHint: "Die read-only Sicht für Vertrauenspersonen — mit dem separaten Vertrauens-Passwort, das die Eigentümerin hinterlegt hat.",  // U2-ADR-062 Anmelde-Hinweis
+  angKeinZugang: "Für diese Datei ist kein Vertrauens-Zugang eingerichtet.",        // U2-ADR-062: kein angehoerigenCache
+  angBittePasswort: "Bitte geben Sie zuerst das Vertrauens-Passwort ein.",          // ruhige Meldung (kein Alarm)
+  angPasswortFalsch: "Das Vertrauens-Passwort stimmt nicht.",                       // GCM-Fehler beim Cache
+  angEintrittAufforderung: "Öffnen Sie die read-only Sicht als Vertrauensperson. Wählen Sie die Vivodepot-Datei und geben Sie das Vertrauens-Passwort ein, das die Eigentümerin Ihnen gegeben oder hinterlegt hat.",  // U2-ADR-062 Startseiten-Eintritt
+  angPwLabel: "Vertrauens-Passwort",
+  angEintrittKnopf: "Als Angehörige öffnen",
   cryptoNeuAnfangen: "Doch neu anfangen — ohne Datei",            // Lage B → Lage A
   cryptoDateiGewaehlt: "Gewählte Datei",
   webAppHinweis: "Tipp: Über das Teilen-Menü Ihres Browsers „Zum Home-Bildschirm hinzufügen“ — dann öffnet sich Vivodepot wie eine App.",
@@ -2907,6 +2914,29 @@ const STRINGS = Object.freeze({
   einstNacht: "Nachtmodus",
   einstAn: "An",
   einstAus: "Aus",
+  // Vertrauensperson einrichten (U2-ADR-062) — Owner-Setup Stufe-2-Angehörigen-Cache.
+  vpAbschnitt: "Vertrauensperson",
+  vpStatusInaktiv: "Kein Vertrauens-Zugang eingerichtet — eine Vertrauensperson kann derzeit nichts öffnen.",
+  vpStatusAktiv: "Vertrauens-Zugang aktiv — eine Vertrauensperson kann mit dem Vertrauens-Passwort die read-only Sicht öffnen.",
+  vpOrtAnzeige: "Passwort hinterlegt:",
+  vpEinrichtenKnopf: "Vertrauensperson einrichten",
+  vpAktualisierenKnopf: "Vertrauens-Zugang aktualisieren",
+  vpEntfernenKnopf: "Vertrauens-Zugang entfernen",
+  vpEinrichtenTitel: "Vertrauensperson einrichten",
+  vpAktualisierenTitel: "Vertrauens-Zugang aktualisieren",
+  vpEinrichtenText: "Setzen Sie ein zweites Vertrauens-Passwort — mindestens 8 Zeichen. Geben Sie es einer Vertrauensperson weiter oder hinterlegen Sie es physisch (Tresor, Notar, versiegelter Umschlag). Damit kann sie eine read-only Sicht auf Krankenhaus, Pflegeheim, Beerdigung, Behörden und Ihre Menschen öffnen — sonst nichts.",
+  vpAktualisierenText: "Der Vertrauens-Zugang wird mit den aktuellen Daten neu verschlüsselt. Ein neues Passwort ersetzt das alte — das alte funktioniert danach nicht mehr.",
+  vpPwLabel: "Vertrauens-Passwort",
+  vpPwPlaceholder: "Mindestens 8 Zeichen",
+  vpPw2Label: "Passwort wiederholen",
+  vpOrtLabel: "Wo ist das Passwort physisch hinterlegt?",
+  vpOrtPlaceholder: "z. B. Versiegelter Umschlag im Tresor",
+  vpFehlerKurz: "Das Vertrauens-Passwort braucht mindestens 8 Zeichen.",
+  vpFehlerUngleich: "Die beiden Eingaben stimmen nicht überein.",
+  vpGesetztToast: "Vertrauens-Zugang gesetzt.",
+  vpEntfernenTitel: "Vertrauens-Zugang entfernen",
+  vpEntfernenText: "Der verschlüsselte Angehörigen-Cache wird gelöscht. Eine Vertrauensperson kann dann mit dem Vertrauens-Passwort keinen Zugang mehr öffnen.",
+  vpEntferntToast: "Vertrauens-Zugang entfernt.",
   einstAbschnittUeber: "Über Vivodepot",
   einstVersion: "Version",
   einstLizenz: "Lizenz",
@@ -5395,13 +5425,20 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 26,                       // Schema 26 (U2-ADR-051): data.codeListen[] — mitgereiste Template-Code-Listen (Reise-als-Daten). Schema 25 (E1–E3): laborwerte/Stub-Slots entfallen + Verwaisungs-Regel. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: 27,                       // Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
     mappe: [],                               // data.mappe[] — Dokumenten-Mappe (U2-ADR-013): Dateien inline (Data-URL) im Depot, krypto-agnostisch (fährt mit encryptDepot/decryptDepot). ref:mappe ist der dritte Entitätstyp.
     sektoren: {},                            // pro Sektor ein Objekt: { feldId: wert | {ref, override} }
     situationen: {},                         // U2-ADR-012: pro Situation ein Objekt mit den situations-EIGENEN Feldwerten. Sektor-Felder werden zur Laufzeit gezogen (keine Kopie). Urheberschaft/Code-Slots im Namespace 'sit:<id>'.
+    // Stufe-2-Angehörigen-Cache (U2-ADR-062). angehoerigenCache = verschlüsselter Snapshot der
+    // fünf-Blatt-Allowlist (PBKDF2/AES-256-GCM aus dem Vertrauens-Passwort, außerhalb des Krypto-Blocks),
+    // wird beim Serialisieren als Umschlag-Geschwister neben `ct` gelegt (Muster wie notfallCache).
+    // Aktivierung = Cache-Präsenz (keine separate Flag). Das Passwort selbst wird NIE gespeichert;
+    // angehoerigen_passwort_ort ist nur der Klartext-Hinweis, WO es physisch hinterlegt ist.
+    angehoerigenCache: null,                  // { v, iterations, salt, iv, ct, stand } | null
+    angehoerigen_passwort_ort: '',            // Freitext-Hinweis (z. B. „Versiegelter Umschlag im Tresor") — NIE das Passwort
     // Übergabe-Strukturen am Anker — der Kern HÄLT sie nur, das Übergaben-Modul besitzt sie (ADR-081)
     bevollmaechtigte: [],
     todUebergangsWege: null,
@@ -5499,6 +5536,10 @@ async function depotSerialisieren() {
     // Teil 4.1 (ADR-099) — Sanitäter-Cache: NUR die Akut-Allowlist im Klartext, neben dem
     // Ciphertext. Lesbar ohne Passwort (Stufe 1). Alles andere bleibt in `ct` verschlüsselt.
     notfallCache: notfallCacheBauen(),
+    // U2-ADR-062 — Stufe-2-Angehörigen-Cache: Geschwister neben `ct` wie notfallCache, aber CHIFFRAT
+    // (mit dem zweiten Vertrauens-Passwort verschlüsselt). Kopiert den in `data` gehaltenen Snapshot;
+    // aufgefrischt wird er beim „Vertrauensperson einrichten/aktualisieren". null, wenn nicht eingerichtet.
+    angehoerigenCache: (data && data.angehoerigenCache) || null,
   };
 }
 
@@ -7544,10 +7585,12 @@ function _vollDepotFelder(depot) {
 
 // Interne / nicht migrierbare Schlüssel (NICHT abbilden, NICHT in die Sammel-Notiz kippen):
 //  profilfoto/uploaded_files = Roh-Base64 (würde die Notiz mit KB-Strings fluten — Grenze, dokumentiert),
-//  angehoerigen_passwort(_ort) = Sicherheits-Geheimnis (NICHT in eine Klartext-Notiz migrieren),
+//  angehoerigen_passwort = Sicherheits-Geheimnis (das Passwort selbst — NIE migrieren/speichern),
 //  tpl_loaded/__fokus__ = App-interne Marker.
+// U2-ADR-062: angehoerigen_passwort_ort ist NICHT mehr hier — der Ort-Hinweis (kein Geheimnis) ist
+// jetzt ein echtes Schema-27-Feld und migriert regulär mit (das Passwort bleibt ignoriert).
 const B16_IGNORE = new Set(['profilfoto', 'uploaded_files', 'tpl_loaded', '__fokus__',
-  'angehoerigen_passwort', 'angehoerigen_passwort_ort']);
+  'angehoerigen_passwort']);
 
 // Unterfelder der Ziel-Listen (Bereich „Meine Menschen") — generischer, verlustfreier Kopierer.
 // U2-ADR-022 (C2): kinder/erwachsene laufen NICHT mehr über diesen generischen Kopierer, sondern
@@ -8190,6 +8233,104 @@ function flowImportAutoritativ(formatId, text) {
    Krypto → eigene Krypto-Review-Runde empfohlen (separat). */
 const SHL_URI_PRAEFIX = 'shlink:/';
 const SHL_STANDARD_TTL_SEK = 7 * 24 * 3600;   // Default-Ablauf, wenn kein exp übergeben wird (single-use, time-limited)
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Stufe-2-Angehörigen-Cache — Krypto AUSSERHALB des VdCrypto-Blocks (U2-ADR-062)
+   ────────────────────────────────────────────────────────────────────────────
+   Die Vertrauensperson öffnet FRISCH vom Welcome mit einem zweiten, physisch
+   hinterlegten Vertrauens-Passwort und entschlüsselt NUR diesen Cache — nie den
+   Master-`ct`, nie den Master-Schlüssel. PBKDF2 (600k, Browser-Fallback 200k) +
+   AES-256-GCM, hand-gerollt über WebCrypto (Muster: SHL-JWE _jweCompactDir); der
+   gepinnte VdCrypto-Block (8d31c678…) bleibt unberührt.
+   ⚠ AUFLAGE (Carola): dieser Krypto-Pfad geht VOR Produktivschaltung durch einen
+   externen Review (analog JWE beim SHL-Strang).
+   Cache = Snapshot der Fünf-Blatt-Allowlist als geprunter `data`-Subset;
+   renderAngehoerigen liest ihn unverändert (data = Subset). */
+const ANG_PBKDF2_PRIMAER = 600000;      // OWASP-2024, = Haupt-KDF PBKDF2_ITERATIONS
+const ANG_PBKDF2_FALLBACK = 200000;     // Geräte, die 600k nicht < 2 s schaffen
+const _ANG_CACHE_VERSION = 1;
+
+// PBKDF2(Passwort, Salt, Iterationen) -> AES-256-GCM-Schlüssel. Parametrisiert (der Block ist 600k-fix).
+async function _angDeriveKey(passwort, saltBytes, iterations) {
+  const basis = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(passwort)),
+    { name: 'PBKDF2' }, false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: saltBytes, iterations, hash: 'SHA-256' },
+    basis, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+
+// Wählt die Iterationszahl: 600k, außer die Messung ergibt > 2 s → 200k. Ergebnis wandert in den
+// Cache-Header, damit die Entschlüsselung dieselbe Zahl nutzt. `opts.iterations` erzwingt (Tests).
+async function _angWaehleIterationen(opts) {
+  if (opts && Number.isFinite(opts.iterations)) return opts.iterations | 0;
+  try {
+    const jetzt = (typeof performance !== 'undefined' && performance.now) ? () => performance.now() : () => Date.now();
+    const t0 = jetzt();
+    await _angDeriveKey('_probe_', crypto.getRandomValues(new Uint8Array(16)), ANG_PBKDF2_PRIMAER);
+    return (jetzt() - t0) > 2000 ? ANG_PBKDF2_FALLBACK : ANG_PBKDF2_PRIMAER;
+  } catch (e) { return ANG_PBKDF2_FALLBACK; }
+}
+
+// Verschlüsselt ein Klartext-Objekt zum Cache-Umschlag { v, iterations, salt, iv, ct, stand }.
+async function angehoerigenCacheVerschluesseln(passwort, obj, opts) {
+  const iterations = await _angWaehleIterationen(opts);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await _angDeriveKey(passwort, salt, iterations);
+  const klar = new TextEncoder().encode(JSON.stringify(obj));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, tagLength: 128 }, key, klar));
+  return { v: _ANG_CACHE_VERSION, iterations, salt: bytesToBase64(salt), iv: bytesToBase64(iv),
+    ct: bytesToBase64(ct), stand: new Date().toISOString() };
+}
+
+// Entschlüsselt einen Cache-Umschlag mit dem Vertrauens-Passwort. Wirft bei falschem Passwort
+// (GCM-Fehler) oder kaputtem Cache. NIE Master-Schlüssel, NIE `ct` des Depots.
+async function angehoerigenCacheEntschluesseln(passwort, cache) {
+  if (!cache || typeof cache !== 'object' || typeof cache.ct !== 'string'
+      || typeof cache.salt !== 'string' || typeof cache.iv !== 'string'
+      || !Number.isFinite(cache.iterations)) throw new Error('Angehörigen-Cache fehlt oder ist unlesbar.');
+  const key = await _angDeriveKey(passwort, base64ToBytes(cache.salt), cache.iterations);
+  const klar = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBytes(cache.iv), tagLength: 128 },
+    key, base64ToBytes(cache.ct));
+  return JSON.parse(new TextDecoder().decode(new Uint8Array(klar)));
+}
+
+// Liest den Cache aus einem Umschlag OHNE Entschlüsselung (nur Präsenz + Header). null, wenn keiner da.
+function angehoerigenCacheAusUmschlag(umschlag) {
+  const c = umschlag && umschlag.angehoerigenCache;
+  return (c && typeof c === 'object' && typeof c.ct === 'string') ? c : null;
+}
+
+/* Cache-Inhalt = geprunter `data`-Subset der Fünf-Blatt-Allowlist. Läuft über _ANG_SITUATIONEN,
+   sammelt genau die (quelle, feld) der fünf Blätter + den Identitäts-Namen fürs Banner. Nichts
+   sonst — kein Master, keine anderen Sektor-Felder, keine Depot-Meta (kein angehoerigenCache-Rekurs). */
+function angehoerigenCacheModell() {
+  const subset = { schemaVersion: (data && data.schemaVersion) || 27, sektoren: {}, situationen: {}, menschen: [] };
+  const setSektor = (sek, feld) => {
+    const roh = ((data && data.sektoren && data.sektoren[sek]) || {})[feld];
+    if (typeof roh === 'undefined') return;
+    (subset.sektoren[sek] || (subset.sektoren[sek] = {}))[feld] = roh;
+  };
+  const setSituation = (sitId, feld) => {
+    const roh = ((data && data.situationen && data.situationen[sitId]) || {})[feld];
+    if (typeof roh === 'undefined') return;
+    (subset.situationen[sitId] || (subset.situationen[sitId] = {}))[feld] = roh;
+  };
+  setSektor('identitaet', 'vorname');                  // fürs Banner (angBannerHTML)
+  setSektor('identitaet', 'nachname');
+  let ziehtMenschen = false;
+  for (const s of _ANG_SITUATIONEN) {
+    for (const b of (s.bloecke || [])) {
+      for (const e of (b.eintraege || [])) {
+        if (e.quelle === 'meine-menschen' && e.feld === 'menschen') { ziehtMenschen = true; continue; }
+        if (typeof e.quelle === 'string' && e.quelle.startsWith('sit:')) setSituation(e.quelle.slice(4), e.feld);
+        else setSektor(e.quelle, e.feld);
+      }
+    }
+  }
+  if (ziehtMenschen && data && Array.isArray(data.menschen)) subset.menschen = tiefKopie(data.menschen);
+  return subset;
+}
 
 // JWE compact (RFC 7516): alg:dir, enc:A256GCM. keyBytes = 32-Byte-Schlüssel. Async, WebCrypto (kein Block).
 async function _jweCompactDir(klartext, keyBytes) {
@@ -10666,6 +10807,11 @@ function renderWelcome() {
         '<button type="button" class="btn btn-sek" id="w-datei">' + svgIcon(ICONS.lock, 16) + ' ' + escapeHTML(STRINGS.welcomeDateiOeffnen) + '</button>' +
       '</div>' +
     '</div>' +
+    // U2-ADR-062: eigener, SICHTBARER Eintritt für die Vertrauensperson auf der Startseite —
+    // der starke Zugang ist wertlos, wenn er versteckt ist; im Ernstfall muss die Vertrauensperson
+    // ihn ohne Anleitung finden. Führt in den Overlay-Angehörigen-Modus (Vertrauens-Passwort).
+    '<p class="welcome-sek-hint"><button type="button" class="btn-dezent" id="w-angehoerige">' +
+      svgIcon(ICONS.users, 16) + ' ' + escapeHTML(STRINGS.cryptoAngehoerige) + '</button></p>' +
     // Notfall klar abgesetzt unten (eigener Block mit Trennlinie); rot via bestehendem
     // Token --modus-notfall (referenziert, KEINE Marken-Farbe geändert/eingeführt).
     '<div class="welcome-notfall"><button class="btn-dezent btn-notfall" id="w-notfall">' +
@@ -10692,6 +10838,7 @@ function renderWelcome() {
   verdrahteEintritt('w-anlass',  () => { if (!data) vorschauDepotErzeugen(); renderAnlassAuswahl(); });
   verdrahteEintritt('w-anfangen', () => flowVorschauBetreten());   // „Hier anfangen" — Sidebar-Sprung, passwortlos
   verdrahteEintritt('w-datei',   () => renderCryptoOverlay());     // Lage A → Lage B (vorhandene Datei öffnen)
+  verdrahteEintritt('w-angehoerige', () => renderCryptoOverlay(null, false, true));   // U2-ADR-062: Vertrauensperson-Eintritt
   verdrahteEintritt('w-notfall', () => flowNotfallAusDatei());
   // Welcome-Vorlesen verdrahten (nur vorhanden, wenn die Sprachausgabe verfügbar ist).
   const wVor = document.getElementById('vorlese-sicht');
@@ -10710,9 +10857,12 @@ function renderWelcome() {
    im Overlay. KEINE neue Krypto/Persistenz — der Öffnen-Weg ruft das bestehende depotLaden(). */
 let _cryptoDatei = null;   // vorbelegte Datei (launchQueue / Drag-Drop); sonst Datei-Auswahl im Overlay
 let _internEintritt = false;   // D43 Etappe 5: Passwort-Eintritt zum Laden des INTERNEN Stands (gehostet, keine Datei)
-function renderCryptoOverlay(vorbelegteDatei, internModus) {
+function renderCryptoOverlay(vorbelegteDatei, internModus, angModus) {
   _cryptoDatei = vorbelegteDatei || null;
   _internEintritt = !!internModus;                // interner Stand laden (kein Datei-Picker)
+  // angModus (U2-ADR-062): Overlay für die Vertrauensperson — Primär-Aktion + Passwort-Label
+  // orientieren sich auf den Vertrauens-Passwort-Cache-Eintritt; die Eigentümerin-Aktion tritt
+  // NICHT auf (keine Verwechslung „Depot öffnen" vs „Als Angehörige öffnen").
   const el = document.getElementById('overlay-inhalt');
   if (!el) return;
   // Datei-Zeile: vorbelegt → Name anzeigen; sonst Datei-Auswahl. KEIN accept-Filter (B1/iOS):
@@ -10732,17 +10882,18 @@ function renderCryptoOverlay(vorbelegteDatei, internModus) {
       '<span class="welcome-wort"><span class="lw-vivo-d">VIVO</span><span class="lw-depot-d">DEPOT</span></span></h1>' +
       '<p class="welcome-sub">' + escapeHTML(STRINGS.appTagline) + '</p>' +
     '</div>' +
-    '<p class="crypto-auff">' + escapeHTML(internModus ? STRINGS.cryptoInternAufforderung : STRINGS.cryptoPwAufforderung) + '</p>' +
+    '<p class="crypto-auff">' + escapeHTML(internModus ? STRINGS.cryptoInternAufforderung : (angModus ? STRINGS.angEintrittAufforderung : STRINGS.cryptoPwAufforderung)) + '</p>' +
     dateiZeile +
-    '<label for="co-pw">' + escapeHTML(STRINGS.modalOeffnenPwLabel) + '</label>' +
+    '<label for="co-pw">' + escapeHTML(angModus ? STRINGS.angPwLabel : STRINGS.modalOeffnenPwLabel) + '</label>' +
     '<input id="co-pw" type="password" autocomplete="current-password">' +
     '<div id="crypto-fehler" class="modal-fehler" role="alert" hidden></div>' +
     '<div class="welcome-aktionen">' +
-      '<div class="welcome-primaer">' +
-        '<button class="btn" id="w-oeffnen"><span>' + svgIcon(ICONS.lock) + '</span>' + escapeHTML(STRINGS.btnDepotOeffnen) + '</button>' +
-      '</div>' +
-      '<p class="welcome-sek-hint"><button type="button" class="btn-dezent" id="co-angehoerige">' +
-        escapeHTML(STRINGS.cryptoAngehoerige) + '</button></p>' +
+      (angModus
+        ? '<div class="welcome-primaer"><button class="btn" id="co-ang-primaer"><span>' + svgIcon(ICONS.users) + '</span>' + escapeHTML(STRINGS.angEintrittKnopf) + '</button></div>' +
+          '<p class="einst-hint ang-login-hint">' + escapeHTML(STRINGS.cryptoAngehoerigeHint) + '</p>'
+        : '<div class="welcome-primaer"><button class="btn" id="w-oeffnen"><span>' + svgIcon(ICONS.lock) + '</span>' + escapeHTML(STRINGS.btnDepotOeffnen) + '</button></div>' +
+          '<p class="welcome-sek-hint"><button type="button" class="btn-dezent" id="co-angehoerige">' + escapeHTML(STRINGS.cryptoAngehoerige) + '</button></p>' +
+          '<p class="einst-hint ang-login-hint">' + escapeHTML(STRINGS.cryptoAngehoerigeHint) + '</p>') +
     '</div>' +
     '<div class="welcome-notfall"><button class="btn-dezent btn-notfall" id="co-notfall">' +
       svgIcon(ICONS.alertTriangle, 16) + ' ' + escapeHTML(STRINGS.notfallAusDatei) + '</button></div>' +
@@ -10750,16 +10901,18 @@ function renderCryptoOverlay(vorbelegteDatei, internModus) {
       escapeHTML(STRINGS.cryptoNeuAnfangen) + '</button></p>';
   // Verdrahtung — jeder Handler null-gesichert.
   const w = (id, fn) => { const e = document.getElementById(id); if (e) e.onclick = fn; };
-  w('w-oeffnen', () => cryptoOverlayOeffnen(false));
-  w('co-angehoerige', () => cryptoOverlayOeffnen(true));
+  w('w-oeffnen', () => cryptoOverlayOeffnen());
+  w('co-angehoerige', () => angehoerigenEintritt());
+  w('co-ang-primaer', () => angehoerigenEintritt());   // U2-ADR-062: Primär-Aktion im Angehörigen-Overlay
   w('co-notfall', () => flowNotfallAusDatei());
   w('co-neu', () => renderWelcome());      // Lage B → Lage A
   overlayNachObenScrollen();
 }
 
-// Öffnen aus dem crypto-overlay: vorbelegte ODER ausgewählte Datei + Passwort → depotLaden()
-// → App betreten. alsAngehoerige=true betritt danach den read-only Vertrauenspersonen-Modus.
-async function cryptoOverlayOeffnen(alsAngehoerige) {
+// Öffnen aus dem crypto-overlay (Eigentümerin): vorbelegte ODER ausgewählte Datei + Depot-Passwort
+// → depotLaden() → App betreten. Der Angehörigen-Weg ist NICHT hier — er läuft cache-only über
+// angehoerigenEintritt() mit dem Vertrauens-Passwort (U2-ADR-062; die schwache Option-B-Tür ist zu).
+async function cryptoOverlayOeffnen() {
   const inp = document.getElementById('co-datei');
   const datei = _cryptoDatei || (inp && inp.files && inp.files[0]);
   const pwEl = document.getElementById('co-pw');
@@ -10776,7 +10929,6 @@ async function cryptoOverlayOeffnen(alsAngehoerige) {
     try {
       await depotAusIdbLaden(pw);
       _internEintritt = false; betreteApp();
-      if (alsAngehoerige) Modus._setzeIntern('angehoerigen');
       ui.toast(STRINGS.geoeffnet, 'ok');
     } catch (e) {
       zeigeFehler(STRINGS.entsperrPasswortFalsch);
@@ -10794,9 +10946,9 @@ async function cryptoOverlayOeffnen(alsAngehoerige) {
   // echter GCM-/AAD-Fehler → das Passwort stimmt nicht.
   try {
     await depotLaden(umschlag, pw);                 // Passwort gegen die Datei geprüft; data = Datei
-    // D43 Etappe 5 — Konflikt mit einem internen Stand? Nur im internen Speicher-Modus, nicht im
-    // read-only Angehörigen-Eintritt. Vergleich über die Klartext-Zeitmarke (kein Entschlüsseln nötig).
-    if (internerSpeicherModus() && !alsAngehoerige) {
+    // D43 Etappe 5 — Konflikt mit einem internen Stand? Nur im internen Speicher-Modus.
+    // Vergleich über die Klartext-Zeitmarke (kein Entschlüsseln nötig).
+    if (internerSpeicherModus()) {
       const internMeta = await internerStandMeta();
       const km = standKonfliktModell(internMeta, umschlag);
       if (km.konflikt) {
@@ -10806,11 +10958,73 @@ async function cryptoOverlayOeffnen(alsAngehoerige) {
       }
     }
     betreteApp();
-    if (alsAngehoerige) Modus._setzeIntern('angehoerigen');   // read-only Vollbild-Sicht
     _cryptoDatei = null;
     ui.toast(STRINGS.geoeffnet, 'ok');
   } catch (e) {
     zeigeFehler(STRINGS.entsperrPasswortFalsch);   // GCM/AAD nach NFC+NFD: falsches Passwort
+  }
+}
+
+// Roh-Umschlag des neuesten internen Stands (OHNE Entschlüsselung). null, wenn keiner da ist.
+async function _internerUmschlagRoh() {
+  try {
+    const liste = await VdStore.liste();
+    if (!liste || !liste.length) return null;
+    liste.sort((a, b) => String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')));
+    return JSON.parse(liste[0].cipherBlob);
+  } catch (e) { return null; }
+}
+
+/* U2-ADR-062 — Vertrauens-Eintritt (Kern, testbar, kein DOM). ERSETZT Option B: frisch, cache-only.
+   Aus dem Umschlag wird NUR der angehoerigenCache mit dem Vertrauens-Passwort entschlüsselt; `data`
+   trägt danach ausschließlich das entschlüsselte Fünf-Blatt-Subset. NIE depotLaden, NIE Master-
+   Schlüssel — die abwesende Eigentümerin bleibt vollständig geschützt. Wirft 'kein-zugang' (kein Cache
+   eingerichtet) bzw. den GCM-Fehler (Vertrauens-Passwort falsch). */
+async function angehoerigenAusUmschlag(umschlag, vertrauensPasswort) {
+  const cache = angehoerigenCacheAusUmschlag(umschlag);
+  if (!cache) throw new Error('kein-zugang');
+  const subset = await angehoerigenCacheEntschluesseln(vertrauensPasswort, cache);   // wirft bei falschem PW
+  const skelett = leeresDepot();                                    // volles, leeres Skelett
+  skelett.sektoren = (subset && subset.sektoren) || {};
+  skelett.situationen = (subset && subset.situationen) || {};
+  skelett.menschen = (subset && Array.isArray(subset.menschen)) ? subset.menschen : [];
+  delete skelett._vorschau;                                         // kein Vorschau-Zustand
+  data = skelett;
+  sessionKey = null; sessionHkdfKey = null;                         // KEIN Master-Schlüssel/Session
+  aktuelleSalt = null; aktuelleDepotSalt = null; aktuelleDepotUUID = null;
+  aktiveAkutId = null;                                              // frisch bei der Blatt-Auswahl starten
+  betreteApp();
+  Modus._setzeIntern('angehoerigen');                              // Gold-soft read-only Vollbild
+  return true;
+}
+
+// DOM-Wrapper für den crypto-overlay-Knopf „Als Angehörige öffnen". Holt Umschlag (Datei ODER
+// interner Stand) + Vertrauens-Passwort, ruft den Kern, zeigt ruhige Meldungen.
+async function angehoerigenEintritt() {
+  const inp = document.getElementById('co-datei');
+  const datei = _cryptoDatei || (inp && inp.files && inp.files[0]);
+  const pwEl = document.getElementById('co-pw');
+  const pw = pwEl ? pwEl.value : '';
+  const fehlerEl = document.getElementById('crypto-fehler');
+  const zeigeFehler = (txt) => {
+    if (fehlerEl) { fehlerEl.textContent = txt; fehlerEl.hidden = false; }
+    else { try { ui.toast(txt, 'fehler'); } catch (_) {} }
+  };
+  let umschlag = null;
+  if (datei) {
+    try { umschlag = JSON.parse(magicStrippen(await datei.text()).json); } catch (e) { zeigeFehler(STRINGS.dateiNichtLesbar); return; }
+  } else if (_internEintritt) {
+    umschlag = await _internerUmschlagRoh();
+  }
+  if (!umschlag || !istGueltigerUmschlag(umschlag)) { zeigeFehler(STRINGS.dateiNichtLesbar); return; }
+  if (!angehoerigenCacheAusUmschlag(umschlag)) { zeigeFehler(STRINGS.angKeinZugang); return; }
+  if (!pw) { zeigeFehler(STRINGS.angBittePasswort); return; }       // ruhige Meldung statt Alarm (Frueh-Fehler behoben)
+  try {
+    await angehoerigenAusUmschlag(umschlag, pw);
+    _internEintritt = false; _cryptoDatei = null;
+    ui.toast(STRINGS.geoeffnet, 'ok');
+  } catch (e) {
+    zeigeFehler(STRINGS.angPasswortFalsch);                         // GCM -> Vertrauens-Passwort falsch
   }
 }
 
@@ -12239,6 +12453,13 @@ function depotNormalisieren(d) {
   // Daten, Datenmodell-Konzept v1.2 §4). Additiv & rückwärts-tolerant wie feldDefinitionen (23er-Muster).
   if (!Array.isArray(ziel.codeListen)) ziel.codeListen = [];
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 26) ziel.schemaVersion = 26;
+  // Schema 26 -> 27 (U2-ADR-062): Stufe-2-Angehörigen-Cache. Additiv: die zwei Felder defaulten.
+  // angehoerigen_passwort_ort migriert einen etwaigen b16-Ort-Hinweis ein (aus B16_IGNORE genommen);
+  // das Passwort selbst wird NIE übernommen. angehoerigenCache bleibt null, bis eine Vertrauensperson
+  // eingerichtet wird (Aktivierung = Cache-Präsenz).
+  if (typeof ziel.angehoerigenCache === 'undefined') ziel.angehoerigenCache = null;
+  if (typeof ziel.angehoerigen_passwort_ort !== 'string') ziel.angehoerigen_passwort_ort = '';
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 27) ziel.schemaVersion = 27;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -13002,6 +13223,68 @@ function renderFooter() {
 // Bruch B — Einstellungen-Dialog (Topbar-Zahnrad). Vier Abschnitte; die Barrierefreiheits-
 // Schalter nutzen DIESELBEN Funktionen wie die Topbar-Schnellschalter (eine Quelle).
 // Kein Angehörigenpasswort (Stufe-2-Krypto noch nicht gebaut — keine tote Hülse).
+/* ── Vertrauensperson einrichten (Owner-Setup, U2-ADR-062) ────────────────────
+   Die Eigentümerin setzt ein zweites, physisch hinterlegtes Vertrauens-Passwort; daraus wird der
+   Fünf-Blatt-Cache gebaut, verschlüsselt (600k/Fallback, außerhalb des Blocks) und als Snapshot in
+   data.angehoerigenCache abgelegt (kommt beim Serialisieren als Umschlag-Geschwister mit). Aktivierung
+   = Cache-Präsenz. Das Passwort selbst wird NIE gespeichert — nur der Ort-Hinweis (kein Geheimnis). */
+function vertrauenspersonAktiv() { return !!(data && data.angehoerigenCache); }
+async function vertrauenspersonEinrichten(passwort, ort, opts) {
+  data.angehoerigenCache = await angehoerigenCacheVerschluesseln(passwort, angehoerigenCacheModell(), opts);
+  data.angehoerigen_passwort_ort = String(ort || '').trim().slice(0, 200);
+  markiereUngespeichert(1);
+  await depotPersistieren();
+}
+async function vertrauenspersonEntfernen() {
+  data.angehoerigenCache = null;
+  data.angehoerigen_passwort_ort = '';
+  markiereUngespeichert(1);
+  await depotPersistieren();
+}
+function flowVertrauenspersonEinrichten() {
+  const aktiv = vertrauenspersonAktiv();
+  const ortVal = (data && data.angehoerigen_passwort_ort) || '';
+  ui.modal({
+    titel: aktiv ? STRINGS.vpAktualisierenTitel : STRINGS.vpEinrichtenTitel,
+    koerperHTML:
+      '<p class="einst-hint">' + escapeHTML(aktiv ? STRINGS.vpAktualisierenText : STRINGS.vpEinrichtenText) + '</p>' +
+      '<label for="vp-pw">' + escapeHTML(STRINGS.vpPwLabel) + '</label>' +
+      '<input id="vp-pw" type="password" autocomplete="new-password" placeholder="' + escapeHTML(STRINGS.vpPwPlaceholder) + '">' +
+      '<label for="vp-pw2">' + escapeHTML(STRINGS.vpPw2Label) + '</label>' +
+      '<input id="vp-pw2" type="password" autocomplete="new-password">' +
+      '<label for="vp-ort">' + escapeHTML(STRINGS.vpOrtLabel) + '</label>' +
+      '<input id="vp-ort" type="text" autocomplete="off" value="' + escapeHTML(ortVal) + '" placeholder="' + escapeHTML(STRINGS.vpOrtPlaceholder) + '">' +
+      '<div id="vp-fehler" class="modal-fehler" role="alert" hidden></div>',
+    primaerLabel: aktiv ? STRINGS.vpAktualisierenKnopf : STRINGS.vpEinrichtenKnopf,
+    onPrimaer: async (schliessen) => {
+      const pw = (document.getElementById('vp-pw') || {}).value || '';
+      const pw2 = (document.getElementById('vp-pw2') || {}).value || '';
+      const ort = (document.getElementById('vp-ort') || {}).value || '';
+      const fe = document.getElementById('vp-fehler');
+      const zeig = (t) => { if (fe) { fe.textContent = t; fe.hidden = false; } };
+      if (pw.length < 8) { zeig(STRINGS.vpFehlerKurz); return; }
+      if (pw !== pw2) { zeig(STRINGS.vpFehlerUngleich); return; }
+      await vertrauenspersonEinrichten(pw, ort);
+      schliessen();
+      if (ui.toast) ui.toast(STRINGS.vpGesetztToast, 'ok');
+      flowEinstellungen();                                   // Einstellungen mit neuem Status neu zeigen
+    },
+  });
+}
+function flowVertrauenspersonEntfernen() {
+  ui.modal({
+    titel: STRINGS.vpEntfernenTitel,
+    koerperHTML: '<p class="einst-hint">' + escapeHTML(STRINGS.vpEntfernenText) + '</p>',
+    primaerLabel: STRINGS.vpEntfernenKnopf,
+    onPrimaer: async (schliessen) => {
+      await vertrauenspersonEntfernen();
+      schliessen();
+      if (ui.toast) ui.toast(STRINGS.vpEntferntToast, 'ok');
+      flowEinstellungen();
+    },
+  });
+}
+
 function einstellungenHTML() {
   const html = document.documentElement;
   const skala = aktuelleSchriftSkala(html);
@@ -13034,6 +13317,16 @@ function einstellungenHTML() {
       '<button type="button" class="btn btn-sek" id="einst-import">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.einlesenKnopf) + '</button>' +
       // Wegweiser: der Gesamt-Export (PDF/Notfallkarte/QR) lebt jetzt in „Daten herausgeben".
       '<p class="einst-hint" style="margin-top:var(--space-3)">' + escapeHTML(STRINGS.einstGesamtExportWegweiser) + '</p>' +
+    '</section>' +
+    // Vertrauensperson einrichten (U2-ADR-062) — Stufe-2-Angehörigen-Cache. Status = Cache-Präsenz.
+    '<section class="einst-abschnitt"><h4>' + STRINGS.vpAbschnitt + '</h4>' +
+      '<p class="einst-hint">' + escapeHTML(vertrauenspersonAktiv() ? STRINGS.vpStatusAktiv : STRINGS.vpStatusInaktiv) + '</p>' +
+      ((vertrauenspersonAktiv() && (data && data.angehoerigen_passwort_ort))
+        ? '<p class="einst-hint"><strong>' + escapeHTML(STRINGS.vpOrtAnzeige) + '</strong> ' + escapeHTML(data.angehoerigen_passwort_ort) + '</p>' : '') +
+      '<button type="button" class="btn btn-sek" id="einst-vp-einrichten">' + svgIcon(ICONS.users) + ' ' +
+        escapeHTML(vertrauenspersonAktiv() ? STRINGS.vpAktualisierenKnopf : STRINGS.vpEinrichtenKnopf) + '</button>' +
+      (vertrauenspersonAktiv()
+        ? '<button type="button" class="btn btn-sek" id="einst-vp-entfernen">' + escapeHTML(STRINGS.vpEntfernenKnopf) + '</button>' : '') +
     '</section>' +
     '<section class="einst-abschnitt"><h4>' + STRINGS.einstAbschnittUeber + '</h4>' +
       '<div class="einst-zeile"><span class="einst-label">' + STRINGS.einstVersion + '</span><span>' + escapeHTML(BUILD_VERSION) + '</span></div>' +
@@ -13090,6 +13383,11 @@ function verdrahteEinstellungen() {
   if (ej) ej.onclick = () => flowFormatExport('json');
   const eimp = document.getElementById('einst-import');
   if (eimp) eimp.onclick = () => flowEinlesen();
+  // Vertrauensperson einrichten (U2-ADR-062) — Stufe-2-Angehörigen-Cache anlegen/aktualisieren/entfernen.
+  const vpEin = document.getElementById('einst-vp-einrichten');
+  if (vpEin) vpEin.onclick = () => flowVertrauenspersonEinrichten();
+  const vpEnt = document.getElementById('einst-vp-entfernen');
+  if (vpEnt) vpEnt.onclick = () => flowVertrauenspersonEntfernen();
   // Aufräumen Teil 3 — „Nach neuer Version suchen": der EINZIGE, bewusste Netz-Schritt. Öffnet
   // die Website in einem NEUEN Tab. Kein automatischer Fetch, kein Hintergrund-Netz. Wir sagen
   // dem Menschen vorher klar, dass er jetzt online geht.

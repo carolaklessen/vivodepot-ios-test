@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v14';  // v14 (2026-07-06): Datei-Speichern-Guard (U2-ADR-061, 4f25905) — Web-Share-Blatt nur auf Touch/Standalone; Desktop-WebKit (Safari/DuckDuckGo) nutzt jetzt den Download-Pfad statt eines Teilen-Blatts ohne „In Dateien sichern"; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v15';  // v15 (2026-07-06): Stufe-2-Vertrauens-Zugang (U2-ADR-062, 9f7035b) — Owner-Setup „Vertrauensperson einrichten" (Einstellungen) + cache-only Vertrauens-Passwort-Eintritt (ersetzt Option B) + Startseiten-Eintritt „Als Angehörige öffnen"; Schema 26→27; Krypto ausserhalb Block; skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird
