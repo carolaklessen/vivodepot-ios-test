@@ -2705,6 +2705,8 @@ const STRINGS = Object.freeze({
   angEintrittAufforderung: "Öffnen Sie die read-only Sicht als Vertrauensperson. Wählen Sie die Vivodepot-Datei und geben Sie das Vertrauens-Passwort ein, das die Eigentümerin Ihnen gegeben oder hinterlegt hat.",  // U2-ADR-062 Startseiten-Eintritt
   angPwLabel: "Vertrauens-Passwort",
   angEintrittKnopf: "Als Angehörige öffnen",
+  angOeffnetLaeuft: "Zugang wird geöffnet …",                                       // Ladezustand: PBKDF2-Entschlüsselung läuft
+  angLadeHinweis: "Der Zugang wird entschlüsselt — auf älteren Geräten kann das einen Moment dauern.",  // Ladehinweis (fest 600k, U2-ADR-062)
   cryptoNeuAnfangen: "Doch neu anfangen — ohne Datei",            // Lage B → Lage A
   cryptoDateiGewaehlt: "Gewählte Datei",
   webAppHinweis: "Tipp: Über das Teilen-Menü Ihres Browsers „Zum Home-Bildschirm hinzufügen“ — dann öffnet sich Vivodepot wie eine App.",
@@ -8239,57 +8241,47 @@ const SHL_STANDARD_TTL_SEK = 7 * 24 * 3600;   // Default-Ablauf, wenn kein exp �
    ────────────────────────────────────────────────────────────────────────────
    Die Vertrauensperson öffnet FRISCH vom Welcome mit einem zweiten, physisch
    hinterlegten Vertrauens-Passwort und entschlüsselt NUR diesen Cache — nie den
-   Master-`ct`, nie den Master-Schlüssel. PBKDF2 (600k, Browser-Fallback 200k) +
+   Master-`ct`, nie den Master-Schlüssel. PBKDF2 (600.000 fest — kein Fallback) +
    AES-256-GCM, hand-gerollt über WebCrypto (Muster: SHL-JWE _jweCompactDir); der
    gepinnte VdCrypto-Block (8d31c678…) bleibt unberührt.
    ⚠ AUFLAGE (Carola): dieser Krypto-Pfad geht VOR Produktivschaltung durch einen
    externen Review (analog JWE beim SHL-Strang).
    Cache = Snapshot der Fünf-Blatt-Allowlist als geprunter `data`-Subset;
    renderAngehoerigen liest ihn unverändert (data = Subset). */
-const ANG_PBKDF2_PRIMAER = 600000;      // OWASP-2024, = Haupt-KDF PBKDF2_ITERATIONS
-const ANG_PBKDF2_FALLBACK = 200000;     // Geräte, die 600k nicht < 2 s schaffen
-const _ANG_CACHE_VERSION = 1;
+const ANG_PBKDF2_ITERATIONEN = 600000;  // OWASP-2024, = Haupt-KDF PBKDF2_ITERATIONS. FEST (06.07.):
+                                        // 600k liegt auf realer Hardware < 2 s (Mac-Anker ~44 ms/Ableitung,
+                                        // altes iPhone ~0,3–1,3 s). Der frühere 200k-Browser-Fallback ist
+                                        // gestrichen — konstanter KDF-Aufwand, keine Mess-/Timing-Wahl,
+                                        // kein iterations-Feld mehr im Header (schlanker für den ext. Review).
+const _ANG_CACHE_VERSION = 2;           // v2 (06.07.): Cache-Header ohne `iterations` (fest 600k)
 
-// PBKDF2(Passwort, Salt, Iterationen) -> AES-256-GCM-Schlüssel. Parametrisiert (der Block ist 600k-fix).
-async function _angDeriveKey(passwort, saltBytes, iterations) {
+// PBKDF2(Passwort, Salt) -> AES-256-GCM-Schlüssel, fest ANG_PBKDF2_ITERATIONEN (600k).
+async function _angDeriveKey(passwort, saltBytes) {
   const basis = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(passwort)),
     { name: 'PBKDF2' }, false, ['deriveKey']);
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: saltBytes, iterations, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: saltBytes, iterations: ANG_PBKDF2_ITERATIONEN, hash: 'SHA-256' },
     basis, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 }
 
-// Wählt die Iterationszahl: 600k, außer die Messung ergibt > 2 s → 200k. Ergebnis wandert in den
-// Cache-Header, damit die Entschlüsselung dieselbe Zahl nutzt. `opts.iterations` erzwingt (Tests).
-async function _angWaehleIterationen(opts) {
-  if (opts && Number.isFinite(opts.iterations)) return opts.iterations | 0;
-  try {
-    const jetzt = (typeof performance !== 'undefined' && performance.now) ? () => performance.now() : () => Date.now();
-    const t0 = jetzt();
-    await _angDeriveKey('_probe_', crypto.getRandomValues(new Uint8Array(16)), ANG_PBKDF2_PRIMAER);
-    return (jetzt() - t0) > 2000 ? ANG_PBKDF2_FALLBACK : ANG_PBKDF2_PRIMAER;
-  } catch (e) { return ANG_PBKDF2_FALLBACK; }
-}
-
-// Verschlüsselt ein Klartext-Objekt zum Cache-Umschlag { v, iterations, salt, iv, ct, stand }.
-async function angehoerigenCacheVerschluesseln(passwort, obj, opts) {
-  const iterations = await _angWaehleIterationen(opts);
+// Verschlüsselt ein Klartext-Objekt zum Cache-Umschlag { v, salt, iv, ct, stand } (fest 600k, kein iterations-Feld).
+async function angehoerigenCacheVerschluesseln(passwort, obj) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await _angDeriveKey(passwort, salt, iterations);
+  const key = await _angDeriveKey(passwort, salt);
   const klar = new TextEncoder().encode(JSON.stringify(obj));
   const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, tagLength: 128 }, key, klar));
-  return { v: _ANG_CACHE_VERSION, iterations, salt: bytesToBase64(salt), iv: bytesToBase64(iv),
+  return { v: _ANG_CACHE_VERSION, salt: bytesToBase64(salt), iv: bytesToBase64(iv),
     ct: bytesToBase64(ct), stand: new Date().toISOString() };
 }
 
-// Entschlüsselt einen Cache-Umschlag mit dem Vertrauens-Passwort. Wirft bei falschem Passwort
+// Entschlüsselt einen Cache-Umschlag mit dem Vertrauens-Passwort (fest 600k). Wirft bei falschem Passwort
 // (GCM-Fehler) oder kaputtem Cache. NIE Master-Schlüssel, NIE `ct` des Depots.
 async function angehoerigenCacheEntschluesseln(passwort, cache) {
   if (!cache || typeof cache !== 'object' || typeof cache.ct !== 'string'
-      || typeof cache.salt !== 'string' || typeof cache.iv !== 'string'
-      || !Number.isFinite(cache.iterations)) throw new Error('Angehörigen-Cache fehlt oder ist unlesbar.');
-  const key = await _angDeriveKey(passwort, base64ToBytes(cache.salt), cache.iterations);
+      || typeof cache.salt !== 'string' || typeof cache.iv !== 'string')
+    throw new Error('Angehörigen-Cache fehlt oder ist unlesbar.');
+  const key = await _angDeriveKey(passwort, base64ToBytes(cache.salt));
   const klar = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBytes(cache.iv), tagLength: 128 },
     key, base64ToBytes(cache.ct));
   return JSON.parse(new TextDecoder().decode(new Uint8Array(klar)));
@@ -11019,11 +11011,29 @@ async function angehoerigenEintritt() {
   if (!umschlag || !istGueltigerUmschlag(umschlag)) { zeigeFehler(STRINGS.dateiNichtLesbar); return; }
   if (!angehoerigenCacheAusUmschlag(umschlag)) { zeigeFehler(STRINGS.angKeinZugang); return; }
   if (!pw) { zeigeFehler(STRINGS.angBittePasswort); return; }       // ruhige Meldung statt Alarm (Frueh-Fehler behoben)
+  // Ladehinweis: die feste 600k-PBKDF2-Ableitung dauert auf älteren Geräten spürbar (WebCrypto
+  // blockiert den Hauptthread nicht → der Label-/Hinweis-Wechsel malt vor der Ableitung).
+  const primaer = document.getElementById('co-ang-primaer');
+  const altLabel = primaer ? primaer.innerHTML : '';
+  let ladeHinweis = null;
+  if (primaer) {
+    primaer.disabled = true;
+    primaer.innerHTML = '<span>' + svgIcon(ICONS.users) + '</span>' + escapeHTML(STRINGS.angOeffnetLaeuft);
+    if (primaer.parentNode) {
+      ladeHinweis = document.createElement('p');
+      ladeHinweis.className = 'einst-hint';
+      ladeHinweis.textContent = STRINGS.angLadeHinweis;
+      primaer.parentNode.appendChild(ladeHinweis);
+    }
+  }
+  if (fehlerEl) fehlerEl.hidden = true;                             // evtl. alten Fehler wegnehmen
   try {
-    await angehoerigenAusUmschlag(umschlag, pw);
+    await angehoerigenAusUmschlag(umschlag, pw);                    // betreteApp() rendert die Overlay-Schale neu → kein Restore nötig
     _internEintritt = false; _cryptoDatei = null;
     ui.toast(STRINGS.geoeffnet, 'ok');
   } catch (e) {
+    if (primaer) { primaer.disabled = false; primaer.innerHTML = altLabel; }
+    if (ladeHinweis && ladeHinweis.parentNode) ladeHinweis.parentNode.removeChild(ladeHinweis);
     zeigeFehler(STRINGS.angPasswortFalsch);                         // GCM -> Vertrauens-Passwort falsch
   }
 }
@@ -13225,12 +13235,12 @@ function renderFooter() {
 // Kein Angehörigenpasswort (Stufe-2-Krypto noch nicht gebaut — keine tote Hülse).
 /* ── Vertrauensperson einrichten (Owner-Setup, U2-ADR-062) ────────────────────
    Die Eigentümerin setzt ein zweites, physisch hinterlegtes Vertrauens-Passwort; daraus wird der
-   Fünf-Blatt-Cache gebaut, verschlüsselt (600k/Fallback, außerhalb des Blocks) und als Snapshot in
+   Fünf-Blatt-Cache gebaut, verschlüsselt (600k fest, außerhalb des Blocks) und als Snapshot in
    data.angehoerigenCache abgelegt (kommt beim Serialisieren als Umschlag-Geschwister mit). Aktivierung
    = Cache-Präsenz. Das Passwort selbst wird NIE gespeichert — nur der Ort-Hinweis (kein Geheimnis). */
 function vertrauenspersonAktiv() { return !!(data && data.angehoerigenCache); }
-async function vertrauenspersonEinrichten(passwort, ort, opts) {
-  data.angehoerigenCache = await angehoerigenCacheVerschluesseln(passwort, angehoerigenCacheModell(), opts);
+async function vertrauenspersonEinrichten(passwort, ort) {
+  data.angehoerigenCache = await angehoerigenCacheVerschluesseln(passwort, angehoerigenCacheModell());
   data.angehoerigen_passwort_ort = String(ort || '').trim().slice(0, 200);
   markiereUngespeichert(1);
   await depotPersistieren();
