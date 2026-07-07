@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v20';  // v20 (2026-07-06): Feldtyp mehrfachauswahl (U2-ADR-063, f18dc44, Schema 27→28) — vollmachtsGrundlage als Checkboxen/Array, Anzeige „, "-getrennt, Migration verlustfrei; enthält v19 EUDI-aus + v18 Kosmetik + v17 VP-Härtung + v16 finale Krypto; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v21';  // v21 (2026-07-07): Vollmacht-liste-Record (U2-ADR-064, cleanslate 3efbd15, Schema 28->29) — conditional Stelle-Feld + reaktive Modal-Schicht; enthaelt v20 mehrfachauswahl + v19 EUDI-aus + v18 Kosmetik; skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird

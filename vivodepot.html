@@ -689,6 +689,8 @@
   .liste-eintraege li { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; }
   /* Sub-Inputs im Eintrag-Modal — engere Zeilen als Top-Felder. */
   .liste-eintrag-form .feld-zeile-sub { grid-template-columns: 160px 1fr; padding: var(--space-1) 0; border-top: none; }
+  /* U2-ADR-064: conditional Unterfeld-Zeile ausgeblendet (schlägt das grid-display der .feld-zeile). */
+  .feld-zeile[hidden] { display: none !important; }
   /* Ref-Picker — Dropdown plus Override-Freitext nebeneinander. */
   .feld-ref-picker { display: flex; gap: var(--space-2); align-items: center; }
   .feld-ref-picker select, .feld-ref-picker input { font-size: var(--fs-sm); padding: var(--space-1); }
@@ -2457,7 +2459,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
-const BUILD_DATUM = '2026-07-06';
+const BUILD_DATUM = '2026-07-07';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 
@@ -3763,13 +3765,13 @@ const SEKTOREN = Object.freeze([
     wizards: ['erbwiz'],
     // Standard-Dokument-Liste (U2-ADR-014, Einheit 2). Heimat-Bereich der Bankvollmacht:
     // ihr Gegenstand sind die Konten (siehe konto_haupt_bank/-iban), und Angehörige brauchen
-    // sie für den laufenden Zahlungsverkehr. Die Vollmachts-ART selbst wird im bestehenden Feld
-    // vorsorge/vollmachtsGrundlage (Option „Bankvollmacht") erfasst → bereichsübergreifende
+    // sie für den laufenden Zahlungsverkehr. Die Vollmachts-ART selbst wird seit U2-ADR-064 als
+    // Eintrag (art='bank') in der Liste vorsorge/vollmachten erfasst → bereichsübergreifende
     // Vorverknüpfung (Heimat finanzen, Feld in vorsorge; Konsequenz 7 erlaubt das ausdrücklich).
     standardDokumente: [
       { typ: 'bankvollmacht', name: 'Bankvollmacht', empfRhythmusMonate: 12,
         hinweis: 'Jährlich prüfen, ob die Kontovollmacht noch besteht und die richtige Person umfasst.',
-        felder: [{ sektorId: 'vorsorge', feldId: 'vollmachtsGrundlage' }] },
+        felder: [{ sektorId: 'vorsorge', feldId: 'vollmachten' }] },
     ],
     sektionen: [
       { id: 'konten-steuern-vorsorge', label: 'Konten, Steuern, Vorsorge, Vermögen', felder: [
@@ -4040,27 +4042,38 @@ const SEKTOREN = Object.freeze([
         { id: 'vollmacht_vorhanden',         label: 'Vorsorgevollmacht vorhanden?',                    typ: 'auswahl', optionen: [
           { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
         ] },
-        { id: 'vollmacht_person',            label: 'Bevollmächtigte Person',                          typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' },
-        // Bruch D / Schnitt 2.3 — die Grundlage der EIGENEN, ERTEILTEN Vollmacht. Bewusst nur
-        // erteilte Vollmacht-Arten (keine gesetzliche Vertretung wie elterliche Sorge — die gehört
-        // zur Sub-Depot-Grundlage, nicht hierher). Manuell ausfüllbar UND vom vvwiz gesetzt; dieselben
-        // Felder, kein paralleles Datenmodell. Optionsschlüssel = erteilte VERTRETUNGS_GRUNDLAGEN.
-        { id: 'vollmachtsGrundlage',         label: 'Art der erteilten Vollmacht',                     typ: 'mehrfachauswahl', optionen: [
-          { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
-          { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
-          { wert: 'bank',       label: 'Bankvollmacht' },
-          { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
-          { wert: 'general',    label: 'Generalvollmacht' },
-        ],
-          hint: 'Welche Art von Vollmacht haben Sie einer Person erteilt? Eine Vorsorgevollmacht greift, wenn Sie selbst nicht mehr entscheiden können; eine Generalvollmacht umfasst alle Geschäfte; eine Bankvollmacht nur den Zahlungsverkehr. Gemeint ist nur eine von Ihnen ERTEILTE Vollmacht — nicht die gesetzliche Vertretung (z. B. elterliche Sorge fürs eigene Kind, die kraft Gesetzes besteht).' },
-        { id: 'vollmachtsTyp',               label: 'Form der Vollmacht',                              typ: 'auswahl', optionen: [
-          { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
-          { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
-          { wert: 'beurkundet', label: 'notariell beurkundet' },
-        ],
-          hint: 'Eine privatschriftliche Vollmacht genügt für viele Zwecke. Für Grundstücks- und Gesellschaftsgeschäfte verlangt das Gesetz meist eine notarielle Beurkundung; die Betreuungsbehörde kann Unterschriften beglaubigen (Betreuungsrecht, seit 2023 §§ 1814 ff. BGB).' },
-        { id: 'gesundheitsvollmacht_person', label: 'Gesundheitsvollmacht — bevollmächtigte Person',   typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' },
-        { id: 'gesundheitsvollmacht_ort',    label: 'Gesundheitsvollmacht — Ablageort',                typ: 'text', beispiel: 'Hausarztpraxis · Geldbeutel-Hinweiszettel' },
+        // U2-ADR-064: Erteilte Vollmachten sind ein WIEDERHOLBARER Datensatz {Art · Person · Form ·
+        // Ablageort} — jede Vollmacht ein eigener Eintrag (eine Bank-, eine Gesundheits-, eine
+        // Generalvollmacht können an verschiedene Menschen und in verschiedener Form gehen). Löst die
+        // früheren Flachfelder vollmacht_person / vollmachtsGrundlage(mehrfachauswahl) / vollmachtsTyp /
+        // vollmacht_ort / gesundheitsvollmacht_person/-ort ab (Migration Schema 28→29, verlustfrei;
+        // ADR-063 für vollmachtsGrundlage supersediert). Das Gate vollmacht_vorhanden bleibt bewusst
+        // getrennt (Existenz / „in Vorbereitung", auch ohne Eintrag; trägt Dokument-Erkennung + heirwiz).
+        // Optionsschlüssel = erteilte VERTRETUNGS_GRUNDLAGEN (KEINE gesetzliche Vertretung wie elterliche
+        // Sorge — die gehört zur Sub-Depot-Grundlage, nicht hierher).
+        { id: 'vollmachten', label: 'Erteilte Vollmachten', typ: 'liste',
+          hint: 'Jede von Ihnen erteilte Vollmacht als eigener Eintrag — Art, bevollmächtigte Person, Form und Ablageort. Gemeint ist nur eine von Ihnen ERTEILTE Vollmacht, nicht die gesetzliche Vertretung (z. B. elterliche Sorge, die kraft Gesetzes besteht).',
+          unterFelder: [
+            { id: 'art', label: 'Art der Vollmacht', typ: 'auswahl', optionen: [
+              { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
+              { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
+              { wert: 'bank',       label: 'Bankvollmacht' },
+              { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
+              { wert: 'general',    label: 'Generalvollmacht' },
+            ] },
+            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' },
+            { id: 'form', label: 'Form der Vollmacht', typ: 'auswahl', optionen: [
+              { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
+              { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
+              { wert: 'beurkundet', label: 'notariell beurkundet' },
+            ] },
+            // U2-ADR-064 · conditional Unterfeld: nur bei beglaubigter/beurkundeter Form relevant
+            // (privatschriftlich hat keine amtliche Stelle) — live ein-/ausgeblendet im Eintrags-Modal.
+            { id: 'stelle', label: 'Beurkundende / beglaubigende Stelle', typ: 'text',
+              sichtbarWenn: { feld: 'form', wert: ['beurkundet', 'beglaubigt'] },
+              beispiel: 'Notar Dr. Sommer, München · Urkundenrolle Nr. 123/2024' },
+            { id: 'ort', label: 'Ablageort', typ: 'text', beispiel: 'beim Notar · Tresor zuhause · Hinweiszettel im Geldbeutel' },
+          ] },
         { id: 'betreuungsverfuegung',        label: 'Betreuungsverfügung vorhanden?',                  typ: 'auswahl', optionen: [
           { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' },
         ] },
@@ -4090,7 +4103,6 @@ const SEKTOREN = Object.freeze([
         { id: 'patientenverf_ort',           label: 'Ablageort Patientenverfügung',                    typ: 'text', beispiel: 'beim Hausarzt · Hinweiszettel im Geldbeutel',
           hint: 'Idealerweise beim Hausarzt hinterlegt und im Portemonnaie einen Hinweiszettel tragen.' },
         // Modul
-        { id: 'vollmacht_ort',               label: 'Ablageort Vollmacht',                             typ: 'text', ebene: 'modul', beispiel: 'beim Notar Dr. Sommer · Tresor zuhause' },
         { id: 'patientenverf_arzt',          label: 'Patientenverfügung — ärztlich begleitet durch',   typ: 'ref',  entitaet: 'person', rolle: 'arzt', ebene: 'modul' },
         { id: 'patientenverf_wunsch',        label: 'Behandlungswünsche (Kurzform)',                   typ: 'textarea', ebene: 'modul', beispiel: 'Keine künstliche Ernährung in der Sterbephase; Palliativversorgung erwünscht' },
         // Pflege-Übernahme (pflwiz, B8-Teil): Stand der Vorsorgedokumente, wenn jemand pflegebedürftig wird.
@@ -4520,7 +4532,7 @@ const SITUATIONEN = Object.freeze([
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmacht_person' },
+        { quelle: 'vorsorge', feld: 'vollmachten' },
         { quelle: 'vorsorge', feld: 'testament_vorhanden' },
         { quelle: 'vorsorge', feld: 'testament_ort' },
         { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
@@ -4611,7 +4623,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'kv_art' },
         { quelle: 'vorsorge',   feld: 'patientenverf_vorhanden' },
         { quelle: 'vorsorge',   feld: 'patientenverf_ort' },
-        { quelle: 'vorsorge',   feld: 'gesundheitsvollmacht_person' },
+        { quelle: 'vorsorge',   feld: 'vollmachten' },
       ] },
       { titel: 'Für den Aufenthalt', eintraege: [
         { feld: { id: 'kh_termin',          label: 'Aufnahme — Datum, Klinik, Station', typ: 'text', beispiel: 'Klinikum Großhadern, Station C2, Aufnahme 12.08.' } },
@@ -4638,7 +4650,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit',         feld: 'krankheiten' },
         { quelle: 'gesundheit',         feld: 'medikamente' },
         { quelle: 'vorsorge',           feld: 'betreuungsverfuegung' },
-        { quelle: 'vorsorge',           feld: 'vollmacht_person' },
+        { quelle: 'vorsorge',           feld: 'vollmachten' },
       ] },
       { titel: 'Für den Einzug', eintraege: [
         { feld: { id: 'ph_einrichtung',     label: 'Einrichtung — Name & Adresse',          typ: 'text', beispiel: 'Caritas-Seniorenheim, München-Schwabing' } },
@@ -4746,8 +4758,7 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'vorsorge', feld: 'patientenverf_vorhanden' },
         { quelle: 'vorsorge', feld: 'patientenverf_ort' },
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'gesundheitsvollmacht_person' },
-        { quelle: 'vorsorge', feld: 'gesundheitsvollmacht_ort' },
+        { quelle: 'vorsorge', feld: 'vollmachten' },
       ] },
       { titel: 'Meine Menschen', eintraege: [
         { quelle: 'meine-menschen', feld: 'menschen' },
@@ -4779,7 +4790,7 @@ const _ANG_SITUATIONEN = Object.freeze([
       ] },
       { titel: 'Aus Vorsorge', eintraege: [
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmacht_person' },
+        { quelle: 'vorsorge', feld: 'vollmachten' },
         { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
         { quelle: 'vorsorge', feld: 'patientenverf_ort' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_koerper' },
@@ -4828,7 +4839,7 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'vorsorge', feld: 'erben' },
         { quelle: 'vorsorge', feld: 'zvr_nummer' },
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmacht_person' },
+        { quelle: 'vorsorge', feld: 'vollmachten' },
       ] },
       { titel: 'Die ersten Schritte', eintraege: [
         { quelle: 'sit:erbfall', feld: 'erb_sterbeurkunde' },
@@ -4952,46 +4963,24 @@ const WIZARDS = Object.freeze([
 
   // ── vvwiz — Vorsorgevollmacht (Schnitt 2.3). Ziel: Sektor 'vorsorge' (Bereich 8).
   //    Bürger-Sprache, Sie-Form, eine Frage pro Schritt; BGB-Vokabel nur in Hilfetexten.
-  //    Erfasst u. a. vollmachtsGrundlage + vollmachtsTyp (NUR erteilte Vollmachten —
-  //    keine gesetzliche Vertretung). Schreibt in dieselben Felder wie die manuelle Eingabe. ──
+  //    Hält seit U2-ADR-064 nur noch das Gate vollmacht_vorhanden + die ZVR-Nummer; die einzelnen
+  //    Vollmachten leben als liste-Record „vollmachten" (Art · Person · Form · Ablageort). ──
   { id: 'vvwiz', titel: 'Vorsorgevollmacht', icon: 'scale',
     ziel: { sektor: 'vorsorge' },
     einleitung: 'Eine Vorsorgevollmacht legt fest, wer für Sie entscheiden darf, wenn Sie es selbst einmal nicht können — bei medizinischen Fragen, Bank, Wohnung, Behörden.\n\nOhne Vollmacht bestellt das Betreuungsgericht eine rechtliche Betreuung. Das kostet Zeit, und Sie können nicht mitbestimmen, wer es wird. Mit Vollmacht steht es fest.\n\nWir gehen das Schritt für Schritt durch — Sie können jederzeit pausieren.',
     schritte: [
+      // U2-ADR-064: vvwiz hält nur noch das GATE (vorhanden?) + die ZVR-Nummer. Die einzelnen
+      // Vollmachten (Art · Person · Form · Ablageort) sind seit dem liste-Record ein wiederholbarer
+      // Datensatz und werden pro Vollmacht als Eintrag unter „Erteilte Vollmachten" erfasst — der
+      // Wizard schreibt keine Skalar-Detailfelder mehr (die Schritt-Engine kennt keine Listen-Anhänge).
       { frage: 'Haben Sie bereits eine Vorsorgevollmacht?',
+        hilfetext: 'Diese Frage hält nur fest, OB eine Vollmacht besteht (oder in Vorbereitung ist). Die einzelnen Vollmachten selbst — Art, bevollmächtigte Person, Form und Ablageort — tragen Sie danach als Einträge unter „Erteilte Vollmachten" in „Vorsorge & Recht" ein; jede Vollmacht ein eigener Eintrag.',
         feld: { id: 'vollmacht_vorhanden', label: 'Vorsorgevollmacht vorhanden?', typ: 'auswahl', optionen: [
           { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
         ] } },
-      { frage: 'Wem haben Sie diese Vollmacht erteilt?',
-        hilfetext: 'Wem vertrauen Sie am meisten? Diese Person darf in Ihrem Namen handeln. Falls noch keine feststeht, lassen Sie das Feld frei. Über „Neue Person anlegen" können Sie sie direkt erfassen.',
-        feld: { id: 'vollmacht_person', label: 'Bevollmächtigte Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' } },
-      { frage: 'Welche Art von Vollmacht haben Sie erteilt?',
-        hilfetext: 'Eine Vorsorgevollmacht greift, wenn Sie selbst nicht mehr entscheiden können; eine Generalvollmacht umfasst alle Geschäfte; eine Bankvollmacht nur den Zahlungsverkehr. Gemeint ist nur eine von Ihnen erteilte Vollmacht — nicht die gesetzliche Vertretung (etwa die elterliche Sorge fürs eigene Kind).',
-        feld: { id: 'vollmachtsGrundlage', label: 'Art der erteilten Vollmacht', typ: 'mehrfachauswahl', optionen: [
-          { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
-          { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
-          { wert: 'bank',       label: 'Bankvollmacht' },
-          { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
-          { wert: 'general',    label: 'Generalvollmacht' },
-        ] } },
-      { frage: 'In welcher Form wurde die Vollmacht errichtet?',
-        hilfetext: 'Eine privatschriftliche Vollmacht genügt für viele Zwecke. Für Grundstücks- und Gesellschaftsgeschäfte verlangt das Gesetz meist eine notarielle Beurkundung; die Betreuungsbehörde kann Unterschriften beglaubigen (Betreuungsrecht, seit 2023 §§ 1814 ff. BGB).',
-        feld: { id: 'vollmachtsTyp', label: 'Form der Vollmacht', typ: 'auswahl', optionen: [
-          { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
-          { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
-          { wert: 'beurkundet', label: 'notariell beurkundet' },
-        ] } },
-      { frage: 'Wo wird die Vollmacht aufbewahrt?',
-        hilfetext: 'Im Ernstfall muss die Vollmacht schnell auffindbar sein. Gut sind ein fester Ablageort und ein Hinweiszettel im Portemonnaie.',
-        feld: { id: 'vollmacht_ort', label: 'Ablageort Vollmacht', typ: 'text', beispiel: 'beim Notar Dr. Sommer · Tresor zuhause' } },
       { frage: 'Sind Sie im Zentralen Vorsorgeregister eingetragen?',
         hilfetext: 'Das Zentrale Vorsorgeregister der Bundesnotarkammer ermöglicht Betreuungsgerichten, Ihre Vollmacht im Ernstfall zu finden. Falls eingetragen, tragen Sie hier die Registrierungsnummer ein.',
         feld: { id: 'zvr_nummer', label: 'Zentrales Vorsorgeregister — Eintragungsnummer', typ: 'text', beispiel: 'ZVR-2024-987654' } },
-      { frage: 'Gibt es zusätzlich eine eigene Gesundheitsvollmacht — und wer ist darin bevollmächtigt?',
-        hilfetext: 'Eine Gesundheitsvollmacht erlaubt einer Person, in medizinische Behandlungen einzuwilligen. Oft ist sie Teil der Vorsorgevollmacht; manche Menschen geben sie aber getrennt an eine andere Person. Unterschied zur Vorsorgevollmacht: Die Vorsorgevollmacht deckt alle Lebensbereiche ab — auch Bank, Wohnung und Behörden. Die Gesundheitsvollmacht beschränkt sich auf medizinische Entscheidungen.',
-        feld: { id: 'gesundheitsvollmacht_person', label: 'Gesundheitsvollmacht — bevollmächtigte Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' } },
-      { frage: 'Wo liegt die Gesundheitsvollmacht — oder ein Hinweis darauf?',
-        feld: { id: 'gesundheitsvollmacht_ort', label: 'Gesundheitsvollmacht — Ablageort', typ: 'text', beispiel: 'Hausarztpraxis · Geldbeutel-Hinweiszettel' } },
     ],
     abschluss: { toast: 'Ihre Angaben zur Vorsorgevollmacht sind in „Vorsorge & Recht" gespeichert.' } },
 
@@ -5432,7 +5421,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 28,                       // Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: 29,                       // Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -7736,10 +7725,10 @@ const B16_FELD_MAPPING = Object.freeze([
   { alt: 'testament_datum',sektorId: 'vorsorge', feldId: 'testament_datum' },
   { alt: 'erben',          sektorId: 'vorsorge', feldId: 'erben' },              // ref
   { alt: 'vollmacht_vorhanden',sektorId: 'vorsorge', feldId: 'vollmacht_vorhanden' },
-  { alt: 'vollmacht_person',sektorId: 'vorsorge', feldId: 'vollmacht_person' },  // ref
-  { alt: 'vollmacht_ort',  sektorId: 'vorsorge', feldId: 'vollmacht_ort' },
-  { alt: 'gesundheitsvollmacht_person',sektorId: 'vorsorge', feldId: 'gesundheitsvollmacht_person' }, // ref
-  { alt: 'gesundheitsvollmacht_ort',   sektorId: 'vorsorge', feldId: 'gesundheitsvollmacht_ort' },
+  // U2-ADR-064: die Vollmacht-Detailfelder (vollmacht_person/-ort, gesundheitsvollmacht_person/-ort)
+  // sind in den liste-Record vorsorge/vollmachten gewandert. Sektor-Format-Import kann keinen Skalar
+  // in einen Listen-Eintrag hängen (bewusster Pilot-Verzicht) → keine Alias-Zeile mehr. Native
+  // .vivodepot-Depots decken ihre Alt-Daten verlustfrei über die Migration 28→29 ab.
   { alt: 'patientenverf_vorhanden',sektorId: 'vorsorge', feldId: 'patientenverf_vorhanden' },
   { alt: 'patientenverf_ort',  sektorId: 'vorsorge', feldId: 'patientenverf_ort' },
   { alt: 'patientenverf_arzt', sektorId: 'vorsorge', feldId: 'patientenverf_arzt' }, // ref
@@ -12495,6 +12484,48 @@ function depotNormalisieren(d) {
     if (t) _v28.vollmachtsGrundlage = [t]; else delete _v28.vollmachtsGrundlage;
   }
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 28) ziel.schemaVersion = 28;
+  // Schema 28 -> 29 (U2-ADR-064): die Vollmacht-Flachfelder werden zum liste-Record `vollmachten`
+  // (Art · Person · Form · Ablageort). VERWAISUNGS-REGEL: kein Bürgerdatum geht verloren —
+  // vollmachtsGrundlage (Array aus 27→28) → ein Eintrag je erteilter Art (mehrfach = mehrere
+  // Einträge), sonst EIN Eintrag, sobald irgendein Detail (Person/Form/Ablageort) gesetzt ist. Eine
+  // getrennte Gesundheitsvollmacht (eigene Person/Ablageort) wird ein eigener Eintrag (art='gesundheit').
+  // Das Gate vollmacht_vorhanden BLEIBT (Existenz/„in Vorbereitung"). Flachfelder werden nach dem
+  // Folden entfernt. Idempotent: liegt kein Flachfeld (mehr) vor, passiert nichts.
+  const _v29 = ziel.sektoren && ziel.sektoren.vorsorge;
+  if (_v29 && typeof _v29 === 'object') {
+    const hatFlach = _v29.vollmacht_person != null || _v29.vollmachtsGrundlage != null ||
+      _v29.vollmachtsTyp != null || _v29.vollmacht_ort != null ||
+      _v29.gesundheitsvollmacht_person != null || _v29.gesundheitsvollmacht_ort != null;
+    if (hatFlach) {
+      const liste = Array.isArray(_v29.vollmachten) ? _v29.vollmachten : [];
+      const arten = Array.isArray(_v29.vollmachtsGrundlage) ? _v29.vollmachtsGrundlage
+        : (_v29.vollmachtsGrundlage != null && String(_v29.vollmachtsGrundlage).trim() ? [String(_v29.vollmachtsGrundlage).trim()] : []);
+      const person = _v29.vollmacht_person;      // {ref,override} | string | undefined
+      const form   = _v29.vollmachtsTyp;
+      const ort    = _v29.vollmacht_ort;
+      const detail = (person != null || form != null || ort != null);
+      const baueEintrag = (art) => {
+        const e = {};
+        if (art) e.art = art;
+        if (person != null) e.bevollmaechtigter = person;
+        if (form != null)   e.form = form;
+        if (ort != null)    e.ort = ort;
+        return e;
+      };
+      if (arten.length) { for (const a of arten) liste.push(baueEintrag(a)); }
+      else if (detail)  { liste.push(baueEintrag('')); }
+      if (_v29.gesundheitsvollmacht_person != null || _v29.gesundheitsvollmacht_ort != null) {
+        const g = { art: 'gesundheit' };
+        if (_v29.gesundheitsvollmacht_person != null) g.bevollmaechtigter = _v29.gesundheitsvollmacht_person;
+        if (_v29.gesundheitsvollmacht_ort != null)    g.ort = _v29.gesundheitsvollmacht_ort;
+        liste.push(g);
+      }
+      if (liste.length) _v29.vollmachten = liste;
+      delete _v29.vollmacht_person; delete _v29.vollmachtsGrundlage; delete _v29.vollmachtsTyp;
+      delete _v29.vollmacht_ort; delete _v29.gesundheitsvollmacht_person; delete _v29.gesundheitsvollmacht_ort;
+    }
+  }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 29) ziel.schemaVersion = 29;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -16526,7 +16557,13 @@ function listenEintragInputsHTML(feld, eintrag) {
     const pflichtMarker = uf.pflicht
       ? ' <span class="feld-pflicht-marker" aria-label="' + STRINGS.pflichtMarker + '">*</span>'
       : '';
-    h += '<div class="feld-zeile feld-zeile-sub">';
+    // U2-ADR-064 „das if": Unterfelder tragen dieselbe sichtbarWenn-Bedingung wie Sektorfelder,
+    // ausgewertet gegen den EINTRAG. Anfangs-Sichtbarkeit aus dem geladenen Eintrag; das
+    // Live-Umschalten beim Bearbeiten übernimmt _listenEintragBedingungVerdrahten. data-sub-zeile
+    // ist der Anker fürs Umschalten. Ausgeblendete Zeilen bleiben im DOM (Werte gehen nicht
+    // verloren); liesEintragAusDOM sammelt sie bewusst NICHT (nicht zutreffend → kein Wert).
+    const aus = !feldSichtbar(uf, eintrag || {});
+    h += '<div class="feld-zeile feld-zeile-sub" data-sub-zeile="' + escapeHTML(uf.id) + '"' + (aus ? ' hidden' : '') + '>';
     h += '<div class="feld-label">' + escapeHTML(uf.label || uf.id) + pflichtMarker + '</div>';
     h += '<div class="feld-wert">' + feldInputHTML(uf, eintrag ? eintrag[uf.id] : undefined) + '</div>';
     if (uf.hint) h += '<div class="feld-hint">' + escapeHTML(uf.hint) + '</div>';
@@ -16536,16 +16573,19 @@ function listenEintragInputsHTML(feld, eintrag) {
 }
 
 // Conditional Fields (UX-Spec V/Spec 30.05.) — ein Feld kann eine `sichtbarWenn`-Bedingung
-// tragen. Form: { feld: '<feldId>', wert: '<wert>' }  (Gleichheit mit anderem Feld im selben
-// Sektor). Fehlt sichtbarWenn, ist das Feld immer sichtbar. Erweiterbar: später Operator/
-// Listen-Werte. Renderer nutzt das, um conditional Felder auszublenden (z. B. KI-Verfügung
-// Fragen 2–4 nur, wenn Grundsatz = ja).
+// tragen. Form: { feld: '<feldId>', wert: '<wert>' | ['<wert>', …] }  (Gleichheit mit einem
+// anderen Feld im selben Kontext; ein Array trifft, wenn EINER der Werte gleich ist). Fehlt
+// sichtbarWenn, ist das Feld immer sichtbar. Renderer nutzt das, um conditional Felder
+// auszublenden (z. B. KI-Verfügung Fragen 2–4 nur, wenn Grundsatz = ja). U2-ADR-064: dieselbe
+// Prädikat-Funktion wertet auch Listen-Unterfelder aus — dann ist der Datenkontext (sektorDaten)
+// der EINTRAG, nicht der Sektor. So blendet z. B. eine Vollmacht das Feld „beurkundende Stelle"
+// nur bei notarieller/beglaubigter Form ein (Array-Wert).
 function feldSichtbar(feld, sektorDaten) {
   if (!feld || !feld.sichtbarWenn) return true;
   const b = feld.sichtbarWenn;
   if (!b || typeof b !== 'object') return true;
   const ist = sektorDaten ? sektorDaten[b.feld] : undefined;
-  return ist === b.wert;
+  return Array.isArray(b.wert) ? b.wert.includes(ist) : ist === b.wert;
 }
 
 // Render einer Feld-Zeile (Label + Wert/Input + optionaler Hint + Urheberschafts-Beleg).
@@ -16608,6 +16648,7 @@ function flowListenEintragHinzufuegen(sektorId, feld) {
     },
   });
   _refSubPickerVerdrahten(feld);
+  _listenEintragBedingungVerdrahten(feld);
 }
 function flowListenEintragBearbeiten(sektorId, feld, index) {
   const liste = (data && data.sektoren && data.sektoren[sektorId] && data.sektoren[sektorId][feld.id]) || [];
@@ -16626,6 +16667,36 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
     },
   });
   _refSubPickerVerdrahten(feld);
+  _listenEintragBedingungVerdrahten(feld);
+}
+
+// U2-ADR-064 · Reaktive Modal-Schicht (Muster: _refSubPickerVerdrahten). Blendet Unterfelder mit
+// sichtbarWenn live ein/aus, WÄHREND der Eintrag im Modal bearbeitet wird — ohne Neu-Render, damit
+// bereits getippte Eingaben nicht verloren gehen. Wertet feldSichtbar gegen die AKTUELLEN DOM-Werte
+// des Eintrags aus (nicht gegen den Sektor). Ohne bedingtes Unterfeld tut die Funktion nichts.
+function _listenEintragBedingungVerdrahten(feld) {
+  const modalEl = document.getElementById('modal-inhalt');
+  if (!modalEl || !modalEl.querySelectorAll) return;
+  const unterFelder = (feld && feld.unterFelder) || [];
+  if (!unterFelder.some(uf => uf.sichtbarWenn)) return;   // nichts Bedingtes → keine Verdrahtung
+  const werteAusDOM = () => {
+    const w = {};
+    for (const uf of unterFelder) {
+      if (uf.typ === 'ref') { const s = modalEl.querySelector('[data-edit-ref="' + uf.id + '"]'); w[uf.id] = (s && s.value) || ''; }
+      else { const i = modalEl.querySelector('[data-edit="' + uf.id + '"]'); w[uf.id] = (i && i.value) || ''; }
+    }
+    return w;
+  };
+  const neuBewerten = () => {
+    const w = werteAusDOM();
+    for (const uf of unterFelder) {
+      const zeile = modalEl.querySelector('[data-sub-zeile="' + uf.id + '"]');
+      if (zeile) zeile.hidden = !feldSichtbar(uf, w);
+    }
+  };
+  modalEl.addEventListener('change', neuBewerten);
+  modalEl.addEventListener('input', neuBewerten);
+  neuBewerten();   // Anfangs-Stand konsistent mit den geladenen Werten
 }
 
 // Verdrahtet die ref-Sub-Picker im aktuell offenen Listen-Eintrag-Modal. Bei „__neu__"-Auswahl
@@ -16727,6 +16798,11 @@ function liesEintragAusDOM(modalEl, feld) {
   if (!modalEl || !modalEl.querySelector) return {};
   const werte = {};
   for (const uf of (feld.unterFelder || [])) {
+    // U2-ADR-064: ausgeblendete conditional-Zeilen werden NICHT gesammelt — ein nicht
+    // zutreffendes Feld (z. B. „beurkundende Stelle" bei privatschriftlicher Form) hinterlässt
+    // keinen Wert. Nur bei Listen mit sichtbarWenn relevant; Listen ohne Bedingung unverändert.
+    const zeile = modalEl.querySelector('[data-sub-zeile="' + uf.id + '"]');
+    if (zeile && zeile.hidden) continue;
     if (uf.typ === 'ref') {
       const sel = modalEl.querySelector('[data-edit-ref="' + uf.id + '"]');
       const ov  = modalEl.querySelector('[data-edit-override="' + uf.id + '"]');
