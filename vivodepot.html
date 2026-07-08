@@ -1050,6 +1050,11 @@
   .feld-mehrfach { display: flex; flex-direction: column; gap: var(--space-1); }
   .feld-mehrfach-opt { display: flex; align-items: flex-start; gap: var(--space-2); font-weight: 400; cursor: pointer; }
   .feld-mehrfach-opt input[type="checkbox"] { flex: 0 0 auto; margin-top: 0.2em; }
+  /* U2-ADR-065: refMehrfach — Spalte aus Personen-Zeilen (Select + Freitext + ↑/↓/×) + „+ Person". */
+  .feld-refm { display: flex; flex-direction: column; gap: var(--space-1); }
+  .refm-zeile { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+  .refm-zeile select, .refm-zeile input { font-size: var(--fs-sm); padding: var(--space-1); }
+  .refm-add { align-self: flex-start; }
 
   /* ══════════════════════════════════════════════════════════════════════════
      RESPONSIVER DURCHGANG (mobil-first im Verhalten) — der Großteil der Nutzung
@@ -2459,7 +2464,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
-const BUILD_DATUM = '2026-07-07';
+const BUILD_DATUM = '2026-07-08';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 
@@ -3492,6 +3497,10 @@ const STRINGS = Object.freeze({
   refNeueInstitutionOption: "Neue Institution",           // Picker-Option „+ Neue Institution anlegen"
   refOptionAnlegenSuffix: "anlegen",
   refFreitextPlatzhalter: "oder Freitext",                // Freitext-Override im ref-Picker
+  refmPersonHinzufuegen: "Person hinzufügen",             // U2-ADR-065: refMehrfach — weitere Person
+  refmHoch: "Nach oben",                                  // Reihenfolge-Knopf ↑
+  refmRunter: "Nach unten",                               // Reihenfolge-Knopf ↓
+  refmWeg: "Entfernen",                                   // Zeile/Person aus der Mehrfachauswahl entfernen
   listenEintragSg: "Eintrag",                             // „1 Eintrag"
   listenEintragPl: "Einträge",                            // „N Einträge"
   pdfSeite: "Seite",                                      // PDF-Fuß „Seite X/Y"
@@ -4061,7 +4070,17 @@ const SEKTOREN = Object.freeze([
               { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
               { wert: 'general',    label: 'Generalvollmacht' },
             ] },
-            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' },
+            // U2-ADR-065: eine Vollmacht kann an MEHRERE Personen gehen (gemeinsam oder als Ersatz-
+            // Reihenfolge) → refMehrfach (Register-Mehrfachpick, umsortierbar). Reihenfolge = Bürger-Wille.
+            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person(en)', typ: 'refMehrfach', entitaet: 'person', rolle: 'bevollmaechtigte' },
+            // Vertretungs-Modus erscheint NUR bei mehr als einer Person (minAnzahl 2).
+            { id: 'vertretungsModus', label: 'Wie vertreten die Personen?', typ: 'auswahl',
+              sichtbarWenn: { feld: 'bevollmaechtigter', minAnzahl: 2 },
+              optionen: [
+                { wert: 'gleichwertig', label: 'gleichwertig — jede darf allein handeln' },
+                { wert: 'nacheinander', label: 'nacheinander — in der genannten Reihenfolge (Ersatz)' },
+              ],
+              hint: 'Gleichwertig: jede bevollmächtigte Person darf einzeln handeln. Nacheinander: die erste ist zuständig, die nächste nur als Ersatz — die Reihenfolge oben bestimmt die Vertretung.' },
             { id: 'form', label: 'Form der Vollmacht', typ: 'auswahl', optionen: [
               { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
               { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
@@ -5421,7 +5440,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 29,                       // Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: 30,                       // Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -10545,6 +10564,19 @@ function listenEintragEntfernen(sektorId, feldId, index) {
   codeSlotSicherstellen(sektorId, feldId);
   return stempel;
 }
+// U2-ADR-065: einen Listen-Eintrag um eine Position verschieben (richtung -1 = hoch, +1 = runter).
+// Reihenfolge ist ein Bürger-Willen (z. B. Ersatz-Reihenfolge bei „nacheinander"); kein Stempel, da
+// keine Werte geändert werden. Ränder ohne Wrap; ungültiger Index → false.
+function listenEintragVerschieben(sektorId, feldId, index, richtung) {
+  if (!data) throw new Error('Kein offenes Depot.');
+  const liste = _listeOder(sektorId, feldId);
+  const ziel = index + richtung;
+  if (typeof index !== 'number' || index < 0 || index >= liste.length) return false;
+  if (ziel < 0 || ziel >= liste.length) return false;
+  const tmp = liste[index]; liste[index] = liste[ziel]; liste[ziel] = tmp;
+  markiereUngespeichert(1);
+  return true;
+}
 
 // Anzeige-Name eines Akteurs (Person aus data.menschen[]); '' wenn unbekannt.
 function akteurName(personId) {
@@ -12526,6 +12558,23 @@ function depotNormalisieren(d) {
     }
   }
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 29) ziel.schemaVersion = 29;
+  // Schema 29 -> 30 (U2-ADR-065): `bevollmaechtigter` im Vollmacht-Record wird refMehrfach (Array von
+  // {ref,override}). VERWAISUNGS-REGEL: ein Einzel-Ref → [Einzel-Ref] (verlustfrei); ein Alt-String →
+  // [{ref:'',override:String}]; ein leerer Einzel-Ref → [] (Feld entfällt beim nächsten Save).
+  // vertretungsModus bleibt undefined (erscheint erst bei >1 Person). Idempotent: Array bleibt unberührt.
+  const _v30 = ziel.sektoren && ziel.sektoren.vorsorge;
+  if (_v30 && Array.isArray(_v30.vollmachten)) {
+    for (const e of _v30.vollmachten) {
+      if (e && e.bevollmaechtigter != null && !Array.isArray(e.bevollmaechtigter)) {
+        const b = e.bevollmaechtigter;
+        const alsObj = (typeof b === 'string') ? { ref: '', override: b } : b;
+        const hat = alsObj && typeof alsObj === 'object' &&
+          ((typeof alsObj.ref === 'string' && alsObj.ref !== '') || (typeof alsObj.override === 'string' && String(alsObj.override).trim() !== ''));
+        e.bevollmaechtigter = hat ? [alsObj] : [];
+      }
+    }
+  }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 30) ziel.schemaVersion = 30;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -13618,6 +13667,14 @@ function bearbeitungSpeichern() {
     const werte = [];
     c.querySelectorAll('[data-edit-multi="' + fid + '"]').forEach(cb => { if (cb.checked) werte.push(cb.value); });
     const vorher = Array.isArray(vorherDaten[fid]) ? vorherDaten[fid] : (vorherDaten[fid] != null ? [String(vorherDaten[fid])] : []);
+    if (werte.length) neu[fid] = werte; else delete neu[fid];
+    if (JSON.stringify(vorher) !== JSON.stringify(werte)) geaendert.push(fid);
+  });
+  // e) refMehrfach (U2-ADR-065): Personen-Zeilen in DOM-Reihenfolge → Array {ref,override}, leere raus.
+  c.querySelectorAll('[data-refm]').forEach(box => {
+    const fid = box.getAttribute('data-refm');
+    const werte = _refmSammeln(c, fid);
+    const vorher = Array.isArray(vorherDaten[fid]) ? vorherDaten[fid] : [];
     if (werte.length) neu[fid] = werte; else delete neu[fid];
     if (JSON.stringify(vorher) !== JSON.stringify(werte)) geaendert.push(fid);
   });
@@ -15153,6 +15210,25 @@ function renderSektor(sektorOrId) {
         if (feld) flowListenEintragHinzufuegen(sektorId, feld);
       };
     });
+    // U2-ADR-065: Listen-Einträge umsortieren (↑/↓) — persistente Reihenfolge via listenEintragVerschieben.
+    c.querySelectorAll('[data-eintrag-hoch]').forEach(btn => {
+      btn.onclick = () => {
+        const wrap = btn.closest ? btn.closest('[data-feld-liste]') : null;
+        const fid = wrap && wrap.getAttribute('data-feld-liste');
+        const idx = parseInt(btn.getAttribute('data-eintrag-hoch'), 10);
+        if (fid && listenEintragVerschieben(sektorId, fid, idx, -1)) renderContent();
+      };
+    });
+    c.querySelectorAll('[data-eintrag-runter]').forEach(btn => {
+      btn.onclick = () => {
+        const wrap = btn.closest ? btn.closest('[data-feld-liste]') : null;
+        const fid = wrap && wrap.getAttribute('data-feld-liste');
+        const idx = parseInt(btn.getAttribute('data-eintrag-runter'), 10);
+        if (fid && listenEintragVerschieben(sektorId, fid, idx, +1)) renderContent();
+      };
+    });
+    // U2-ADR-065: refMehrfach-Widgets im Sektor-Edit-Modus verdrahten (Add/Entfernen/↑↓/„+ Neu").
+    _refMehrfachVerdrahten(c, findeFeld);
 
     // Ref-Picker im Sektor-Edit-Modus: „__neu__"-Auswahl öffnet Inline-Anlage und setzt das Feld
     // direkt (mit Stempel). Bei normaler Auswahl wird der Wert per Auto-Save (blur/change) übernommen.
@@ -15301,6 +15377,11 @@ function feldWertText(feld, roh) {
       return (e && (e.beschriftung || e.dateiname)) || STRINGS.leerZustand;
     }
     return entitaetAnzeige(roh, feld.entitaet || 'person') || STRINGS.leerZustand;
+  }
+  if (feld.typ === 'refMehrfach') {
+    // U2-ADR-065: Array von {ref,override} → Namen, „, "-getrennt (Anzeige-Reihenfolge = Array-Reihenfolge).
+    const arr = Array.isArray(roh) ? roh : [];
+    return arr.map(e => entitaetAnzeige(e, feld.entitaet || 'person')).filter(Boolean).join(', ') || STRINGS.leerZustand;
   }
   if (feld.typ === 'auswahl') {
     const opt = (Array.isArray(feld.optionen) ? feld.optionen : []).find(o => o.wert === roh);
@@ -16261,6 +16342,12 @@ function feldWertHTML(feld, roh) {
     const name = entitaetAnzeige(roh, feld.entitaet || 'person');
     return name ? escapeHTML(name) : '<span class="leer">' + STRINGS.leerZustand + '</span>';
   }
+  if (feld.typ === 'refMehrfach') {
+    // U2-ADR-065: Array von {ref,override} → Namen escaped, „, "-getrennt; nie das rohe Array.
+    const arr = Array.isArray(roh) ? roh : [];
+    const namen = arr.map(e => entitaetAnzeige(e, feld.entitaet || 'person')).filter(Boolean);
+    return namen.length ? escapeHTML(namen.join(', ')) : '<span class="leer">' + STRINGS.leerZustand + '</span>';
+  }
   if (feld.typ === 'auswahl') {
     // Wert ist der maschinelle Schlüssel; im Render zeigen wir das Label der gewählten Option.
     const opt = (Array.isArray(feld.optionen) ? feld.optionen : []).find(o => o.wert === roh);
@@ -16308,6 +16395,9 @@ function listenEintragZusammenfassung(feld, eintrag) {
     if (uf.typ === 'ref') {
       const n = entitaetAnzeige(w, uf.entitaet || 'person');
       if (n) teile.push(n);
+    } else if (uf.typ === 'refMehrfach') {
+      const namen = (Array.isArray(w) ? w : []).map(e => entitaetAnzeige(e, uf.entitaet || 'person')).filter(Boolean);
+      if (namen.length) teile.push(namen.join(', '));
     } else if (uf.typ === 'auswahl') {
       const opt = (Array.isArray(uf.optionen) ? uf.optionen : []).find(o => o.wert === w);
       teile.push((opt && opt.label) || String(w));
@@ -16321,6 +16411,10 @@ function listenEintragZusammenfassung(feld, eintrag) {
 // Eingetragen? — Pure Prüfung, ob ein Feldwert nicht-leer ist. Generisch für alle Typen.
 function feldEingetragen(feld, wert) {
   if (wert == null) return false;
+  if (feld && feld.typ === 'refMehrfach') {
+    // U2-ADR-065: Array von {ref,override} — eingetragen, wenn mindestens EINE Person ref oder override trägt.
+    return Array.isArray(wert) && wert.some(e => e && ((typeof e.ref === 'string' && e.ref !== '') || (typeof e.override === 'string' && e.override.trim() !== '')));
+  }
   if (typeof wert === 'string') return wert.trim() !== '';
   if (typeof wert === 'number') return Number.isFinite(wert);          // 0 zählt als eingetragen
   if (typeof wert === 'boolean') return wert === true;
@@ -16411,10 +16505,45 @@ function feldValidieren(feld, wert) {
       if (typeof wert.ref !== 'string' && typeof wert.override !== 'string') return { ok: false, grund: 'ref' };
       return { ok: true };
     }
+    case 'refMehrfach': {
+      // U2-ADR-065: Array von {ref,override}; jedes Element muss ein ref- oder override-tragendes Objekt sein.
+      if (!Array.isArray(wert)) return { ok: false, grund: 'ref' };
+      for (const e of wert) {
+        if (typeof e === 'string') continue;                      // toleranter Override-as-string
+        if (!e || typeof e !== 'object') return { ok: false, grund: 'ref' };
+        if (typeof e.ref !== 'string' && typeof e.override !== 'string') return { ok: false, grund: 'ref' };
+      }
+      return { ok: true };
+    }
     // 'liste' wird vor dem eingetragen-Gate behandelt (siehe oben) — kein case hier.
     default:
       return { ok: true };
   }
+}
+
+// U2-ADR-065: eine Personen-Zeile eines refMehrfach-Felds (Select mit Register-Vorschlägen + „+ Neu",
+// Freitext-Override, ↑/↓ zum Umsortieren, × zum Entfernen). Auch von der Verdrahtung genutzt, um beim
+// „+ Person"-Klick eine frische Zeile anzuhängen — darum eigenständige Funktion (keine Closure).
+function _refmZeileHTML(feld, eintrag) {
+  const fid = feld.id;
+  const entitaet = feld.entitaet || 'person';
+  const ref = (eintrag && typeof eintrag === 'object' && 'ref' in eintrag) ? String(eintrag.ref || '') : '';
+  const override = (eintrag && typeof eintrag === 'object' && typeof eintrag.override === 'string') ? eintrag.override : '';
+  const vorschlaege = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
+  const al = ' aria-label="' + escapeHTML(String(feld.label != null ? feld.label : fid)).replace(/"/g, '&quot;') + '"';
+  let z = '<div class="refm-zeile" data-refm-zeile>';
+  z += '<select data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '"' + al + '><option value=""></option>';
+  for (const v of vorschlaege) {
+    const s = (v.id === ref) ? ' selected' : '';
+    z += '<option value="' + String(v.id).replace(/"/g, '&quot;') + '"' + s + '>' + escapeHTML(v.name || '') + '</option>';
+  }
+  z += '<option value="__neu__">+ ' + (entitaet === 'institution' ? STRINGS.refNeueInstitutionOption : STRINGS.refNeuePersonOption) + ' ' + STRINGS.refOptionAnlegenSuffix + '</option>';
+  z += '</select>';
+  z += '<input type="text" data-edit-refm-override="' + fid + '"' + al + ' placeholder="' + STRINGS.refFreitextPlatzhalter + '" value="' + override.replace(/"/g, '&quot;') + '">';
+  z += '<button type="button" class="btn-mini refm-hoch" data-refm-hoch aria-label="' + escapeHTML(STRINGS.refmHoch) + '">↑</button>';
+  z += '<button type="button" class="btn-mini refm-runter" data-refm-runter aria-label="' + escapeHTML(STRINGS.refmRunter) + '">↓</button>';
+  z += '<button type="button" class="btn-mini refm-weg" data-refm-weg aria-label="' + escapeHTML(STRINGS.refmWeg) + '">×</button>';
+  return z + '</div>';
 }
 
 // Input-Renderer pro Feldtyp — wird im Edit-Modus gerendert. `roh` ist der aktuelle Wert. Liefert
@@ -16509,6 +16638,16 @@ function feldInputHTML(feld, roh) {
         override.replace(/"/g, '&quot;') + '">';
       return h + '</div>';
     }
+    case 'refMehrfach': {
+      // U2-ADR-065: mehrere Register-Personen mit „+ Person", Entfernen und ↑/↓. Reihenfolge = DOM-
+      // Reihenfolge (wird beim Sektor-Save bzw. liesEintragAusDOM ausgelesen). Mind. eine leere Zeile.
+      const arr = Array.isArray(roh) ? roh : [];
+      const zeilen = arr.length ? arr : [{ ref: '', override: '' }];
+      let h = '<div class="feld-refm" data-refm="' + fid + '" data-entitaet="' + (feld.entitaet || 'person') + '" role="group"' + al + '>';
+      for (const e of zeilen) h += _refmZeileHTML(feld, e);
+      h += '<button type="button" class="btn-mini refm-add" data-refm-add="' + fid + '">+ ' + escapeHTML(STRINGS.refmPersonHinzufuegen) + '</button>';
+      return h + '</div>';
+    }
     case 'liste': {
       // Mit unterFelder: Lese-Sicht der Einträge plus pro Eintrag Bearbeiten/Entfernen-Knöpfe
       // plus Hinzufügen-Knopf am Ende. Die Knöpfe werden im Browser ans Eintrag-Modal verdrahtet.
@@ -16523,6 +16662,9 @@ function feldInputHTML(feld, roh) {
         h += '<span class="liste-eintrag-zusammenfassung">' +
           (zusammen ? escapeHTML(zusammen) : '<span class="leer">' + STRINGS.leerZustand + '</span>') +
           '</span> ';
+        // U2-ADR-065: Einträge umsortieren (↑/↓) — persistente Reihenfolge via listenEintragVerschieben.
+        h += '<button type="button" class="btn-mini" data-eintrag-hoch="' + i + '" aria-label="' + escapeHTML(STRINGS.refmHoch) + '">↑</button>';
+        h += '<button type="button" class="btn-mini" data-eintrag-runter="' + i + '" aria-label="' + escapeHTML(STRINGS.refmRunter) + '">↓</button> ';
         h += '<button type="button" class="btn-mini" data-eintrag-bearbeiten="' + i + '">' +
           STRINGS.btnBearbeiten + '</button> ';
         h += '<button type="button" class="btn-mini" data-eintrag-entfernen="' + i + '">' +
@@ -16579,12 +16721,15 @@ function listenEintragInputsHTML(feld, eintrag) {
 // auszublenden (z. B. KI-Verfügung Fragen 2–4 nur, wenn Grundsatz = ja). U2-ADR-064: dieselbe
 // Prädikat-Funktion wertet auch Listen-Unterfelder aus — dann ist der Datenkontext (sektorDaten)
 // der EINTRAG, nicht der Sektor. So blendet z. B. eine Vollmacht das Feld „beurkundende Stelle"
-// nur bei notarieller/beglaubigter Form ein (Array-Wert).
+// nur bei notarieller/beglaubigter Form ein (Array-Wert). U2-ADR-065: zusätzlich `minAnzahl` —
+// sichtbar nur, wenn das referenzierte Feld ein Array mit ≥ minAnzahl Einträgen ist (z. B. der
+// Vertretungs-Modus nur bei mehr als einer bevollmächtigten Person).
 function feldSichtbar(feld, sektorDaten) {
   if (!feld || !feld.sichtbarWenn) return true;
   const b = feld.sichtbarWenn;
   if (!b || typeof b !== 'object') return true;
   const ist = sektorDaten ? sektorDaten[b.feld] : undefined;
+  if (typeof b.minAnzahl === 'number') return Array.isArray(ist) && ist.length >= b.minAnzahl;
   return Array.isArray(b.wert) ? b.wert.includes(ist) : ist === b.wert;
 }
 
@@ -16648,6 +16793,7 @@ function flowListenEintragHinzufuegen(sektorId, feld) {
     },
   });
   _refSubPickerVerdrahten(feld);
+  _refMehrfachVerdrahten(document.getElementById('modal-inhalt'), (fid) => (feld.unterFelder || []).find(u => u.id === fid));
   _listenEintragBedingungVerdrahten(feld);
 }
 function flowListenEintragBearbeiten(sektorId, feld, index) {
@@ -16667,6 +16813,7 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
     },
   });
   _refSubPickerVerdrahten(feld);
+  _refMehrfachVerdrahten(document.getElementById('modal-inhalt'), (fid) => (feld.unterFelder || []).find(u => u.id === fid));
   _listenEintragBedingungVerdrahten(feld);
 }
 
@@ -16683,6 +16830,7 @@ function _listenEintragBedingungVerdrahten(feld) {
     const w = {};
     for (const uf of unterFelder) {
       if (uf.typ === 'ref') { const s = modalEl.querySelector('[data-edit-ref="' + uf.id + '"]'); w[uf.id] = (s && s.value) || ''; }
+      else if (uf.typ === 'refMehrfach') { w[uf.id] = _refmSammeln(modalEl, uf.id); }
       else { const i = modalEl.querySelector('[data-edit="' + uf.id + '"]'); w[uf.id] = (i && i.value) || ''; }
     }
     return w;
@@ -16768,6 +16916,75 @@ function _refSubPickerVerdrahten(feld) {
     };
   });
 }
+// U2-ADR-065: Verdrahtung der refMehrfach-Widgets in `container` (Sektor-Content ODER Eintrags-Modal).
+// `feldeFinden(fid)` liefert die Felddefinition (für „+ Person"-Zeilen-Neubau + entitaet/rolle). Add,
+// Entfernen und ↑/↓ arbeiten rein im DOM (Reihenfolge/Auswahl wird beim Speichern via _refmSammeln
+// gelesen); jede Mutation dispatcht ein bubbelndes „change", damit die conditional-Schicht (z. B. der
+// Vertretungs-Modus ab >1 Person) live nachzieht.
+function _refMehrfachVerdrahten(container, feldeFinden) {
+  if (!container || !container.querySelectorAll) return;
+  container.querySelectorAll('[data-refm]').forEach(box => {
+    const fid = box.getAttribute('data-refm');
+    const feld = feldeFinden ? feldeFinden(fid) : null;
+    if (!feld) return;
+    const melden = () => { try { box.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {} };
+    const zeileVerdrahten = (z) => {
+      const sel = z.querySelector('[data-edit-refm]');
+      if (sel) sel.onchange = () => { if (sel.value === '__neu__') { _refmNeuInline(sel, feld); } else { melden(); } };
+      const weg = z.querySelector('[data-refm-weg]');
+      if (weg) weg.onclick = () => { if (z.remove) z.remove(); melden(); };
+      const hoch = z.querySelector('[data-refm-hoch]');
+      if (hoch) hoch.onclick = () => { const p = z.previousElementSibling; if (p && p.hasAttribute && p.hasAttribute('data-refm-zeile')) box.insertBefore(z, p); melden(); };
+      const runter = z.querySelector('[data-refm-runter]');
+      if (runter) runter.onclick = () => { const n = z.nextElementSibling; if (n && n.hasAttribute && n.hasAttribute('data-refm-zeile')) box.insertBefore(n, z); melden(); };
+      const ov = z.querySelector('[data-edit-refm-override]');
+      if (ov) ov.oninput = melden;
+    };
+    box.querySelectorAll('[data-refm-zeile]').forEach(zeileVerdrahten);
+    const add = box.querySelector('[data-refm-add]');
+    if (add) add.onclick = () => {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = _refmZeileHTML(feld, { ref: '', override: '' });
+      const neu = tmp.firstElementChild;
+      if (!neu) return;
+      box.insertBefore(neu, add);
+      zeileVerdrahten(neu);
+      melden();
+      const s = neu.querySelector('[data-edit-refm]'); if (s && s.focus) s.focus();
+    };
+  });
+}
+// Inline-Anlage einer neuen Person/Institution aus einer refMehrfach-Zeile (Muster _refSubPickerVerdrahten,
+// name-only). Legt die Entität an, hängt sie als <option> ein, wählt sie aus. Kein Modal-Stack.
+function _refmNeuInline(sel, feld) {
+  const entitaet = feld.entitaet || 'person';
+  sel.value = '';
+  const zeile = (sel.closest && sel.closest('.refm-zeile')) || sel.parentNode;
+  if (!zeile || !zeile.parentNode) return;
+  if (zeile.parentNode.querySelector && zeile.parentNode.querySelector('.inline-neu')) {
+    const inp0 = zeile.parentNode.querySelector('.inline-neu [data-neu-name]'); if (inp0 && inp0.focus) inp0.focus(); return;
+  }
+  const platzhalter = (entitaet === 'institution') ? 'Name der Institution' : 'Name der Person';
+  const inline = document.createElement('div');
+  inline.className = 'inline-neu';
+  inline.innerHTML =
+    '<input type="text" data-neu-name placeholder="' + platzhalter + '"> ' +
+    '<button type="button" class="btn-mini" data-neu-anlegen>' + STRINGS.btnHinzufuegen + '</button> ' +
+    '<button type="button" class="btn-mini" data-neu-abbr>' + STRINGS.btnAbbrechen + '</button>';
+  zeile.parentNode.insertBefore(inline, zeile.nextSibling);
+  const nameInp = inline.querySelector('[data-neu-name]'); if (nameInp && nameInp.focus) nameInp.focus();
+  inline.querySelector('[data-neu-anlegen]').onclick = () => {
+    const name = (nameInp && nameInp.value || '').trim(); if (!name) return;
+    const newId = (entitaet === 'institution') ? institutionHinzufuegen({ name, art: feld.art }) : personHinzufuegen({ name });
+    const opt = document.createElement('option'); opt.value = newId; opt.textContent = name;
+    const neuOpt = sel.querySelector && sel.querySelector('option[value="__neu__"]');
+    if (neuOpt) sel.insertBefore(opt, neuOpt); else sel.appendChild(opt);
+    sel.value = newId;
+    if (inline.remove) inline.remove();
+    try { sel.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+  };
+  inline.querySelector('[data-neu-abbr]').onclick = () => { if (inline.remove) inline.remove(); };
+}
 function flowListenEintragEntfernen(sektorId, feld, index) {
   listenEintragEntfernen(sektorId, feld.id, index);
   renderContent();
@@ -16794,6 +17011,21 @@ function liesEintragAusWerten(feld, werte) {
 
 // Browser-Brücke: liest Sub-Werte aus den data-edit-Inputs im Modal-DOM und ruft das reine
 // Mapping liesEintragAusWerten. Im headless Test wird die reine Funktion direkt geprüft.
+// U2-ADR-065: die Personen-Zeilen eines refMehrfach-Felds aus dem DOM sammeln (Container beliebig —
+// Sektor-Content ODER Eintrags-Modal). Reihenfolge = DOM-Reihenfolge; leere Zeilen fallen raus.
+function _refmSammeln(container, fid) {
+  const box = container && container.querySelector && container.querySelector('[data-refm="' + fid + '"]');
+  if (!box) return [];
+  const out = [];
+  box.querySelectorAll('[data-refm-zeile]').forEach(z => {
+    const sel = z.querySelector('[data-edit-refm]');
+    const ov  = z.querySelector('[data-edit-refm-override]');
+    const ref = (sel && sel.value && sel.value !== '__neu__') ? sel.value : '';
+    const override = (ov && ov.value) || '';
+    if (ref || (override && override.trim())) out.push({ ref, override });
+  });
+  return out;
+}
 function liesEintragAusDOM(modalEl, feld) {
   if (!modalEl || !modalEl.querySelector) return {};
   const werte = {};
@@ -16807,6 +17039,8 @@ function liesEintragAusDOM(modalEl, feld) {
       const sel = modalEl.querySelector('[data-edit-ref="' + uf.id + '"]');
       const ov  = modalEl.querySelector('[data-edit-override="' + uf.id + '"]');
       werte[uf.id] = { ref: (sel && sel.value) || '', override: (ov && ov.value) || '' };
+    } else if (uf.typ === 'refMehrfach') {
+      werte[uf.id] = _refmSammeln(modalEl, uf.id);
     } else {
       const inp = modalEl.querySelector('[data-edit="' + uf.id + '"]');
       werte[uf.id] = inp ? (inp.value || '') : '';
