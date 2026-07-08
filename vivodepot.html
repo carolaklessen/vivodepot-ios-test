@@ -1050,11 +1050,16 @@
   .feld-mehrfach { display: flex; flex-direction: column; gap: var(--space-1); }
   .feld-mehrfach-opt { display: flex; align-items: flex-start; gap: var(--space-2); font-weight: 400; cursor: pointer; }
   .feld-mehrfach-opt input[type="checkbox"] { flex: 0 0 auto; margin-top: 0.2em; }
-  /* U2-ADR-065: refMehrfach — Spalte aus Personen-Zeilen (Select + Freitext + ↑/↓/×) + „+ Person". */
-  .feld-refm { display: flex; flex-direction: column; gap: var(--space-1); }
-  .refm-zeile { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
-  .refm-zeile .refm-name { flex: 1 1 12em; min-width: 8em; }         /* primär: Name tippen */
-  .refm-zeile .refm-register { flex: 0 1 14em; min-width: 8em; }     /* sekundär: aus Register */
+  /* U2-ADR-065: refMehrfach — Spalte aus Personen-Zeilen (Name + Register-Select + ↑/↓/×) + „+ Person".
+     U2-ADR-065-Nachlauf (Bug 2): breiten-UNABHÄNGIGES Grid statt flex-wrap, damit das Widget in JEDEM
+     Container identisch rendert (Sektor-Feld = Erben ⇔ Listen-Unterfeld = Vollmacht). Pro Person zwei
+     Reihen: Name über die volle Breite (behebt zugleich das schmale Namensfeld), darunter Register-
+     Select + ↑ ↓ ×. Die Anordnung hängt nicht mehr an der Spaltenbreite — kein unterschiedlicher Umbruch. */
+  .feld-refm { display: flex; flex-direction: column; gap: var(--space-2); }
+  .refm-zeile { display: grid; grid-template-columns: 1fr auto auto auto; gap: var(--space-1) var(--space-2); align-items: center; }
+  .refm-zeile + .refm-zeile { border-top: 1px solid var(--line); padding-top: var(--space-2); }
+  .refm-zeile .refm-name { grid-column: 1 / -1; }                    /* primär: Name tippen — volle Breite */
+  .refm-zeile .refm-register { min-width: 0; }                       /* sekundär: aus Register (schrumpfbar) */
   .refm-zeile select, .refm-zeile input { font-size: var(--fs-sm); padding: var(--space-1); }
   .refm-add { align-self: flex-start; }
 
@@ -10010,6 +10015,21 @@ function personHinzufuegen(patch) {
   data.menschen.push(eintrag);
   return id;
 }
+
+// U2-ADR-065-Nachlauf (Bug 1): getippten Namen ins Register auflösen — bestehende Person
+// (case-insensitiv, getrimmter Namensvergleich) wiederverwenden, sonst neu anlegen. Liefert die id.
+// Gleicher Name = gleiche Person (bewusst; wer verschiedene Menschen gleichen Namens trennen will,
+// wählt die bestehende Person explizit im Register-Select).
+function personFindenOderAnlegen(name) {
+  const n = String((name == null ? '' : name)).trim();
+  if (!n) return '';
+  if (!data) throw new Error('Kein offenes Depot.');
+  if (!Array.isArray(data.menschen)) data.menschen = [];
+  const nl = n.toLowerCase();
+  const vorhanden = data.menschen.find(p => p && typeof p.name === 'string' && p.name.trim().toLowerCase() === nl);
+  if (vorhanden) return vorhanden.id;
+  return personHinzufuegen({ name: n });
+}
 // Append-only auf konkrete Felder; wirft, wenn die Person nicht existiert. Pflegt OPTIONALE
 // Felder (Telefon, E-Mail, Adresse, Fachrichtung, Notariatsnummer, Anmerkung). Der Name
 // bleibt der Anker — wird er hier mit-aktualisiert, wirkt das in JEDEM Feld, das via ref auf
@@ -13693,7 +13713,7 @@ function bearbeitungSpeichern() {
   // e) refMehrfach (U2-ADR-065): Personen-Zeilen in DOM-Reihenfolge → Array {ref,override}, leere raus.
   c.querySelectorAll('[data-refm]').forEach(box => {
     const fid = box.getAttribute('data-refm');
-    const werte = _refmSammeln(c, fid);
+    const werte = _refmInsRegister(_refmSammeln(c, fid)); // Bug 1: getippte Namen → Register-Personen
     const vorher = Array.isArray(vorherDaten[fid]) ? vorherDaten[fid] : [];
     if (werte.length) neu[fid] = werte; else delete neu[fid];
     if (JSON.stringify(vorher) !== JSON.stringify(werte)) geaendert.push(fid);
@@ -17017,6 +17037,26 @@ function _refmSammeln(container, fid) {
   });
   return out;
 }
+
+// U2-ADR-065-Nachlauf (Bug 1): eine refMehrfach-Werteliste beim SPEICHERN ins Register auflösen.
+// Jede Zeile bekommt eine Register-ref: bereits gewählte ref bleibt; sonst wird der getippte Name
+// über personFindenOderAnlegen zu einer (dedup-ten) Register-Person, override entfällt. Freitext-only
+// gibt es damit nicht mehr. NUR an den Schreib-Stellen aufrufen — NICHT im reaktiven werteAusDOM-Leser
+// (der feuert bei jedem Tastendruck und darf keine Personen anlegen).
+function _refmInsRegister(arr) {
+  if (!Array.isArray(arr)) return [];
+  const out = [];
+  for (const e of arr) {
+    if (!e) continue;
+    if (e.ref) { out.push({ ref: e.ref, override: '' }); continue; }
+    const nm = (typeof e.override === 'string') ? e.override.trim() : '';
+    if (!nm) continue;
+    const id = personFindenOderAnlegen(nm);
+    if (id) out.push({ ref: id, override: '' });
+    else out.push({ ref: '', override: nm });
+  }
+  return out;
+}
 function liesEintragAusDOM(modalEl, feld) {
   if (!modalEl || !modalEl.querySelector) return {};
   const werte = {};
@@ -17031,7 +17071,7 @@ function liesEintragAusDOM(modalEl, feld) {
       const ov  = modalEl.querySelector('[data-edit-override="' + uf.id + '"]');
       werte[uf.id] = { ref: (sel && sel.value) || '', override: (ov && ov.value) || '' };
     } else if (uf.typ === 'refMehrfach') {
-      werte[uf.id] = _refmSammeln(modalEl, uf.id);
+      werte[uf.id] = _refmInsRegister(_refmSammeln(modalEl, uf.id)); // Bug 1: getippte Namen → Register-Personen
     } else {
       const inp = modalEl.querySelector('[data-edit="' + uf.id + '"]');
       werte[uf.id] = inp ? (inp.value || '') : '';
