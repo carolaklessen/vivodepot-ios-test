@@ -1053,6 +1053,8 @@
   /* U2-ADR-065: refMehrfach — Spalte aus Personen-Zeilen (Select + Freitext + ↑/↓/×) + „+ Person". */
   .feld-refm { display: flex; flex-direction: column; gap: var(--space-1); }
   .refm-zeile { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+  .refm-zeile .refm-name { flex: 1 1 12em; min-width: 8em; }         /* primär: Name tippen */
+  .refm-zeile .refm-register { flex: 0 1 14em; min-width: 8em; }     /* sekundär: aus Register */
   .refm-zeile select, .refm-zeile input { font-size: var(--fs-sm); padding: var(--space-1); }
   .refm-add { align-self: flex-start; }
 
@@ -3498,6 +3500,8 @@ const STRINGS = Object.freeze({
   refOptionAnlegenSuffix: "anlegen",
   refFreitextPlatzhalter: "oder Freitext",                // Freitext-Override im ref-Picker
   refmPersonHinzufuegen: "Person hinzufügen",             // U2-ADR-065: refMehrfach — weitere Person
+  refmNamePlatzhalter: "Name der Person",                 // primäres Namensfeld je Zeile (Straffung 08.07.)
+  refmAusRegister: "… oder aus Register",                 // sekundäre Register-Auswahl je Zeile
   refmHoch: "Nach oben",                                  // Reihenfolge-Knopf ↑
   refmRunter: "Nach unten",                               // Reihenfolge-Knopf ↓
   refmWeg: "Entfernen",                                   // Zeile/Person aus der Mehrfachauswahl entfernen
@@ -4038,7 +4042,8 @@ const SEKTOREN = Object.freeze([
         { id: 'testament_ort',               label: 'Ablageort Original',                              typ: 'text', beispiel: 'beim Notar Dr. Sommer, München',
           hint: 'Das Original muss nach dem Tod dem Nachlassgericht vorgelegt werden.' },
         { id: 'testament_datum',             label: 'Datum der letzten Änderung',                      typ: 'datum' },
-        { id: 'erben',                       label: 'Erben — Kurzübersicht',                           typ: 'ref', entitaet: 'person' },
+        // U2-ADR-065 (08.07.): Erben sind mehrere Personen → refMehrfach (Register-Mehrfachpick, umsortierbar).
+        { id: 'erben',                       label: 'Erben — Kurzübersicht',                           typ: 'refMehrfach', entitaet: 'person' },
         // Erbschaftsregelung (erbwiz, B8-Teil) — neben Testament. Bürger-Sprache; BGB nur im Hilfetext.
         { id: 'erbfolge_hinweis',            label: 'Gesetzliche Erbfolge oder abweichender Wille?',   typ: 'auswahl', optionen: [
           { wert: 'gesetzlich', label: 'Die gesetzliche Erbfolge soll gelten' },
@@ -5136,9 +5141,9 @@ const WIZARDS = Object.freeze([
           { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
           { wert: 'unklar',     label: 'Noch unklar — Beratung gewünscht' },
         ] } },
-      { frage: 'Wer soll erben?',
-        hilfetext: 'Eine Kurzübersicht genügt. Über „Neue Person anlegen" erfassen Sie eine Person direkt.',
-        feld: { id: 'erben', label: 'Erben — Kurzübersicht', typ: 'ref', entitaet: 'person' } },
+      // U2-ADR-065: „Wer soll erben?" gekappt (wie vvwiz) — erben ist jetzt ein refMehrfach-Feld
+      // (mehrere Personen, umsortierbar) und wird direkt im Sektor „Vorsorge & Recht" erfasst; die
+      // lineare Wizard-Schritt-Engine kennt kein refMehrfach-Widget.
       { frage: 'Gibt es besondere Wünsche oder Vermächtnisse?',
         hilfetext: 'Ein Vermächtnis ist ein einzelner Gegenstand oder Betrag für eine bestimmte Person (§ 1939 BGB) — ohne dass sie Erbin wird.',
         feld: { id: 'vermaechtnisse', label: 'Besondere Wünsche & Vermächtnisse', typ: 'textarea', beispiel: 'Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein' } },
@@ -5440,7 +5445,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 30,                       // Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: 31,                       // Schema 31 (U2-ADR-065-Nachlauf): vorsorge/erben → refMehrfach (mehrere Erben, umsortierbar); Migration Einzel→Array verlustfrei. Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -7742,7 +7747,8 @@ const B16_FELD_MAPPING = Object.freeze([
   { alt: 'testament_vorhanden',sektorId: 'vorsorge', feldId: 'testament_vorhanden' },
   { alt: 'testament_ort',  sektorId: 'vorsorge', feldId: 'testament_ort' },
   { alt: 'testament_datum',sektorId: 'vorsorge', feldId: 'testament_datum' },
-  { alt: 'erben',          sektorId: 'vorsorge', feldId: 'erben' },              // ref
+  // U2-ADR-065: erben ist refMehrfach (Array) — Sektor-Format-Import kann keinen Skalar in ein Array
+  // hängen (bewusster Verzicht, wie bei den Vollmacht-Details); native .vivodepot deckt die Migration ab.
   { alt: 'vollmacht_vorhanden',sektorId: 'vorsorge', feldId: 'vollmacht_vorhanden' },
   // U2-ADR-064: die Vollmacht-Detailfelder (vollmacht_person/-ort, gesundheitsvollmacht_person/-ort)
   // sind in den liste-Record vorsorge/vollmachten gewandert. Sektor-Format-Import kann keinen Skalar
@@ -10625,14 +10631,18 @@ const ui = {
         (zweitAktion ? '<button class="btn btn-sek" id="m-zweit">' + zweitAktion.label + '</button>' : '') +
         '<button class="btn" id="m-ok">' + primaerLabel + '</button>' +
       '</div>';
+    // U2-ADR-065-Nachlauf: die Scroll-Position der Eingangsseite merken, damit sie nach dem Schließen
+    // WIEDERHERGESTELLT wird (sonst „Sprung nach oben" bei jedem Eintrags-Dialog — Carola-Befund 08.07.).
+    const _scrollVorModal = (typeof window !== 'undefined' && typeof window.scrollY === 'number') ? window.scrollY : 0;
     host.classList.add('an');
     // Härtung Mobil: der Dialog liegt per z-index über dem Overlay (#modal-rueck:200 >
-    // #overlay:100) und ist position:fixed am Viewport. Damit er beim Öffnen sicher
-    // sichtbar OBEN steht — auch wenn die Eingangsseite gescrollt war — setzen wir den
-    // Rück-Scroll zurück. Defensiv (alte Browser/Test-Stub): in try/catch.
+    // #overlay:100) und ist position:fixed am Viewport. Der Dialog-INHALT startet oben (host.scrollTop=0);
+    // der Fenster-Scroll wird beim Schließen zurückgesetzt statt hart auf 0 (kein Verlust der Stelle).
     try { if (host.scrollTop != null) host.scrollTop = 0; } catch (_) {}
-    try { if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, 0); } catch (_) {}
-    const schliessen = () => { host.classList.remove('an'); box.innerHTML = ''; };
+    const schliessen = () => {
+      host.classList.remove('an'); box.innerHTML = '';
+      try { if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, _scrollVorModal); } catch (_) {}
+    };
     const abbr = document.getElementById('m-abbr');
     if (abbr) abbr.onclick = schliessen;
     if (zweitAktion && typeof zweitAktion.handler === 'function') {
@@ -12575,6 +12585,16 @@ function depotNormalisieren(d) {
     }
   }
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 30) ziel.schemaVersion = 30;
+  // Schema 30 -> 31 (U2-ADR-065): das Sektorfeld vorsorge/erben wird refMehrfach (Array {ref,override}).
+  // VERWAISUNGS-REGEL: Einzel-Ref → [Ref]; Alt-String → [{ref:'',override:String}]; leer → entfällt.
+  const _v31 = ziel.sektoren && ziel.sektoren.vorsorge;
+  if (_v31 && typeof _v31 === 'object' && _v31.erben != null && !Array.isArray(_v31.erben)) {
+    const b = _v31.erben;
+    const alsObj = (typeof b === 'string') ? { ref: '', override: b } : b;
+    const hat = alsObj && typeof alsObj === 'object' && ((typeof alsObj.ref === 'string' && alsObj.ref !== '') || (typeof alsObj.override === 'string' && String(alsObj.override).trim() !== ''));
+    if (hat) _v31.erben = [alsObj]; else delete _v31.erben;
+  }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 31) ziel.schemaVersion = 31;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -16531,15 +16551,17 @@ function _refmZeileHTML(feld, eintrag) {
   const override = (eintrag && typeof eintrag === 'object' && typeof eintrag.override === 'string') ? eintrag.override : '';
   const vorschlaege = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
   const al = ' aria-label="' + escapeHTML(String(feld.label != null ? feld.label : fid)).replace(/"/g, '&quot;') + '"';
+  // U2-ADR-065-Straffung (08.07.): primär EIN Namensfeld (direkt tippen) — kein „+ Neu"-Zwischenschritt
+  // mehr. Der Register-Select ist die schlanke Zweit-Option (bereits erfasste Person wählen). Wählt man
+  // eine Register-Person, gewinnt sie in der Anzeige; sonst zählt der getippte Name (Freitext-Override).
   let z = '<div class="refm-zeile" data-refm-zeile>';
-  z += '<select data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '"' + al + '><option value=""></option>';
+  z += '<input type="text" class="refm-name" data-edit-refm-override="' + fid + '"' + al + ' placeholder="' + escapeHTML(STRINGS.refmNamePlatzhalter) + '" value="' + override.replace(/"/g, '&quot;') + '">';
+  z += '<select class="refm-register" data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '"' + al + '><option value="">' + escapeHTML(STRINGS.refmAusRegister) + '</option>';
   for (const v of vorschlaege) {
     const s = (v.id === ref) ? ' selected' : '';
     z += '<option value="' + String(v.id).replace(/"/g, '&quot;') + '"' + s + '>' + escapeHTML(v.name || '') + '</option>';
   }
-  z += '<option value="__neu__">+ ' + (entitaet === 'institution' ? STRINGS.refNeueInstitutionOption : STRINGS.refNeuePersonOption) + ' ' + STRINGS.refOptionAnlegenSuffix + '</option>';
   z += '</select>';
-  z += '<input type="text" data-edit-refm-override="' + fid + '"' + al + ' placeholder="' + STRINGS.refFreitextPlatzhalter + '" value="' + override.replace(/"/g, '&quot;') + '">';
   z += '<button type="button" class="btn-mini refm-hoch" data-refm-hoch aria-label="' + escapeHTML(STRINGS.refmHoch) + '">↑</button>';
   z += '<button type="button" class="btn-mini refm-runter" data-refm-runter aria-label="' + escapeHTML(STRINGS.refmRunter) + '">↓</button>';
   z += '<button type="button" class="btn-mini refm-weg" data-refm-weg aria-label="' + escapeHTML(STRINGS.refmWeg) + '">×</button>';
@@ -16930,7 +16952,7 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
     const melden = () => { try { box.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {} };
     const zeileVerdrahten = (z) => {
       const sel = z.querySelector('[data-edit-refm]');
-      if (sel) sel.onchange = () => { if (sel.value === '__neu__') { _refmNeuInline(sel, feld); } else { melden(); } };
+      if (sel) sel.onchange = melden;   // Register-Auswahl (Straffung: kein „+ Neu"-Zweig mehr)
       const weg = z.querySelector('[data-refm-weg]');
       if (weg) weg.onclick = () => { if (z.remove) z.remove(); melden(); };
       const hoch = z.querySelector('[data-refm-hoch]');
@@ -16950,40 +16972,9 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
       box.insertBefore(neu, add);
       zeileVerdrahten(neu);
       melden();
-      const s = neu.querySelector('[data-edit-refm]'); if (s && s.focus) s.focus();
+      const s = neu.querySelector('[data-edit-refm-override]'); if (s && s.focus) s.focus();   // Fokus aufs Namensfeld
     };
   });
-}
-// Inline-Anlage einer neuen Person/Institution aus einer refMehrfach-Zeile (Muster _refSubPickerVerdrahten,
-// name-only). Legt die Entität an, hängt sie als <option> ein, wählt sie aus. Kein Modal-Stack.
-function _refmNeuInline(sel, feld) {
-  const entitaet = feld.entitaet || 'person';
-  sel.value = '';
-  const zeile = (sel.closest && sel.closest('.refm-zeile')) || sel.parentNode;
-  if (!zeile || !zeile.parentNode) return;
-  if (zeile.parentNode.querySelector && zeile.parentNode.querySelector('.inline-neu')) {
-    const inp0 = zeile.parentNode.querySelector('.inline-neu [data-neu-name]'); if (inp0 && inp0.focus) inp0.focus(); return;
-  }
-  const platzhalter = (entitaet === 'institution') ? 'Name der Institution' : 'Name der Person';
-  const inline = document.createElement('div');
-  inline.className = 'inline-neu';
-  inline.innerHTML =
-    '<input type="text" data-neu-name placeholder="' + platzhalter + '"> ' +
-    '<button type="button" class="btn-mini" data-neu-anlegen>' + STRINGS.btnHinzufuegen + '</button> ' +
-    '<button type="button" class="btn-mini" data-neu-abbr>' + STRINGS.btnAbbrechen + '</button>';
-  zeile.parentNode.insertBefore(inline, zeile.nextSibling);
-  const nameInp = inline.querySelector('[data-neu-name]'); if (nameInp && nameInp.focus) nameInp.focus();
-  inline.querySelector('[data-neu-anlegen]').onclick = () => {
-    const name = (nameInp && nameInp.value || '').trim(); if (!name) return;
-    const newId = (entitaet === 'institution') ? institutionHinzufuegen({ name, art: feld.art }) : personHinzufuegen({ name });
-    const opt = document.createElement('option'); opt.value = newId; opt.textContent = name;
-    const neuOpt = sel.querySelector && sel.querySelector('option[value="__neu__"]');
-    if (neuOpt) sel.insertBefore(opt, neuOpt); else sel.appendChild(opt);
-    sel.value = newId;
-    if (inline.remove) inline.remove();
-    try { sel.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
-  };
-  inline.querySelector('[data-neu-abbr]').onclick = () => { if (inline.remove) inline.remove(); };
 }
 function flowListenEintragEntfernen(sektorId, feld, index) {
   listenEintragEntfernen(sektorId, feld.id, index);

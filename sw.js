@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v22';  // v22 (2026-07-08): refMehrfach Personen-Mehrfachpick + Umsortieren + Vertretungs-Modus (U2-ADR-065, cleanslate 1034ac5, Schema 29->30); skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v23';  // v23 (2026-07-08): refMehrfach-UX gestrafft (Name primär, kein „+ Neu"-Zweischritt) + Scroll-Halten + erben als refMehrfach (U2-ADR-065-Nachlauf, cleanslate 4ab9e35, Schema 30->31); skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird
