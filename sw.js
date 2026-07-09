@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v24';  // v24 (2026-07-08): refMehrfach-Bugfixes (U2-ADR-065-Nachlauf 2, cleanslate 6a47810) — getippte Namen werden zu Register-Personen (case-insensitiver Dedup, Freitext-only entfällt) + Widget in Sektor-Feld (Erben) und Listen-Unterfeld (Vollmacht) identisch (breiten-unabhängiges Grid); kein Schema-Bump; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v25';  // v25 (2026-07-09): Personen-Widget nach UX-Spezifikation (Phase 1, cleanslate d7adf87, kein Schema-Bump) — Zwei-Felder-Widget ersetzt durch EIN Combobox-Feld pro Person (Eingabe+Suche, weiche Live-Vorschlagsliste aus dem Register, stumme Neuanlage bei Blur/Dedup), ↑/↓ Umsortieren rein im DOM (kein Sprung), Fokus ohne Auto-Scroll, Tap ≥44px, überall identisch; skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird

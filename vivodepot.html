@@ -1050,17 +1050,24 @@
   .feld-mehrfach { display: flex; flex-direction: column; gap: var(--space-1); }
   .feld-mehrfach-opt { display: flex; align-items: flex-start; gap: var(--space-2); font-weight: 400; cursor: pointer; }
   .feld-mehrfach-opt input[type="checkbox"] { flex: 0 0 auto; margin-top: 0.2em; }
-  /* U2-ADR-065: refMehrfach — Spalte aus Personen-Zeilen (Name + Register-Select + ↑/↓/×) + „+ Person".
-     U2-ADR-065-Nachlauf (Bug 2): breiten-UNABHÄNGIGES Grid statt flex-wrap, damit das Widget in JEDEM
-     Container identisch rendert (Sektor-Feld = Erben ⇔ Listen-Unterfeld = Vollmacht). Pro Person zwei
-     Reihen: Name über die volle Breite (behebt zugleich das schmale Namensfeld), darunter Register-
-     Select + ↑ ↓ ×. Die Anordnung hängt nicht mehr an der Spaltenbreite — kein unterschiedlicher Umbruch. */
+  /* Personen-Widget (UX-Spezifikation 08.07.): EIN Feld pro Person — Eingabe UND Suche zugleich, mit
+     weicher Live-Vorschlagsliste (kein System-Dropdown). ↑/↓/× je Zeile, „+ Person" am Fuß. Breiten-
+     unabhängiges Grid → in Sektor-Feld (Erben) und Listen-Unterfeld (Vollmacht) identisch. Marken-Stil
+     (Salbei), Tap-Flächen ≥44px (Zielgruppe ältere Menschen). Ersetzt das Zwei-Felder-Widget. */
   .feld-refm { display: flex; flex-direction: column; gap: var(--space-2); }
-  .refm-zeile { display: grid; grid-template-columns: 1fr auto auto auto; gap: var(--space-1) var(--space-2); align-items: center; }
+  .refm-zeile { display: grid; grid-template-columns: 1fr auto auto auto; gap: var(--space-2); align-items: center; }
   .refm-zeile + .refm-zeile { border-top: 1px solid var(--line); padding-top: var(--space-2); }
-  .refm-zeile .refm-name { grid-column: 1 / -1; }                    /* primär: Name tippen — volle Breite */
-  .refm-zeile .refm-register { min-width: 0; }                       /* sekundär: aus Register (schrumpfbar) */
-  .refm-zeile select, .refm-zeile input { font-size: var(--fs-sm); padding: var(--space-1); }
+  .refm-combo { grid-column: 1; position: relative; min-width: 0; }  /* trägt das eine Feld + die Vorschlagsliste */
+  .refm-combo .refm-name { width: 100%; font-size: var(--fs-sm); padding: var(--space-2); }
+  .refm-zeile .btn-mini { min-width: 44px; min-height: 44px; }       /* Tap ≥44px */
+  /* Weiche Vorschlagsliste: abgerundet, dezenter Schatten, Marken-Grün beim Überfahren — NICHT das native Grau. */
+  .refm-vorschlaege { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 30; margin: 0;
+    padding: var(--space-1); list-style: none; background: var(--white); border: 1px solid var(--line);
+    border-radius: var(--radius-md); box-shadow: 0 6px 20px rgba(0,0,0,0.14); max-height: 15rem; overflow-y: auto; }
+  .refm-vorschlaege[hidden] { display: none; }
+  .refm-vorschlaege li { min-height: 44px; display: flex; align-items: center; padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm); cursor: pointer; color: var(--ink); font-size: var(--fs-sm); }
+  .refm-vorschlaege li.refm-aktiv, .refm-vorschlaege li:hover { background: var(--salbei-light); color: var(--salbei-dunkel); }
   .refm-add { align-self: flex-start; }
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -2471,7 +2478,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
-const BUILD_DATUM = '2026-07-08';
+const BUILD_DATUM = '2026-07-09';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 
@@ -3505,8 +3512,8 @@ const STRINGS = Object.freeze({
   refOptionAnlegenSuffix: "anlegen",
   refFreitextPlatzhalter: "oder Freitext",                // Freitext-Override im ref-Picker
   refmPersonHinzufuegen: "Person hinzufügen",             // U2-ADR-065: refMehrfach — weitere Person
-  refmNamePlatzhalter: "Name der Person",                 // primäres Namensfeld je Zeile (Straffung 08.07.)
-  refmAusRegister: "… oder aus Register",                 // sekundäre Register-Auswahl je Zeile
+  refmNamePlatzhalter: "Name eingeben oder wählen",       // Personen-Widget (UX-Spec 08.07.): ein Feld = Eingabe + Suche
+  refmAusRegister: "… oder aus Register",                 // (unbenutzt seit Personen-Widget; String erhalten)
   refmHoch: "Nach oben",                                  // Reihenfolge-Knopf ↑
   refmRunter: "Nach unten",                               // Reihenfolge-Knopf ↓
   refmWeg: "Entfernen",                                   // Zeile/Person aus der Mehrfachauswahl entfernen
@@ -16561,27 +16568,28 @@ function feldValidieren(feld, wert) {
   }
 }
 
-// U2-ADR-065: eine Personen-Zeile eines refMehrfach-Felds (Select mit Register-Vorschlägen + „+ Neu",
-// Freitext-Override, ↑/↓ zum Umsortieren, × zum Entfernen). Auch von der Verdrahtung genutzt, um beim
-// „+ Person"-Klick eine frische Zeile anzuhängen — darum eigenständige Funktion (keine Closure).
+// Personen-Widget (UX-Spezifikation 08.07.): eine Personen-Zeile eines refMehrfach-Felds. EIN sichtbares
+// Textfeld — Eingabe UND Suche zugleich (Platzhalter „Name eingeben oder wählen"). Die gewählte Register-ref
+// liegt in einem VERBORGENEN Feld (`data-edit-refm`), sodass _refmSammeln/_refmInsRegister unverändert
+// `{ref, override}` lesen. Die Live-Vorschlagsliste (`.refm-vorschlaege`, weich, kein System-Dropdown) füllt
+// _refMehrfachVerdrahten dynamisch. ↑/↓ sortieren die Zeile (DOM-Reihenfolge, kein Re-Render → kein Sprung),
+// × entfernt nur die Zeile. Auch von der Verdrahtung für die „+ Person"-Neuzeile genutzt (eigenständig).
 function _refmZeileHTML(feld, eintrag) {
   const fid = feld.id;
   const entitaet = feld.entitaet || 'person';
   const ref = (eintrag && typeof eintrag === 'object' && 'ref' in eintrag) ? String(eintrag.ref || '') : '';
   const override = (eintrag && typeof eintrag === 'object' && typeof eintrag.override === 'string') ? eintrag.override : '';
-  const vorschlaege = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
+  // Anzeige: gewählte Register-Person zeigt ihren Namen, sonst der getippte Freitext. EIN Feld trägt beides.
+  const anzeige = personName({ ref, override });
   const al = ' aria-label="' + escapeHTML(String(feld.label != null ? feld.label : fid)).replace(/"/g, '&quot;') + '"';
-  // U2-ADR-065-Straffung (08.07.): primär EIN Namensfeld (direkt tippen) — kein „+ Neu"-Zwischenschritt
-  // mehr. Der Register-Select ist die schlanke Zweit-Option (bereits erfasste Person wählen). Wählt man
-  // eine Register-Person, gewinnt sie in der Anzeige; sonst zählt der getippte Name (Freitext-Override).
   let z = '<div class="refm-zeile" data-refm-zeile>';
-  z += '<input type="text" class="refm-name" data-edit-refm-override="' + fid + '"' + al + ' placeholder="' + escapeHTML(STRINGS.refmNamePlatzhalter) + '" value="' + override.replace(/"/g, '&quot;') + '">';
-  z += '<select class="refm-register" data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '"' + al + '><option value="">' + escapeHTML(STRINGS.refmAusRegister) + '</option>';
-  for (const v of vorschlaege) {
-    const s = (v.id === ref) ? ' selected' : '';
-    z += '<option value="' + String(v.id).replace(/"/g, '&quot;') + '"' + s + '>' + escapeHTML(v.name || '') + '</option>';
-  }
-  z += '</select>';
+  z += '<div class="refm-combo">';
+  z += '<input type="text" class="refm-name" role="combobox" aria-autocomplete="list" aria-expanded="false" autocomplete="off"'
+     + ' data-edit-refm-override="' + fid + '"' + al
+     + ' placeholder="' + escapeHTML(STRINGS.refmNamePlatzhalter) + '" value="' + anzeige.replace(/"/g, '&quot;') + '">';
+  z += '<input type="hidden" class="refm-ref" data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '" value="' + String(ref).replace(/"/g, '&quot;') + '">';
+  z += '<ul class="refm-vorschlaege" role="listbox" hidden></ul>';
+  z += '</div>';
   z += '<button type="button" class="btn-mini refm-hoch" data-refm-hoch aria-label="' + escapeHTML(STRINGS.refmHoch) + '">↑</button>';
   z += '<button type="button" class="btn-mini refm-runter" data-refm-runter aria-label="' + escapeHTML(STRINGS.refmRunter) + '">↓</button>';
   z += '<button type="button" class="btn-mini refm-weg" data-refm-weg aria-label="' + escapeHTML(STRINGS.refmWeg) + '">×</button>';
@@ -16969,18 +16977,63 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
     const fid = box.getAttribute('data-refm');
     const feld = feldeFinden ? feldeFinden(fid) : null;
     if (!feld) return;
+    const entitaet = feld.entitaet || 'person';
     const melden = () => { try { box.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {} };
+    // Live-Vorschläge aus dem Register, gefiltert am getippten Text (getrimmt, case-insensitiv), max. 5.
+    const vorschlaegeFuer = (text) => {
+      const t = String(text || '').trim().toLowerCase();
+      if (!t) return [];
+      const alle = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
+      return alle.filter(v => String(v.name || '').toLowerCase().indexOf(t) !== -1).slice(0, 5);
+    };
+    // Personen-Widget: EIN Feld = Eingabe + Suche. Auswahl setzt die verborgene ref; freier Name legt beim
+    // Verlassen stumm eine Register-Person an (Dedup via personFindenOderAnlegen). Alles rein im DOM — KEIN
+    // renderContent, damit die Scroll-Position am Widget bleibt (UX-Spec: „kein Sprung nach oben").
+    const comboVerdrahten = (z) => {
+      const eingabe = z.querySelector('[data-edit-refm-override]');
+      const refFeld = z.querySelector('[data-edit-refm]');
+      const liste = z.querySelector('.refm-vorschlaege');
+      if (!eingabe || !refFeld || !liste) return;
+      let aktivIdx = -1;
+      const verbergen = () => { liste.hidden = true; liste.innerHTML = ''; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'false'); } catch (_) {} };
+      const waehle = (id, name) => { refFeld.value = id || ''; eingabe.value = name || ''; verbergen(); melden(); };
+      const zeigen = (items) => {
+        if (!items || !items.length) { verbergen(); return; }
+        liste.innerHTML = items.map(v =>
+          '<li role="option" data-id="' + String(v.id).replace(/"/g, '&quot;') + '">' + escapeHTML(v.name || '') + '</li>').join('');
+        liste.hidden = false; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'true'); } catch (_) {}
+        // Zeiger/Touch: mousedown feuert VOR blur — preventDefault hält den Fokus, dann übernehmen.
+        liste.querySelectorAll('li').forEach(li => {
+          li.onmousedown = (e) => { try { e.preventDefault(); } catch (_) {} waehle(li.getAttribute('data-id'), li.textContent); };
+        });
+      };
+      const insRegister = () => {
+        const nm = String(eingabe.value || '').trim();
+        if (!refFeld.value && nm) { try { const id = personFindenOderAnlegen(nm); if (id) refFeld.value = id; } catch (_) {} }
+      };
+      eingabe.oninput = () => { refFeld.value = ''; zeigen(vorschlaegeFuer(eingabe.value)); melden(); };
+      eingabe.onfocus = () => { const t = String(eingabe.value || '').trim(); if (t && !refFeld.value) zeigen(vorschlaegeFuer(t)); };
+      eingabe.onkeydown = (e) => {
+        if (e.key === 'Escape') { verbergen(); return; }
+        const items = liste.hidden ? [] : Array.prototype.slice.call(liste.querySelectorAll('li'));
+        if (!items.length) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); aktivIdx = Math.min(aktivIdx + 1, items.length - 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); aktivIdx = Math.max(aktivIdx - 1, 0); }
+        else if (e.key === 'Enter' && aktivIdx >= 0) { e.preventDefault(); const li = items[aktivIdx]; waehle(li.getAttribute('data-id'), li.textContent); return; }
+        else return;
+        items.forEach((li, i) => li.classList.toggle('refm-aktiv', i === aktivIdx));
+      };
+      // Verlassen: kurz warten (Touch/Klick auf einen Vorschlag darf zuerst greifen), dann Freitext ins Register.
+      eingabe.onblur = () => { setTimeout(() => { if (eingabe.isConnected === false) return; insRegister(); verbergen(); melden(); }, 120); };
+    };
     const zeileVerdrahten = (z) => {
-      const sel = z.querySelector('[data-edit-refm]');
-      if (sel) sel.onchange = melden;   // Register-Auswahl (Straffung: kein „+ Neu"-Zweig mehr)
+      comboVerdrahten(z);
       const weg = z.querySelector('[data-refm-weg]');
       if (weg) weg.onclick = () => { if (z.remove) z.remove(); melden(); };
       const hoch = z.querySelector('[data-refm-hoch]');
       if (hoch) hoch.onclick = () => { const p = z.previousElementSibling; if (p && p.hasAttribute && p.hasAttribute('data-refm-zeile')) box.insertBefore(z, p); melden(); };
       const runter = z.querySelector('[data-refm-runter]');
       if (runter) runter.onclick = () => { const n = z.nextElementSibling; if (n && n.hasAttribute && n.hasAttribute('data-refm-zeile')) box.insertBefore(n, z); melden(); };
-      const ov = z.querySelector('[data-edit-refm-override]');
-      if (ov) ov.oninput = melden;
     };
     box.querySelectorAll('[data-refm-zeile]').forEach(zeileVerdrahten);
     const add = box.querySelector('[data-refm-add]');
@@ -16992,7 +17045,10 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
       box.insertBefore(neu, add);
       zeileVerdrahten(neu);
       melden();
-      const s = neu.querySelector('[data-edit-refm-override]'); if (s && s.focus) s.focus();   // Fokus aufs Namensfeld
+      // Fokus aufs Namensfeld — OHNE Auto-Scroll (UX-Spec: „kein Sprung ... bleibt am Widget"). Die neue
+      // Zeile sitzt direkt am „+ Person"-Knopf, ist also schon im Blick; preventScroll hält die Position.
+      const s = neu.querySelector('[data-edit-refm-override]');
+      if (s && s.focus) { try { s.focus({ preventScroll: true }); } catch (_) { s.focus(); } }
     };
   });
 }
