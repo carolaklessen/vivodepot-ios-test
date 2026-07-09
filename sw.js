@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v25';  // v25 (2026-07-09): Personen-Widget nach UX-Spezifikation (Phase 1, cleanslate d7adf87, kein Schema-Bump) — Zwei-Felder-Widget ersetzt durch EIN Combobox-Feld pro Person (Eingabe+Suche, weiche Live-Vorschlagsliste aus dem Register, stumme Neuanlage bei Blur/Dedup), ↑/↓ Umsortieren rein im DOM (kein Sprung), Fokus ohne Auto-Scroll, Tap ≥44px, überall identisch; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v26';  // v26 (2026-07-09): Personen-Widget-Nachbesserungen (cleanslate 1ba69e3, UX-Spec-Zusatz 09.07., kein Schema-Bump) — §1 Neuanlage EXPLIZIT statt stumm: Vorschlagsliste zeigt „<Name>" als neue Person anlegen, nur Tap legt an (Dedup); Blur ohne Tap verwirft Freitext, _refmInsRegister legt am Save nicht mehr an (Register nicht mehr verschmutzt); §2 Vorschlagsliste im Vollmacht-Modal position:fixed (kein overflow-Clip, kein Umbruch); skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird

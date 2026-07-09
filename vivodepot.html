@@ -1060,14 +1060,21 @@
   .refm-combo { grid-column: 1; position: relative; min-width: 0; }  /* trägt das eine Feld + die Vorschlagsliste */
   .refm-combo .refm-name { width: 100%; font-size: var(--fs-sm); padding: var(--space-2); }
   .refm-zeile .btn-mini { min-width: 44px; min-height: 44px; }       /* Tap ≥44px */
-  /* Weiche Vorschlagsliste: abgerundet, dezenter Schatten, Marken-Grün beim Überfahren — NICHT das native Grau. */
-  .refm-vorschlaege { position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 30; margin: 0;
+  /* Weiche Vorschlagsliste: abgerundet, dezenter Schatten, Marken-Grün beim Überfahren — NICHT das native Grau.
+     position:FIXED (Zusatz 09.07., §2): entkommt dem overflow-Clip des verschachtelten Vollmacht-Modals
+     (#modal-inhalt: overflow auto, max-height) → wird nicht selbst beschnitten und liegt über allem. left/top/
+     width setzt _refMehrfachVerdrahten beim Anzeigen an das Feld (Breite = Feldbreite). */
+  .refm-vorschlaege { position: fixed; z-index: 60; margin: 0; box-sizing: border-box;
     padding: var(--space-1); list-style: none; background: var(--white); border: 1px solid var(--line);
     border-radius: var(--radius-md); box-shadow: 0 6px 20px rgba(0,0,0,0.14); max-height: 15rem; overflow-y: auto; }
   .refm-vorschlaege[hidden] { display: none; }
   .refm-vorschlaege li { min-height: 44px; display: flex; align-items: center; padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm); cursor: pointer; color: var(--ink); font-size: var(--fs-sm); }
+    border-radius: var(--radius-sm); cursor: pointer; color: var(--ink); font-size: var(--fs-sm);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* Namen brechen nie um (§2) */
   .refm-vorschlaege li.refm-aktiv, .refm-vorschlaege li:hover { background: var(--salbei-light); color: var(--salbei-dunkel); }
+  /* „… als neue Person anlegen" (Zusatz 09.07.): Aktion, keine Person — leicht abgesetzt (kursiv, Trennlinie). */
+  .refm-vorschlaege li.refm-anlegen { color: var(--salbei-dunkel); font-style: italic; }
+  .refm-vorschlaege li.refm-anlegen:not(:only-child) { border-top: 1px solid var(--line); }
   .refm-add { align-self: flex-start; }
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -3517,6 +3524,7 @@ const STRINGS = Object.freeze({
   refmHoch: "Nach oben",                                  // Reihenfolge-Knopf ↑
   refmRunter: "Nach unten",                               // Reihenfolge-Knopf ↓
   refmWeg: "Entfernen",                                   // Zeile/Person aus der Mehrfachauswahl entfernen
+  refmNeuAnlegen: "als neue Person anlegen",              // Zusatz 09.07.: letzte Vorschlagszeile „<Name>" … (EXPLIZITE Anlage per Tap, nicht stumm bei Blur)
   listenEintragSg: "Eintrag",                             // „1 Eintrag"
   listenEintragPl: "Einträge",                            // „N Einträge"
   pdfSeite: "Seite",                                      // PDF-Fuß „Seite X/Y"
@@ -16986,6 +16994,14 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
       const alle = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
       return alle.filter(v => String(v.name || '').toLowerCase().indexOf(t) !== -1).slice(0, 5);
     };
+    // Zusatz 09.07.: gibt es zum getippten Text bereits eine EXAKT so heißende Register-Person (getrimmt,
+    // case-insensitiv)? Dann keine „… anlegen"-Zeile (der normale Vorschlag deckt sie ab, keine Doppel-Anlage).
+    const exaktVorhanden = (text) => {
+      const t = String(text || '').trim().toLowerCase();
+      if (!t) return false;
+      const alle = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
+      return alle.some(v => String(v.name || '').trim().toLowerCase() === t);
+    };
     // Personen-Widget: EIN Feld = Eingabe + Suche. Auswahl setzt die verborgene ref; freier Name legt beim
     // Verlassen stumm eine Register-Person an (Dedup via personFindenOderAnlegen). Alles rein im DOM — KEIN
     // renderContent, damit die Scroll-Position am Widget bleibt (UX-Spec: „kein Sprung nach oben").
@@ -16995,36 +17011,61 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
       const liste = z.querySelector('.refm-vorschlaege');
       if (!eingabe || !refFeld || !liste) return;
       let aktivIdx = -1;
+      let schmutzig = false;   // in dieser Fokus-Runde neu getippt? Nur DANN wird Freitext beim Verlassen verworfen.
       const verbergen = () => { liste.hidden = true; liste.innerHTML = ''; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'false'); } catch (_) {} };
-      const waehle = (id, name) => { refFeld.value = id || ''; eingabe.value = name || ''; verbergen(); melden(); };
-      const zeigen = (items) => {
-        if (!items || !items.length) { verbergen(); return; }
-        liste.innerHTML = items.map(v =>
+      const waehle = (id, name) => { refFeld.value = id || ''; eingabe.value = name || ''; schmutzig = false; verbergen(); melden(); };
+      // Auswahl per Tap/Enter: bekannte Person → ref setzen; „… anlegen"-Zeile → Person EXPLIZIT anlegen (Dedup) + ref.
+      const waehleZeile = (li) => {
+        if (!li) return;
+        if (li.getAttribute('data-anlegen')) {
+          const nm = String(eingabe.value || '').trim();
+          if (!nm) { verbergen(); return; }
+          let id = ''; try { id = personFindenOderAnlegen(nm); } catch (_) {}
+          waehle(id, nm);
+        } else {
+          waehle(li.getAttribute('data-id'), li.textContent);
+        }
+      };
+      const zeigen = () => {
+        const roh = String(eingabe.value || '');
+        const text = roh.trim();
+        const treffer = vorschlaegeFuer(roh);
+        // Zusatz 09.07.: passt kein Vorschlag EXAKT, zeigt die letzte Zeile „<Getipptes>" als neue Person anlegen.
+        const zeigeAnlegen = !!text && !exaktVorhanden(roh);
+        if (!treffer.length && !zeigeAnlegen) { verbergen(); return; }
+        let h = treffer.map(v =>
           '<li role="option" data-id="' + String(v.id).replace(/"/g, '&quot;') + '">' + escapeHTML(v.name || '') + '</li>').join('');
+        if (zeigeAnlegen) {
+          h += '<li role="option" class="refm-anlegen" data-anlegen="1">„' + escapeHTML(text) + '" ' + escapeHTML(STRINGS.refmNeuAnlegen) + '</li>';
+        }
+        liste.innerHTML = h;
         liste.hidden = false; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'true'); } catch (_) {}
+        // §2: position:fixed am Feld ausrichten (unter dem Feld, Breite = Feldbreite) — entkommt dem Modal-Clip.
+        try { const r = eingabe.getBoundingClientRect(); liste.style.left = Math.round(r.left) + 'px'; liste.style.top = Math.round(r.bottom + 3) + 'px'; liste.style.width = Math.round(r.width) + 'px'; } catch (_) {}
         // Zeiger/Touch: mousedown feuert VOR blur — preventDefault hält den Fokus, dann übernehmen.
         liste.querySelectorAll('li').forEach(li => {
-          li.onmousedown = (e) => { try { e.preventDefault(); } catch (_) {} waehle(li.getAttribute('data-id'), li.textContent); };
+          li.onmousedown = (e) => { try { e.preventDefault(); } catch (_) {} waehleZeile(li); };
         });
       };
-      const insRegister = () => {
-        const nm = String(eingabe.value || '').trim();
-        if (!refFeld.value && nm) { try { const id = personFindenOderAnlegen(nm); if (id) refFeld.value = id; } catch (_) {} }
-      };
-      eingabe.oninput = () => { refFeld.value = ''; zeigen(vorschlaegeFuer(eingabe.value)); melden(); };
-      eingabe.onfocus = () => { const t = String(eingabe.value || '').trim(); if (t && !refFeld.value) zeigen(vorschlaegeFuer(t)); };
+      eingabe.oninput = () => { refFeld.value = ''; schmutzig = true; zeigen(); melden(); };
+      eingabe.onfocus = () => { schmutzig = false; const t = String(eingabe.value || '').trim(); if (t && !refFeld.value) zeigen(); };
       eingabe.onkeydown = (e) => {
         if (e.key === 'Escape') { verbergen(); return; }
         const items = liste.hidden ? [] : Array.prototype.slice.call(liste.querySelectorAll('li'));
         if (!items.length) return;
         if (e.key === 'ArrowDown') { e.preventDefault(); aktivIdx = Math.min(aktivIdx + 1, items.length - 1); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); aktivIdx = Math.max(aktivIdx - 1, 0); }
-        else if (e.key === 'Enter' && aktivIdx >= 0) { e.preventDefault(); const li = items[aktivIdx]; waehle(li.getAttribute('data-id'), li.textContent); return; }
+        else if (e.key === 'Enter' && aktivIdx >= 0) { e.preventDefault(); waehleZeile(items[aktivIdx]); return; }
         else return;
         items.forEach((li, i) => li.classList.toggle('refm-aktiv', i === aktivIdx));
       };
-      // Verlassen: kurz warten (Touch/Klick auf einen Vorschlag darf zuerst greifen), dann Freitext ins Register.
-      eingabe.onblur = () => { setTimeout(() => { if (eingabe.isConnected === false) return; insRegister(); verbergen(); melden(); }, 120); };
+      // Verlassen ohne Auswahl (Zusatz 09.07.): NICHTS anlegen. Neu getippter Freitext ohne ref wird verworfen;
+      // ein unveränderter Bestands-Override (nur fokussiert/verlassen, nicht getippt) bleibt erhalten.
+      eingabe.onblur = () => { setTimeout(() => {
+        if (eingabe.isConnected === false) return;
+        if (schmutzig && !refFeld.value) { eingabe.value = ''; }
+        verbergen(); melden();
+      }, 150); };
     };
     const zeileVerdrahten = (z) => {
       comboVerdrahten(z);
@@ -17100,16 +17141,17 @@ function _refmSammeln(container, fid) {
 // gibt es damit nicht mehr. NUR an den Schreib-Stellen aufrufen — NICHT im reaktiven werteAusDOM-Leser
 // (der feuert bei jedem Tastendruck und darf keine Personen anlegen).
 function _refmInsRegister(arr) {
+  // U2-ADR-065-Zusatz (09.07.): KEINE stille Anlage mehr. Eine ref-Zeile bleibt (override verworfen, die ref ist
+  // maßgeblich); ein Freitext-Override ohne ref bleibt als Override erhalten und wird NICHT zur Register-Person —
+  // die Anlage passiert ausschließlich per Tap auf die „… anlegen"-Zeile in der Vorschlagsliste (setzt dort die ref).
+  // So verschmutzen vertippte/abgebrochene Fragmente das Register nicht (Datenintegrität); Bestands-Overrides bleiben.
   if (!Array.isArray(arr)) return [];
   const out = [];
   for (const e of arr) {
     if (!e) continue;
     if (e.ref) { out.push({ ref: e.ref, override: '' }); continue; }
     const nm = (typeof e.override === 'string') ? e.override.trim() : '';
-    if (!nm) continue;
-    const id = personFindenOderAnlegen(nm);
-    if (id) out.push({ ref: id, override: '' });
-    else out.push({ ref: '', override: nm });
+    if (nm) out.push({ ref: '', override: nm });
   }
   return out;
 }
