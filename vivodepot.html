@@ -1064,18 +1064,27 @@
      position:FIXED (Zusatz 09.07., §2): entkommt dem overflow-Clip des verschachtelten Vollmacht-Modals
      (#modal-inhalt: overflow auto, max-height) → wird nicht selbst beschnitten und liegt über allem. left/top/
      width setzt _refMehrfachVerdrahten beim Anzeigen an das Feld (Breite = Feldbreite). */
-  .refm-vorschlaege { position: fixed; z-index: 60; margin: 0; box-sizing: border-box;
-    padding: var(--space-1); list-style: none; background: var(--white); border: 1px solid var(--line);
-    border-radius: var(--radius-md); box-shadow: 0 6px 20px rgba(0,0,0,0.14); max-height: 15rem; overflow-y: auto; }
+  /* Phase-1-Nachbesserung: die Liste WÄCHST mit dem längsten Namen (width:max-content) statt zu kürzen — min =
+     Feldbreite, Max = Viewport (setzt _refMehrfachVerdrahten). Ellipsis nur als allerletzte Reserve, wenn Max greift.
+     Klar als Auswahl erkennbar: kräftiger Rahmen + Schatten, Optionen mit Trennlinie/Hover, Tap-Höhe ≥44px. */
+  .refm-vorschlaege { position: fixed; z-index: 60; margin: 0; box-sizing: border-box; width: max-content;
+    padding: var(--space-1); list-style: none; background: var(--white); border: 1.5px solid var(--salbei-mid);
+    border-radius: var(--radius-md); box-shadow: 0 10px 28px rgba(28,42,30,0.22); max-height: 15rem; overflow-y: auto; }
   .refm-vorschlaege[hidden] { display: none; }
-  .refm-vorschlaege li { min-height: 44px; display: flex; align-items: center; padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-sm); cursor: pointer; color: var(--ink); font-size: var(--fs-sm);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* Namen brechen nie um (§2) */
+  .refm-vorschlaege li { min-height: 44px; display: flex; align-items: center; padding: var(--space-2);
+    cursor: pointer; color: var(--ink); font-size: var(--fs-sm);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* Ellipsis nur greift, wenn die Max-Breite anschlägt */
+  .refm-vorschlaege li + li { border-top: 1px solid var(--line-feiner); }   /* Optionen sichtbar voneinander abgesetzt */
   .refm-vorschlaege li.refm-aktiv, .refm-vorschlaege li:hover { background: var(--salbei-light); color: var(--salbei-dunkel); }
-  /* „… als neue Person anlegen" (Zusatz 09.07.): Aktion, keine Person — leicht abgesetzt (kursiv, Trennlinie). */
+  /* „… als neue Person anlegen": Aktion, keine Person — kursiv + deutlichere Trennlinie über den Personen-Vorschlägen. */
   .refm-vorschlaege li.refm-anlegen { color: var(--salbei-dunkel); font-style: italic; }
-  .refm-vorschlaege li.refm-anlegen:not(:only-child) { border-top: 1px solid var(--line); }
+  .refm-vorschlaege li.refm-anlegen:not(:only-child) { border-top: 1px solid var(--salbei-mid); margin-top: 2px; }
   .refm-add { align-self: flex-start; }
+  /* Im verschachtelten Eintrags-Modal ist die 1fr-Wertspalte schmal — das eine Feld + drei Knöpfe in EINER Reihe
+     quetschten das Feld auf ~68px (getippter/gewählter Name abgeschnitten). NUR dort (`.liste-eintrag-form`): Feld
+     über die volle Breite (Reihe 1), ↑↓× darunter (Reihe 2). Das Erben-Sektorfeld (nicht im Modal) bleibt einreihig. */
+  .liste-eintrag-form .refm-zeile { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .liste-eintrag-form .refm-combo { flex: 1 1 100%; }
 
   /* ══════════════════════════════════════════════════════════════════════════
      RESPONSIVER DURCHGANG (mobil-first im Verhalten) — der Großteil der Nutzung
@@ -17040,8 +17049,17 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
         }
         liste.innerHTML = h;
         liste.hidden = false; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'true'); } catch (_) {}
-        // §2: position:fixed am Feld ausrichten (unter dem Feld, Breite = Feldbreite) — entkommt dem Modal-Clip.
-        try { const r = eingabe.getBoundingClientRect(); liste.style.left = Math.round(r.left) + 'px'; liste.style.top = Math.round(r.bottom + 3) + 'px'; liste.style.width = Math.round(r.width) + 'px'; } catch (_) {}
+        // §2/Phase-1-Nachbesserung: position:fixed am Feld ausrichten (unter dem Feld) — entkommt dem Modal-Clip.
+        // Breite wächst mit dem Namen (CSS width:max-content) zwischen Feldbreite (min) und Viewport-Rand (max).
+        try {
+          const r = eingabe.getBoundingClientRect();
+          const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+          liste.style.left = Math.round(r.left) + 'px';
+          liste.style.top = Math.round(r.bottom + 3) + 'px';
+          liste.style.width = '';
+          liste.style.minWidth = Math.round(r.width) + 'px';
+          liste.style.maxWidth = Math.max(Math.round(r.width), vw - Math.round(r.left) - 12) + 'px';
+        } catch (_) {}
         // Zeiger/Touch: mousedown feuert VOR blur — preventDefault hält den Fokus, dann übernehmen.
         liste.querySelectorAll('li').forEach(li => {
           li.onmousedown = (e) => { try { e.preventDefault(); } catch (_) {} waehleZeile(li); };
