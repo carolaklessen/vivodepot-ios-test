@@ -1055,11 +1055,22 @@
      unabhängiges Grid → in Sektor-Feld (Erben) und Listen-Unterfeld (Vollmacht) identisch. Marken-Stil
      (Salbei), Tap-Flächen ≥44px (Zielgruppe ältere Menschen). Ersetzt das Zwei-Felder-Widget. */
   .feld-refm { display: flex; flex-direction: column; gap: var(--space-2); }
-  .refm-zeile { display: grid; grid-template-columns: 1fr auto auto auto; gap: var(--space-2); align-items: center; }
+  .refm-zeile { display: grid; grid-template-columns: 1fr auto; gap: var(--space-2); align-items: center; }
   .refm-zeile + .refm-zeile { border-top: 1px solid var(--line); padding-top: var(--space-2); }
   .refm-combo { grid-column: 1; position: relative; min-width: 0; }  /* trägt das eine Feld + die Vorschlagsliste */
   .refm-combo .refm-name { width: 100%; font-size: var(--fs-sm); padding: var(--space-2); }
+  /* Chip-Input (Zusatz 2, 09.07.): bestätigter Name (ref gesetzt bzw. unveränderter Bestands-Name) — ruhiger
+     Salbei-Akzent links als „gesetzt"-Quittung, ohne den Text zu überlagern. */
+  .refm-combo .refm-name.refm-name--gesetzt { border-left: 3px solid var(--salbei-mid); background: var(--salbei-light); }
+  /* Knöpfe der Zeile als EINE Gruppe (eine Grid-Spalte) — so verschwindet der „Übernehmen"-Haken beim Ausblenden
+     ohne Lücke (Flex-gap greift nur zwischen sichtbaren Knöpfen). ↑↓×-Optik unverändert. */
+  .refm-knoepfe { display: flex; gap: var(--space-2); align-items: center; }
   .refm-zeile .btn-mini { min-width: 44px; min-height: 44px; }       /* Tap ≥44px */
+  /* „Übernehmen"-Haken (Chip-Input): bewusste Bestätigung des getippten Namens dieser Zeile. Erscheint NUR bei
+     unbestätigtem Freitext; Marken-Akzent (Salbei), lesbar als bestätigende Aktion — abgesetzt vom neutralen
+     ↑↓× und vom Text-Knopf „+ Person". */
+  .refm-uebernehmen { color: var(--salbei-dunkel); border-color: var(--salbei-mid); background: var(--salbei-light); font-weight: 700; }
+  .refm-uebernehmen[hidden] { display: none; }
   /* Weiche Vorschlagsliste: abgerundet, dezenter Schatten, Marken-Grün beim Überfahren — NICHT das native Grau.
      position:FIXED (Zusatz 09.07., §2): entkommt dem overflow-Clip des verschachtelten Vollmacht-Modals
      (#modal-inhalt: overflow auto, max-height) → wird nicht selbst beschnitten und liegt über allem. left/top/
@@ -1076,9 +1087,8 @@
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* Ellipsis nur greift, wenn die Max-Breite anschlägt */
   .refm-vorschlaege li + li { border-top: 1px solid var(--line-feiner); }   /* Optionen sichtbar voneinander abgesetzt */
   .refm-vorschlaege li.refm-aktiv, .refm-vorschlaege li:hover { background: var(--salbei-light); color: var(--salbei-dunkel); }
-  /* „… als neue Person anlegen": Aktion, keine Person — kursiv + deutlichere Trennlinie über den Personen-Vorschlägen. */
-  .refm-vorschlaege li.refm-anlegen { color: var(--salbei-dunkel); font-style: italic; }
-  .refm-vorschlaege li.refm-anlegen:not(:only-child) { border-top: 1px solid var(--salbei-mid); margin-top: 2px; }
+  /* Chip-Input (Zusatz 2): die Vorschlagsliste zeigt NUR echte Register-Treffer — keine „…anlegen"-Zeile mehr
+     (sie war die Klickfalle). Neuanlage läuft über Enter/„Übernehmen"-Haken, nie über die Liste. */
   .refm-add { align-self: flex-start; }
   /* Im verschachtelten Eintrags-Modal ist die 1fr-Wertspalte schmal — das eine Feld + drei Knöpfe in EINER Reihe
      quetschten das Feld auf ~68px (getippter/gewählter Name abgeschnitten). NUR dort (`.liste-eintrag-form`): Feld
@@ -3533,7 +3543,9 @@ const STRINGS = Object.freeze({
   refmHoch: "Nach oben",                                  // Reihenfolge-Knopf ↑
   refmRunter: "Nach unten",                               // Reihenfolge-Knopf ↓
   refmWeg: "Entfernen",                                   // Zeile/Person aus der Mehrfachauswahl entfernen
-  refmNeuAnlegen: "als neue Person anlegen",              // Zusatz 09.07.: letzte Vorschlagszeile „<Name>" … (EXPLIZITE Anlage per Tap, nicht stumm bei Blur)
+  refmUebernehmen: "Übernehmen",                          // Chip-Input (Zusatz 2, 09.07.): Haken bestätigt den getippten Namen dieser Zeile
+  refmUebernommen: '„%s“ übernommen',                     // sichtbare Quittung nach Enter/Haken (Toast)
+  refmNeuAnlegen: "als neue Person anlegen",              // ÜBERHOLT (Zusatz 2): Anlage-Zeile entfällt — Neuanlage nur per Enter/Haken. String bleibt für Alt-Referenzen.
   listenEintragSg: "Eintrag",                             // „1 Eintrag"
   listenEintragPl: "Einträge",                            // „N Einträge"
   pdfSeite: "Seite",                                      // PDF-Fuß „Seite X/Y"
@@ -16598,18 +16610,25 @@ function _refmZeileHTML(feld, eintrag) {
   const override = (eintrag && typeof eintrag === 'object' && typeof eintrag.override === 'string') ? eintrag.override : '';
   // Anzeige: gewählte Register-Person zeigt ihren Namen, sonst der getippte Freitext. EIN Feld trägt beides.
   const anzeige = personName({ ref, override });
+  // Chip-Input (Zusatz 2): ein geladener Name (ref oder Bestands-Override) ist eine bestätigte Person → „gesetzt"-Quittung.
+  const gesetzt = String(anzeige || '').trim().length > 0;
   const al = ' aria-label="' + escapeHTML(String(feld.label != null ? feld.label : fid)).replace(/"/g, '&quot;') + '"';
   let z = '<div class="refm-zeile" data-refm-zeile>';
   z += '<div class="refm-combo">';
-  z += '<input type="text" class="refm-name" role="combobox" aria-autocomplete="list" aria-expanded="false" autocomplete="off"'
+  z += '<input type="text" class="refm-name' + (gesetzt ? ' refm-name--gesetzt' : '') + '" role="combobox" aria-autocomplete="list" aria-expanded="false" autocomplete="off"'
      + ' data-edit-refm-override="' + fid + '"' + al
      + ' placeholder="' + escapeHTML(STRINGS.refmNamePlatzhalter) + '" value="' + anzeige.replace(/"/g, '&quot;') + '">';
   z += '<input type="hidden" class="refm-ref" data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '" value="' + String(ref).replace(/"/g, '&quot;') + '">';
   z += '<ul class="refm-vorschlaege" role="listbox" hidden></ul>';
   z += '</div>';
+  // Knöpfe als eine Gruppe. Der „Übernehmen"-Haken bestätigt den getippten Namen (Enter-Alternative für die
+  // Zielgruppe) — nur bei unbestätigtem Freitext sichtbar (Verdrahtung schaltet ihn über zustand()).
+  z += '<div class="refm-knoepfe">';
+  z += '<button type="button" class="btn-mini refm-uebernehmen" data-refm-uebernehmen aria-label="' + escapeHTML(STRINGS.refmUebernehmen) + '" hidden>✓</button>';
   z += '<button type="button" class="btn-mini refm-hoch" data-refm-hoch aria-label="' + escapeHTML(STRINGS.refmHoch) + '">↑</button>';
   z += '<button type="button" class="btn-mini refm-runter" data-refm-runter aria-label="' + escapeHTML(STRINGS.refmRunter) + '">↓</button>';
   z += '<button type="button" class="btn-mini refm-weg" data-refm-weg aria-label="' + escapeHTML(STRINGS.refmWeg) + '">×</button>';
+  z += '</div>';
   return z + '</div>';
 }
 
@@ -17003,14 +17022,8 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
       const alle = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
       return alle.filter(v => String(v.name || '').toLowerCase().indexOf(t) !== -1).slice(0, 5);
     };
-    // Zusatz 09.07.: gibt es zum getippten Text bereits eine EXAKT so heißende Register-Person (getrimmt,
-    // case-insensitiv)? Dann keine „… anlegen"-Zeile (der normale Vorschlag deckt sie ab, keine Doppel-Anlage).
-    const exaktVorhanden = (text) => {
-      const t = String(text || '').trim().toLowerCase();
-      if (!t) return false;
-      const alle = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
-      return alle.some(v => String(v.name || '').trim().toLowerCase() === t);
-    };
+    // (Chip-Input, Zusatz 2: die frühere `exaktVorhanden`-Prüfung diente nur der entfallenen „…anlegen"-Zeile
+    //  und ist damit weg. Dedup passiert jetzt bei der bewussten Bestätigung über personFindenOderAnlegen.)
     // Personen-Widget: EIN Feld = Eingabe + Suche. Auswahl setzt die verborgene ref; freier Name legt beim
     // Verlassen stumm eine Register-Person an (Dedup via personFindenOderAnlegen). Alles rein im DOM — KEIN
     // renderContent, damit die Scroll-Position am Widget bleibt (UX-Spec: „kein Sprung nach oben").
@@ -17021,36 +17034,10 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
       if (!eingabe || !refFeld || !liste) return;
       let aktivIdx = -1;
       let schmutzig = false;   // in dieser Fokus-Runde neu getippt? Nur DANN wird Freitext beim Verlassen verworfen.
-      const verbergen = () => { liste.hidden = true; liste.innerHTML = ''; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'false'); } catch (_) {} };
-      const waehle = (id, name) => { refFeld.value = id || ''; eingabe.value = name || ''; schmutzig = false; verbergen(); melden(); };
-      // Auswahl per Tap/Enter: bekannte Person → ref setzen; „… anlegen"-Zeile → Person EXPLIZIT anlegen (Dedup) + ref.
-      const waehleZeile = (li) => {
-        if (!li) return;
-        if (li.getAttribute('data-anlegen')) {
-          const nm = String(eingabe.value || '').trim();
-          if (!nm) { verbergen(); return; }
-          let id = ''; try { id = personFindenOderAnlegen(nm); } catch (_) {}
-          waehle(id, nm);
-        } else {
-          waehle(li.getAttribute('data-id'), li.textContent);
-        }
-      };
-      const zeigen = () => {
-        const roh = String(eingabe.value || '');
-        const text = roh.trim();
-        const treffer = vorschlaegeFuer(roh);
-        // Zusatz 09.07.: passt kein Vorschlag EXAKT, zeigt die letzte Zeile „<Getipptes>" als neue Person anlegen.
-        const zeigeAnlegen = !!text && !exaktVorhanden(roh);
-        if (!treffer.length && !zeigeAnlegen) { verbergen(); return; }
-        let h = treffer.map(v =>
-          '<li role="option" data-id="' + String(v.id).replace(/"/g, '&quot;') + '">' + escapeHTML(v.name || '') + '</li>').join('');
-        if (zeigeAnlegen) {
-          h += '<li role="option" class="refm-anlegen" data-anlegen="1">„' + escapeHTML(text) + '" ' + escapeHTML(STRINGS.refmNeuAnlegen) + '</li>';
-        }
-        liste.innerHTML = h;
-        liste.hidden = false; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'true'); } catch (_) {}
-        // §2/Phase-1-Nachbesserung: position:fixed am Feld ausrichten (unter dem Feld) — entkommt dem Modal-Clip.
-        // Breite wächst mit dem Namen (CSS width:max-content) zwischen Feldbreite (min) und Viewport-Rand (max).
+      // §2/Phase-1: position:fixed am Feld ausrichten (unter dem Feld) — entkommt dem overflow-Clip des
+      // Vollmacht-Modals. Breite wächst mit dem Namen (CSS width:max-content) zwischen Feldbreite (min) und
+      // Viewport-Rand (max). Eigene Funktion, damit die offene Liste dem Feld beim Scrollen folgen kann.
+      const positionieren = () => {
         try {
           const r = eingabe.getBoundingClientRect();
           const vw = window.innerWidth || document.documentElement.clientWidth || 0;
@@ -17060,30 +17047,85 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
           liste.style.minWidth = Math.round(r.width) + 'px';
           liste.style.maxWidth = Math.max(Math.round(r.width), vw - Math.round(r.left) - 12) + 'px';
         } catch (_) {}
-        // Zeiger/Touch: mousedown feuert VOR blur — preventDefault hält den Fokus, dann übernehmen.
+      };
+      // Regression-Fix 09.07.: position:fixed folgt dem Feld NICHT von selbst, wenn die Seite scrollt (Fokus
+      // zieht das Feld ins Bild; iOS: die Tastatur schiebt die Seite hoch). Ohne Nachführen löst sich die Liste
+      // vom Feld — sie erscheint über anderen Feldern oder aus dem Bild → wirkt „weg". Solange die Liste offen
+      // ist, führen wir sie bei jedem Scroll/Resize nach; beim Verbergen hängen wir die Hörer wieder ab.
+      let folgtScroll = false;
+      const scrollFolgeAn = () => { if (folgtScroll) return; folgtScroll = true; try { window.addEventListener('scroll', positionieren, true); window.addEventListener('resize', positionieren); } catch (_) {} };
+      const scrollFolgeAus = () => { if (!folgtScroll) return; folgtScroll = false; try { window.removeEventListener('scroll', positionieren, true); window.removeEventListener('resize', positionieren); } catch (_) {} };
+      const uebernehmenBtn = z.querySelector('[data-refm-uebernehmen]');
+      const verbergen = () => { liste.hidden = true; liste.innerHTML = ''; aktivIdx = -1; scrollFolgeAus(); try { eingabe.setAttribute('aria-expanded', 'false'); } catch (_) {} };
+      // Chip-Input (Zusatz 2): der Zeilen-Zustand steuert Quittung + „Übernehmen"-Haken. „Bestätigt" = eine gesetzte
+      // Register-ref ODER ein unveränderter Bestands-Name (nicht in dieser Runde getippt). Der Haken erscheint NUR bei
+      // unbestätigtem Freitext; ein bestätigter Name trägt den Salbei-Akzent (sichtbare „gesetzt"-Quittung).
+      const zustand = () => {
+        const hatText = String(eingabe.value || '').trim().length > 0;
+        const bestaetigt = !!refFeld.value || (hatText && !schmutzig);
+        if (uebernehmenBtn) uebernehmenBtn.hidden = !(hatText && !bestaetigt);
+        eingabe.classList.toggle('refm-name--gesetzt', bestaetigt && hatText);
+      };
+      const waehle = (id, name) => { refFeld.value = id || ''; eingabe.value = name || ''; schmutzig = false; verbergen(); zustand(); melden(); };
+      // Auswahl per Tap/Enter: bekannte Person aus der Vorschlagsliste → ref setzen (keine Neuanlage).
+      const waehleZeile = (li) => {
+        if (!li) return;
+        waehle(li.getAttribute('data-id'), li.textContent);
+      };
+      // Bewusste Neuanlage (Chip-Input): Enter oder „Übernehmen"-Haken bestätigt den getippten Namen. Dedup gegen das
+      // Register (case-insensitiv/getrimmt). Tippen/Blur legen NIE an — nur diese bewusste Handlung.
+      const bestaetige = () => {
+        const nm = String(eingabe.value || '').trim();
+        if (!nm) { verbergen(); return; }
+        if (refFeld.value) { verbergen(); return; }   // schon gesetzt → nichts anzulegen
+        let id = ''; try { id = personFindenOderAnlegen(nm); } catch (_) {}
+        waehle(id, nm);
+        try { ui.toast(STRINGS.refmUebernommen.replace('%s', nm), 'ok'); } catch (_) {}
+      };
+      const zeigen = () => {
+        const roh = String(eingabe.value || '');
+        const treffer = vorschlaegeFuer(roh);
+        // Chip-Input (Zusatz 2): die Liste zeigt NUR echte Register-Treffer. KEINE „…anlegen"-Zeile mehr
+        // (war die Klickfalle) — Neuanlage läuft über Enter/„Übernehmen"-Haken, nie über die Liste.
+        if (!treffer.length) { verbergen(); return; }
+        liste.innerHTML = treffer.map(v =>
+          '<li role="option" data-id="' + String(v.id).replace(/"/g, '&quot;') + '">' + escapeHTML(v.name || '') + '</li>').join('');
+        liste.hidden = false; aktivIdx = -1; try { eingabe.setAttribute('aria-expanded', 'true'); } catch (_) {}
+        // Unter dem Feld ausrichten und dem Feld beim Scrollen/Resize folgen, solange die Liste offen ist.
+        positionieren();
+        scrollFolgeAn();
+        // Zeiger/Touch: mousedown feuert VOR blur — preventDefault hält den Fokus, dann den Vorschlag setzen.
         liste.querySelectorAll('li').forEach(li => {
           li.onmousedown = (e) => { try { e.preventDefault(); } catch (_) {} waehleZeile(li); };
         });
       };
-      eingabe.oninput = () => { refFeld.value = ''; schmutzig = true; zeigen(); melden(); };
+      eingabe.oninput = () => { refFeld.value = ''; schmutzig = true; zeigen(); zustand(); melden(); };
       eingabe.onfocus = () => { schmutzig = false; const t = String(eingabe.value || '').trim(); if (t && !refFeld.value) zeigen(); };
       eingabe.onkeydown = (e) => {
         if (e.key === 'Escape') { verbergen(); return; }
         const items = liste.hidden ? [] : Array.prototype.slice.call(liste.querySelectorAll('li'));
-        if (!items.length) return;
-        if (e.key === 'ArrowDown') { e.preventDefault(); aktivIdx = Math.min(aktivIdx + 1, items.length - 1); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); aktivIdx = Math.max(aktivIdx - 1, 0); }
-        else if (e.key === 'Enter' && aktivIdx >= 0) { e.preventDefault(); waehleZeile(items[aktivIdx]); return; }
+        if (e.key === 'ArrowDown') { if (!items.length) return; e.preventDefault(); aktivIdx = Math.min(aktivIdx + 1, items.length - 1); }
+        else if (e.key === 'ArrowUp') { if (!items.length) return; e.preventDefault(); aktivIdx = Math.max(aktivIdx - 1, 0); }
+        else if (e.key === 'Enter') {
+          // Chip-Input (Zusatz 2): markierter Vorschlag → den setzen; sonst getippten Freitext bewusst anlegen.
+          e.preventDefault();
+          if (aktivIdx >= 0 && items[aktivIdx]) { waehleZeile(items[aktivIdx]); return; }
+          bestaetige();
+          return;
+        }
         else return;
         items.forEach((li, i) => li.classList.toggle('refm-aktiv', i === aktivIdx));
       };
-      // Verlassen ohne Auswahl (Zusatz 09.07.): NICHTS anlegen. Neu getippter Freitext ohne ref wird verworfen;
-      // ein unveränderter Bestands-Override (nur fokussiert/verlassen, nicht getippt) bleibt erhalten.
+      // Verlassen ohne Bestätigung (Chip-Input, Zusatz 2): NICHTS anlegen. Neu getippter, unbestätigter Freitext ohne
+      // ref wird verworfen; ein unveränderter Bestands-Name (nur fokussiert/verlassen, nicht getippt) bleibt erhalten.
       eingabe.onblur = () => { setTimeout(() => {
         if (eingabe.isConnected === false) return;
         if (schmutzig && !refFeld.value) { eingabe.value = ''; }
-        verbergen(); melden();
+        verbergen(); zustand(); melden();
       }, 150); };
+      // „Übernehmen"-Haken: mousedown VOR blur (preventDefault hält den Fokus), dann den getippten Namen bestätigen.
+      if (uebernehmenBtn) uebernehmenBtn.onmousedown = (e) => { try { e.preventDefault(); } catch (_) {} bestaetige(); };
+      zustand();   // Anfangszustand: geladener Name = „gesetzt" (Haken aus); leeres Feld = nichts.
     };
     const zeileVerdrahten = (z) => {
       comboVerdrahten(z);
