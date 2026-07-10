@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v28';  // v28 (2026-07-10): cleanslate 49541f6 — (Zusatz 4) Vorschlagsliste folgt dem Feld beim Scrollen; (Zusatz 5) Personen-Widget auf Chip-Input: Anlage-Zeile/Klickfalle RAUS, Neuanlage nur bewusst (Enter oder „Uebernehmen"-Haken), Tippen/Blur legen nie an, bestaetigter Name mit „gesetzt"-Quittung; Zeilen-Widget/Umsortieren unveraendert; skipWaiting bleibt
+const CACHE = 'vivodepot-shell-v29';  // v29 (2026-07-10): cleanslate 6ca648f — (Zusatz 6) Personen-Zeile responsiv: bei <=560px Feld volle Breite, Knopfgruppe ✓↑↓× darunter, damit das Loeschen-× am iPhone im tippbaren Bereich liegt (>=44px, nichts ragt aus dem Viewport); Desktop einreihig. Enthaelt weiter Zusatz 5 Chip-Input + Zusatz 4 Scroll-Nachfuehrung; skipWaiting bleibt
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird

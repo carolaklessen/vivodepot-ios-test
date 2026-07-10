@@ -1095,6 +1095,14 @@
      über die volle Breite (Reihe 1), ↑↓× darunter (Reihe 2). Das Erben-Sektorfeld (nicht im Modal) bleibt einreihig. */
   .liste-eintrag-form .refm-zeile { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
   .liste-eintrag-form .refm-combo { flex: 1 1 100%; }
+  /* Schmaler Viewport (iPhone ~390px): Feld + ↑↓× (mit „Übernehmen"-Haken beim Tippen sogar fünf Elemente)
+     passen nicht in EINE Reihe — das × (äußerstes) rutschte aus dem tippbaren Bereich. Dieselbe Lösung wie im
+     Modal: Feld über die volle Breite (Reihe 1), Knopfgruppe darunter (Reihe 2). Tap-Ziele bleiben ≥44px, nichts
+     ragt aus dem Viewport. Ab >560px (Tablet/Desktop) bleibt die Zeile einreihig wie bisher (keine Regression). */
+  @media (max-width: 560px) {
+    .refm-zeile { display: flex; flex-wrap: wrap; }
+    .refm-combo { flex: 1 1 100%; }
+  }
 
   /* ══════════════════════════════════════════════════════════════════════════
      RESPONSIVER DURCHGANG (mobil-first im Verhalten) — der Großteil der Nutzung
