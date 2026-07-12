@@ -3399,11 +3399,14 @@ const STRINGS = Object.freeze({
   exportGesamtPdfStand: "Stand",
   exportGesamtPdfFertig: "Alle Daten als PDF gespeichert.",
   exportGesamtPdfFehlt: "Das PDF kann hier gerade nicht erzeugt werden.",
-  // QR (Teil 3.3) — Notfall-Kern für die Papier-Notfallkarte
-  exportQrLabel: "Notfall-Infos als QR-Code",
-  exportQrHinweis: "Erzeugt einen QR-Code mit den wichtigsten Notfall-Angaben (Name, Blutgruppe, Allergien, Notfallkontakt) — zum Ausdrucken für die Brieftasche. Bewusst knapp; keine sensiblen Details.",
-  exportQrTitel: "Notfall-QR-Code",
-  exportQrLeer: "Für einen Notfall-QR-Code sind noch keine Angaben hinterlegt (z. B. Blutgruppe, Allergien, Notfallkontakt).",
+  // QR (Teil 3.3, U2-ADR-077) — der Notfall-QR trägt NUR die Notfallkontakte (Name + Nummer),
+  // KEINE Gesundheitsdaten. Grund: der frühere Klartext-QR leckte am iPhone an die Websuche
+  // (Kamera hat kein Ziel für Klartext). Gesundheitsangaben stehen ausschließlich gedruckt auf
+  // der Notfallkarte (zeichneNotfallkarte) — nie im QR. Format: eine vCard, tappbare TEL-Zeilen.
+  exportQrLabel: "Notfallkontakte als QR-Code",
+  exportQrHinweis: "Erzeugt einen QR-Code mit Ihren Notfallkontakten (Name und Telefonnummer) — beim Scannen mit der Handy-Kamera direkt anrufbar. Gesundheitsangaben (Blutgruppe, Allergien, Medikamente, Diagnosen) trägt der Code bewusst NICHT; die stehen gedruckt auf der Notfallkarte.",
+  exportQrTitel: "Notfallkontakte als QR-Code",
+  exportQrLeer: "Für den QR-Code sind noch keine Notfallkontakte mit Telefonnummer hinterlegt.",
   exportQrFehlt: "Der QR-Code kann hier gerade nicht erzeugt werden.",
   // Format-Export weitere Bereiche (Teil 3.5) — Bürger-Labels, nie „SD-JWT"/„Claim"/„Bundle"
   exportIdentitaetLabel: "Identitätsnachweis (maschinenlesbar)",
@@ -3631,7 +3634,7 @@ const STRINGS = Object.freeze({
   notfallKarteFehlt: "Die Notfallkarte kann hier gerade nicht erzeugt werden.",
   notfallKarteTitel: "Notfall — wichtige Informationen",
   notfallKarteFuss: "Erstellt mit Vivodepot · Diese Karte ersetzt keinen amtlichen Ausweis.",
-  notfallQrKopf: "VIVODEPOT NOTFALL",                     // Kopfzeile des Notfall-QR-Klartexts (3.3/4.2)
+  notfallKontakteVcardTitel: "Notfallkontakte",           // U2-ADR-077: FN-Titel der Kontakte-vCard im Notfall-QR (früher notfallQrKopf-Klartext, entfällt)
 
   // ── Teil 6.1 — restliche zentralisierte UI-Texte (zuvor hartkodiert) ──
   dateiLabel: "Depot-Datei",                              // Label der Datei-Auswahl (Öffnen / Notfall-Stufe-1)
@@ -7183,17 +7186,47 @@ function notfallKernModell() {
   return zeilen;
 }
 
-// Kompakter, beim Scannen lesbarer Text für den QR. Leer, wenn nichts hinterlegt ist.
-function notfallKernText() {
-  const zeilen = notfallKernModell();
-  if (!zeilen.length) return '';
-  return STRINGS.notfallQrKopf + '\n' + zeilen.map(z => z.label + ': ' + z.wert).join('\n');
+// U2-ADR-077: Der Notfall-QR trägt NUR die Anruf-Ziele (Notfallkontakte), KEIN Gesundheitsdatum.
+// Der frühere Klartext-QR (notfallKernText, entfernt) trug ALLE NOTFALL_KERN_FELDER als Klartext —
+// darunter VIER Art.-9-Felder: Blutgruppe, Allergien, laufende Medikamente, kodierte Diagnosen. Am iPhone
+// leckte er an die Websuche (die Kamera hat kein Ziel für Klartext → Google). Eine vCard führt am
+// Gerät BELEGT in eine OFFLINE Kontakt-Vorschau. EIN Block (iOS nimmt nur den ersten `BEGIN:VCARD`),
+// FN mit Patientenname (Bezug, nicht medizinisch), je Kontakt-mit-Nummer eine item{n}.TEL +
+// X-ABLabel:Name. Gesundheit steht ausschließlich als lesbarer Text auf der gedruckten Karte
+// (zeichneNotfallkarte) + im passwortlosen Cache — NIE im QR. Name/Nummer aus dem Register
+// (data.menschen[].tel) über die refMehrfach-Kontakte (gesundheit.hauptpflegeperson); Kontakte OHNE
+// Nummer erscheinen nicht im QR (stehen weiter als Name auf der Karte). Leer, wenn kein anrufbarer
+// Kontakt hinterlegt ist. VERSION:3.0 + X-ABLabel: am iPhone belegt (Namen sichtbar). X-ABLabel ist
+// ein Apple-Herstellerfeld — Android NICHT geprüft (benannte offene Verifikation, s. U2-ADR-077).
+function notfallKontakteVcard() {
+  const ident = (data && data.sektoren && data.sektoren.identitaet) || {};
+  const patient = [ident.vorname, ident.nachname].filter(Boolean).join(' ').trim();
+  const roh = ((data && data.sektoren && data.sektoren.gesundheit) || {}).hauptpflegeperson;
+  const arr = Array.isArray(roh) ? roh : [];
+  const kontakte = [];   // { name, tel } — nur Kontakte MIT Telefonnummer (Anruf-Ziele)
+  for (const e of arr) {
+    const p = (e && e.ref && data && Array.isArray(data.menschen)) ? data.menschen.find(m => m.id === e.ref) : null;
+    const tel = (p && p.tel != null) ? String(p.tel).trim() : '';
+    if (!tel) continue;                 // ohne Nummer kein Anruf-Ziel → nicht in den QR
+    kontakte.push({ name: personName(e) || '', tel: tel });
+  }
+  if (!kontakte.length) return '';      // kein anrufbarer Kontakt → kein QR (graziös, wie früher leer)
+  const fn = patient ? (STRINGS.notfallKontakteVcardTitel + ' · ' + patient) : STRINGS.notfallKontakteVcardTitel;
+  const L = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:' + _vcardEscape(fn),
+    'N:' + _vcardEscape(ident.nachname || '') + ';' + _vcardEscape(ident.vorname || '') + ';;;'];
+  kontakte.forEach(function (k, i) {
+    const g = 'item' + (i + 1);
+    L.push(g + '.TEL;TYPE=CELL:' + _vcardEscape(k.tel));
+    if (k.name) L.push(g + '.X-ABLabel:' + _vcardEscape(k.name));
+  });
+  L.push('END:VCARD');
+  return L.join('\r\n') + '\r\n';
 }
 
 // Auslöser: Notfall-Kern als QR-Code anzeigen (zum Ausdrucken). qrcode-generator ist inline
 // (Teil 3.2, weiterer Skript-Block); fehlt sie (Headless/Test), gibt es einen sauberen Hinweis.
 function flowNotfallQR() {
-  const text = notfallKernText();
+  const text = notfallKontakteVcard();
   if (!text) { if (ui && ui.toast) ui.toast(STRINGS.exportQrLeer, 'info'); return; }
   if (typeof window === 'undefined' || typeof window.qrcode !== 'function') {
     if (ui && ui.toast) ui.toast(STRINGS.exportQrFehlt, 'info');
@@ -7312,7 +7345,7 @@ function flowNotfallkartePdf() {
   }
   let qrDataUrl = null;
   if (typeof window.qrcode === 'function') {
-    try { const qr = window.qrcode(0, 'M'); qr.addData(notfallKernText()); qr.make(); qrDataUrl = qr.createDataURL(4, 0); }
+    try { const qr = window.qrcode(0, 'M'); qr.addData(notfallKontakteVcard()); qr.make(); qrDataUrl = qr.createDataURL(4, 0); }
     catch (e) { qrDataUrl = null; }
   }
   const doc = new window.jspdf.jsPDF({ unit: 'mm', format: 'a6' });
