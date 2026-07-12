@@ -3517,6 +3517,21 @@ const STRINGS = Object.freeze({
   importAutoritativFertig: "Laborbefund abgelegt — im Original, unverändert.",
   mappeAutoritativ: "Original — nur lesbar",
   shlLabel: "Laborbefund",                                 // U2-ADR-047 — Default-Label im shlink:/-Payload
+  // U2-ADR-047 — SHL-Provider-Test-Affordance (manueller Host, z. B. IONOS). Sichtbarer Text jargon-frei
+  // (kein „SHL"/„JWE"). Experimentell: die SHL-Verschlüsselung wartet auf externe Krypto-Prüfung.
+  shlKnopf: "Sicher weitergeben",
+  shlTitel: "Sicher weitergeben",
+  shlEinfuehrung: "So geben Sie dieses geprüfte Original verschlüsselt weiter — der Schlüssel reist im Link, nicht in der Datei. (Experimentell: die Verschlüsselung wartet noch auf eine externe Prüfung.)",
+  shlNurAutoritativ: "Nur geprüfte Original-Dokumente lassen sich so weitergeben.",
+  shlSchritt1: "1. Verschlüsselte Datei sichern",
+  shlDateiKnopf: "Verschlüsselte Datei sichern",
+  shlSchritt2: "2. Ablage-Adresse eintragen",
+  shlUrlLabel: "Web-Adresse, unter der die Datei liegt",
+  shlUrlHinweis: "Legen Sie die gesicherte Datei auf Ihrem Server ab (z. B. per SFTP) und tragen Sie hier die vollständige https-Adresse ein — höchstens 128 Zeichen.",
+  shlBauenKnopf: "Freigabe-Link erzeugen",
+  shlErgebnisLabel: "Freigabe-Link — an den Empfänger geben:",
+  shlUrlFehler: "Die Adresse fehlt oder ist länger als 128 Zeichen. Bitte eine kürzere https-Adresse verwenden.",
+  shlGueltigBis: "Gültig bis {datum}. Datei und Link getrennt weitergeben — die Datei ist nur verschlüsselter Text, der Schlüssel steckt im Link.",
   importIdentitaetLabel: "Identitäts-Angaben einlesen",
   importFinanzenLabel: "Finanz-Angaben einlesen",
   importSozialversicherungLabel: "Sozialversicherungs-Angaben einlesen",
@@ -16341,12 +16356,65 @@ function flowMappeVorschau(id) {
       '<button type="button" class="btn btn-sek" data-mappe-uebernehmen="' + escapeHTML(id) + '">' +
       svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.mappeUebernehmenKnopf) + '</button>';
   }
-  ui.modal({ titel, koerperHTML, primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true });
-  if (_uebernahme) {
-    const box = document.getElementById('modal-inhalt');
-    const b = (box && box.querySelector) ? box.querySelector('[data-mappe-uebernehmen]') : null;
-    if (b) b.onclick = () => flowMappeWerteUebernehmen(id);
+  // U2-ADR-047: autoritative Originale sicher weitergeben (SHL-Provider-Weg, manueller Host).
+  if (e.autoritativ) {
+    koerperHTML += '<button type="button" class="btn btn-sek" data-mappe-shl="' + escapeHTML(id) + '">' +
+      svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.shlKnopf) + '</button>';
   }
+  ui.modal({ titel, koerperHTML, primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true });
+  const _mbox = document.getElementById('modal-inhalt');
+  if (_mbox && _mbox.querySelector) {
+    if (_uebernahme) { const b = _mbox.querySelector('[data-mappe-uebernehmen]'); if (b) b.onclick = () => flowMappeWerteUebernehmen(id); }
+    const bShl = _mbox.querySelector('[data-mappe-shl]'); if (bShl) bShl.onclick = () => flowShlVorbereiten(id);
+  }
+}
+
+/* ── SHL-Provider-Test-Affordance (U2-ADR-047) ───────────────────────────────────
+   Erzeugt aus einem autoritativen Mappe-Eintrag die verschlüsselte Datei (JWE, lokal — kein Netz)
+   zum Sichern + baut nach MANUELLER Eingabe der HTTPS-Ablage-URL den shlink:/-Freigabe-Link.
+   Umgeht bewusst den offenen Upload-Stub (shlDateiHochladen), OHNE die Offline-Invariante zu
+   brechen: die Datei wird lokal gesichert, extern hochgeladen, die URL von Hand eingetragen.
+   `teile` wird EINMAL erzeugt und für Datei UND Link genutzt (sonst passt der Schlüssel nicht
+   zur hochgeladenen Datei). Experimentell — SHL-Krypto wartet auf externe Prüfung. */
+async function flowShlVorbereiten(id) {
+  const e = mappeEintrag(id);
+  if (!e || !e.autoritativ) { ui.toast(STRINGS.shlNurAutoritativ, 'fehler'); return; }
+  let teile;
+  try { teile = await shlProviderPayload(id, { label: e.beschriftung }); }
+  catch (err) { ui.toast(String((err && err.message) || STRINGS.importUngueltig), 'fehler'); return; }
+  const rnd = Array.from(crypto.getRandomValues(new Uint8Array(6))).map((b) => b.toString(16).padStart(2, '0')).join('');
+  const dateiname = 'shl-' + rnd + '.jose';
+  const bis = new Date(teile.exp * 1000).toISOString().slice(0, 10);
+  const koerperHTML =
+    '<p class="einst-hint">' + escapeHTML(STRINGS.shlEinfuehrung) + '</p>' +
+    '<p><strong>' + escapeHTML(STRINGS.shlSchritt1) + '</strong></p>' +
+    '<button type="button" class="btn btn-sek" id="shl-datei">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.shlDateiKnopf) + '</button>' +
+    '<p style="margin-top:var(--space-4)"><strong>' + escapeHTML(STRINGS.shlSchritt2) + '</strong></p>' +
+    '<label for="shl-url">' + escapeHTML(STRINGS.shlUrlLabel) + '</label>' +
+    '<input id="shl-url" type="url" inputmode="url" maxlength="128" placeholder="https://…">' +
+    '<p class="einst-hint">' + escapeHTML(STRINGS.shlUrlHinweis) + '</p>' +
+    '<button type="button" class="btn" id="shl-bauen">' + escapeHTML(STRINGS.shlBauenKnopf) + '</button>' +
+    '<div id="shl-ergebnis"></div>' +
+    '<p class="einst-hint" style="margin-top:var(--space-3)">' + escapeHTML(STRINGS.shlGueltigBis.replace('{datum}', bis)) + '</p>';
+  ui.modal({ titel: STRINGS.shlTitel, koerperHTML, primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true });
+  const box = document.getElementById('modal-inhalt');
+  if (!box || !box.querySelector) return;
+  const bDatei = box.querySelector('#shl-datei');
+  if (bDatei) bDatei.onclick = () => { dateiAusgeben(new Blob([teile.jwe], { type: 'application/jose' }), dateiname, 'application/jose'); };
+  const bBauen = box.querySelector('#shl-bauen');
+  if (bBauen) bBauen.onclick = () => {
+    const feld = box.querySelector('#shl-url');
+    const url = String((feld && feld.value) || '').trim();
+    const out = box.querySelector('#shl-ergebnis');
+    if (!out) return;
+    let uri;
+    try { uri = shlUriBauen(teile, url); }
+    catch (err) { out.innerHTML = '<p class="feld-fehler">' + escapeHTML(STRINGS.shlUrlFehler) + '</p>'; return; }
+    out.innerHTML = '<label for="shl-uri">' + escapeHTML(STRINGS.shlErgebnisLabel) + '</label>' +
+      '<textarea id="shl-uri" readonly rows="3" style="width:100%;box-sizing:border-box"></textarea>';
+    const ta = out.querySelector('#shl-uri');
+    if (ta) { ta.value = uri; ta.focus(); ta.select(); }
+  };
 }
 
 /* ── Mappe Upload-Flow (U2-ADR-013 Schritt 3) ────────────────────────────────────
