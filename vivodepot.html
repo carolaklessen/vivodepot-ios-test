@@ -4,7 +4,7 @@
 <!--
   Vivodepot — Bürger-App (Clean-Slate-Kern)
   SPDX-License-Identifier: EUPL-1.2
-  Copyright (c) 2026 Vivodepot GmbH (i.Gr.), Carola Klessen, Berlin.
+  Copyright (c) 2026 Vivodepot GmbH, Carola Klessen, Berlin.
 
   Lizenziert unter der European Union Public Licence v1.2 (EUPL-1.2).
   Lizenz-Volltext: siehe LICENSE im Repository. Drittsoftware (inline eingebettete
@@ -889,6 +889,10 @@
   /* Aktionsleiste bleibt beim Scrollen am unteren Dialogrand „kleben" (heller Grund deckt den
      durchlaufenden Inhalt ab), damit die Knöpfe nie verschwinden. */
   .modal-aktionen { display: flex; gap: var(--space-3); justify-content: flex-end; position: sticky; bottom: 0; background: var(--white); padding-top: var(--space-3); margin-top: var(--space-4); }
+  /* U2-ADR-079: die zwei Wege beim delegierten IPS-Export stehen GLEICHWERTIG (voll breit,
+     gestapelt, gleiche Sekundär-Optik) — kein Knopf ist der stille Default. */
+  .del-wahl { display: flex; flex-direction: column; gap: var(--space-3); margin-top: var(--space-3); }
+  .del-wahl .btn { width: 100%; justify-content: center; text-align: center; }
   /* Einstellungen-Dialog (Bruch B) */
   .einst-abschnitt { padding: var(--space-3) 0; border-top: 1px solid var(--line); }
   .einst-abschnitt:first-child { border-top: none; }
@@ -2571,6 +2575,12 @@ const VdCrypto = Object.freeze({
    Platzhalter, nie einen geratenen Wert. */
 const BUILD_VERSION = 'v1.0-rc';
 const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot-…html
+// SCHALEN_STAND — die geladene Schalen-Generation, IM LOCKSTEP mit `CACHE` in sw.js zu bumpen.
+// Anders als BUILD_SHA256 (leer bis Release) trägt sie SCHON JETZT: lädt der SW eine alte Schale
+// aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
+// sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
+// beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
+const SCHALEN_STAND = 'v57';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -2839,7 +2849,7 @@ const STRINGS = Object.freeze({
     "Füllen Sie aus, was Ihnen heute wichtig ist. Den Rest können Sie später ergänzen.",
   ],
   // ── Fußzeile (CC-Auftrag Fußzeile/Einstellungen 30.05.) — dezent, kein Marketing ──
-  fussFirma: "Vivodepot GmbH (i.Gr.) · Berlin",
+  fussFirma: "Vivodepot GmbH · Berlin",
   fussLizenz: "Open Source · EUPL-1.2",
   fussKontakt: "kontakt@vivodepot.de",
   fussQuellcode: "codeberg.org/vivodepot/vivodepot",
@@ -2847,6 +2857,10 @@ const STRINGS = Object.freeze({
   fussHaftung: "Werkzeug, kein Berater · keine Rechts-, Finanz-, Steuer- oder medizinische Beratung · alle Dokumente sind Entwürfe",
   fussHashLabel: "SHA-256:",
   fussHashPlatzhalter: "wird beim Release gesetzt",
+  fussSchaleLabel: "Schale",          // geladene Schalen-Generation (SCHALEN_STAND) — Stale-SW zeigt hier den Alt-Stand
+  fussSwLabel: "SW-Cache",            // was der Service Worker gerade hält (live gelesen)
+  fussSwLaedt: "…",                   // Platzhalter, bis caches.keys() aufgelöst hat
+  fussSwKeiner: "keiner",             // kein aktiver Service-Worker-Cache
   anlassFrage: "Was bringt Sie heute hierher?",
   anlassFrageHerausholen: "Für welchen Anlass möchten Sie etwas parat haben?",  // in-App (Herausholen-Weg), Struktur-Spec §1/§4
   klasse1: "Lebensereignisse",
@@ -2978,6 +2992,13 @@ const STRINGS = Object.freeze({
   fhirGeburtsdatumTitel: "Geburtsdatum benötigt",
   fhirGeburtsdatumText: "Für den medizinischen Export (Patientenkurzakte) wird dein Geburtsdatum benötigt. Möchtest du es jetzt ergänzen?",
   fhirGeburtsdatumCta: "Jetzt ergänzen",
+  // U2-ADR-079 — delegierter IPS-Export: die verwaltende Person entscheidet, wie sie im Dokument
+  // erscheint. Zwei gleichwertige Wege, kein stiller Default. „Sie"-Ton (verwaltende Person).
+  delExportTitel: "Wie sollen Sie im Dokument erscheinen?",
+  delExportInfo: "Sie exportieren die Gesundheitsdaten dieser Person in Vertretung. Wählen Sie, ob Ihr Name als vertretende Person im Dokument steht. Ihr Geburtsdatum geht in keinem Fall mit.",
+  delExportBeziehungLabel: "Ihre Beziehung zu dieser Person",
+  delExportMit: "Mit meinem Namen und meiner Beziehung",
+  delExportOhne: "Nur „unter Vollmacht erstellt“ — ohne meinen Namen",
   // fhirLab*-Strings (self-erzeugter Laborbericht-Export) entfernt — E3, Datenmodell-Konzept v1.2 §3.
   depotAktiv: "aktiv",                                    // Marker für das gerade geöffnete Depot
   gruppeEintragen: "Eintragen",                           // Sidebar-Gruppe (Struktur-Spec §4, Achse Eintragen) — die elf Bereiche
@@ -3077,7 +3098,7 @@ const STRINGS = Object.freeze({
   einstLizenz: "Lizenz",
   einstLizenzWert: "EUPL-1.2 (Open Source) — voller Text als LICENSE im Repo",
   einstAbschnittRecht: "Anbieter",
-  einstAnbieter: "Vivodepot GmbH (i.Gr.) · Carola Klessen · Körnerstraße 7-10, 10785 Berlin",
+  einstAnbieter: "Vivodepot GmbH · Carola Klessen · Körnerstraße 7-10, 10785 Berlin",
   einstAnbieterHinweis: "Die vollständige Impressum-Fassung steht auf der Website.",
 
   // ── Versions-Hinweis + „Nach neuer Version suchen" (Aufräumen Teil 3) ──
@@ -3519,6 +3540,15 @@ const STRINGS = Object.freeze({
   mappeUebernehmenHinweis: "Sie können die Werte aus diesem Original zusätzlich in Ihre Gesundheitsfelder übernehmen. Das Original bleibt unverändert erhalten.",
   importAutoritativFertig: "Laborbefund abgelegt — im Original, unverändert.",
   mappeAutoritativ: "Original — nur lesbar",
+  // U2-ADR-045 (Nachtrag): Mappe-Einträge sind entfernbar — „es ist ihre Datei". Zwei Stufen:
+  // schlichte Bestätigung für eigene Uploads, ehrliche WARNUNG (nicht beschönigend) für autoritative
+  // Originale (nicht wiederherstellbar, evtl. nicht erneut anforderbar). Bereits übernommene Werte bleiben.
+  mappeEntfernenKnopf: "Aus der Mappe entfernen",
+  mappeEntfernenTitel: "Aus der Mappe entfernen?",
+  mappeEntfernenFrage: "Diesen Eintrag aus Ihrer Mappe entfernen? Das lässt sich nicht rückgängig machen.",
+  mappeEntfernenAutoritativWarnung: "Dies ist ein Original von einer Institution. Es lässt sich nicht wiederherstellen, und Sie können es möglicherweise nicht erneut anfordern. Bereits in Ihre Felder übernommene Werte bleiben — nur das Dokument geht. Trotzdem entfernen?",
+  mappeEntfernenBestaetigen: "Entfernen",
+  mappeEntferntToast: "Aus der Mappe entfernt.",
   shlLabel: "Laborbefund",                                 // U2-ADR-047 — Default-Label im shlink:/-Payload
   // U2-ADR-047 — SHL-Provider-Test-Affordance (manueller Host, z. B. IONOS). Sichtbarer Text jargon-frei
   // (kein „SHL"/„JWE"). Experimentell: die SHL-Verschlüsselung wartet auf externe Krypto-Prüfung.
@@ -3617,17 +3647,12 @@ const STRINGS = Object.freeze({
   exportPdfQrHinweis: "Dieser QR-Code trägt genau die Daten dieses PDF. Wer mag, scannt ihn und prüft: das Gedruckte = die Daten. Bei mehreren Teilen alle der Reihe nach scannen — die Lese-App setzt sie zusammen.",
   exportPdfQrFehlt: "Maschinenlesbarer QR erscheint, sobald die qrcode-Bibliothek eingebunden ist.",
 
-  // ── Notfall-Dreiklang (Teil 4) — Sanitäter-Cache (Stufe 1) + Papier-Notfallkarte ──
+  // ── Notfall-Dreiklang (Teil 4) — Bürger-Live-Sicht + Papier-Notfallkarte ──
+  // U2-ADR-078: der passwortlose Stufe-1-Cache und seine „Für Sanitäter"-Tür sind entfernt;
+  // die zugehörigen Strings (notfallAusDatei*, notfallCacheStand) sind mit ihnen weggefallen.
   notfallCacheTitel: "Notfall-Informationen",
-  notfallCacheUnterzeile: "Diese Angaben sind ohne Passwort sichtbar — für den Ernstfall.",
-  notfallCacheStand: "Stand",                              // „Stand: TT.MM.JJJJ" der letzten Speicherung
+  notfallCacheUnterzeile: "Ihre wichtigsten Angaben für den Ernstfall — zum Ausdrucken als Notfallkarte für die Brieftasche.",
   notfallCacheLeer: "Es sind keine Notfall-Informationen hinterlegt.",
-  notfallAusDatei: "Für Sanitäter — Akut-Daten ohne Passwort",   // Welcome-/crypto-overlay-Einstieg (Stufe 1; ADR-Wortlaut Strang 2)
-  notfallAusDateiTitel: "Notfall-Informationen anzeigen",
-  notfallAusDateiHinweis: "Wählen Sie eine Vivodepot-Datei. Es werden NUR die hinterlegten Notfall-Angaben angezeigt — ohne Passwort, ohne den übrigen, verschlüsselten Inhalt.",
-  notfallAusDateiAnzeigen: "Anzeigen",
-  notfallAusDateiUngueltig: "Keine gültige Vivodepot-Datei.",
-  notfallAusDateiKeine: "Diese Datei enthält keine Notfall-Informationen.",
   notfallKarteLabel: "Notfallkarte zum Ausdrucken (PDF)",
   notfallKarteHinweis: "Eine kleine Karte mit Ihren wichtigsten Notfall-Angaben und einem QR-Code — zum Ausschneiden für die Brieftasche.",
   notfallKarteFertig: "Notfallkarte als PDF gespeichert.",
@@ -5912,9 +5937,9 @@ let aktiverWizardId = null;       // null = kein Wizard aktiv; sonst id aus WIZA
 let wizardSchrittIndex = 0;       // 0-basiert; Anzeige „Schritt X von Y" addiert 1
 let wizardFehlerGrund = null;     // null | 'datum' | 'zahl' | 'auswahl' | … (feldValidieren-Grund)
 let wizardRueckkehr = null;       // Bug 1: Rückkehr-Kontext, beim START festgehalten ({ansicht,sektorId,situationId})
-// Notfall-Dreiklang (Teil 4.1): der ohne Passwort geladene Sanitäter-Cache (Stufe 1). null =
-// keiner geladen → renderNotfall baut live aus dem offenen Depot. { stand, zeilen:[{label,wert}] }.
-let notfallStufe1 = null;
+// U2-ADR-078: der passwortlose Stufe-1-Sanitäter-Cache ist entfernt. Die Notfall-Sicht
+// (renderNotfall) baut ausschließlich LIVE aus dem offenen Depot (`notfallKernModell`),
+// hinter dem Passwort. Kein `notfallStufe1`-Datei-Cache mehr.
 
 /* ── Vorschau-/Umsehen-Modus (passwortloser Erstbesuch) ───────────────────────
    Ein Erstbesucher betritt die App OHNE Passwort/ohne Depot und sieht die leere
@@ -6088,10 +6113,11 @@ async function depotSerialisieren() {
     depotSalt: bytesToBase64(aktuelleDepotSalt),                   // 32 Byte
     iv,                                                            // 12 Byte
     ct,
-    // Teil 4.1 (ADR-099) — Sanitäter-Cache: NUR die Akut-Allowlist im Klartext, neben dem
-    // Ciphertext. Lesbar ohne Passwort (Stufe 1). Alles andere bleibt in `ct` verschlüsselt.
-    notfallCache: notfallCacheBauen(),
-    // U2-ADR-062 — Stufe-2-Angehörigen-Cache: Geschwister neben `ct` wie notfallCache, aber CHIFFRAT
+    // U2-ADR-078: der passwortlose Stufe-1-`notfallCache` ist ERSATZLOS entfernt. Er lag als
+    // Klartext-Geschwister neben `ct` und leckte vier Art-9-Felder an jeden Datei-Besitzer; der
+    // Sanitäter erreichte ihn am Unfallort nie (kein Gerät/keine App). Deckung: Papier-Notfallkarte
+    // (ADR-097). „Ohne Passwort nicht lesbar" ist damit wieder wahr. (Historie: ADR-099/109.)
+    // U2-ADR-062 — Stufe-2-Angehörigen-Cache: Geschwister neben `ct` wie früher notfallCache, aber CHIFFRAT
     // (mit dem zweiten Vertrauens-Passwort verschlüsselt). Kopiert den in `data` gehaltenen Snapshot;
     // aufgefrischt wird er beim „Vertrauensperson einrichten/aktualisieren". null, wenn nicht eingerichtet.
     angehoerigenCache: (data && data.angehoerigenCache) || null,
@@ -6171,6 +6197,12 @@ async function depotLaden(umschlag, password) {
   // Etappe 5: der geladene Stand trägt seine Klartext-Zeitmarke (Datei: Geschwisterfeld;
   // interner Stand: wird in depotAusIdbLaden aus dem Record überschrieben).
   _aktuellerStandGespeichertAm = (umschlag && typeof umschlag.gespeichert_am === 'string') ? umschlag.gespeichert_am : null;
+  // U2-ADR-078 — Migrations-Nudge: trägt der geladene Umschlag noch den passwortlosen Alt-Cache
+  // (`notfallCache`), wird das Depot als ungespeichert markiert, damit der NÄCHSTE Speichervorgang
+  // einen sauberen Umschlag ohne Klartext-Geschwister schreibt. KEINE rückwirkende Tilgung: die App
+  // säubert nur, was sie neu schreibt — Kopien/Backups/iOS-Exportduplikate am Ruheort erreicht sie
+  // nicht (siehe ADR). Best-Effort-Anstoß, keine Garantie.
+  try { if (umschlag && umschlag.notfallCache) markiereUngespeichert(1); } catch (_) {}
   return obj;
 }
 
@@ -6890,7 +6922,7 @@ function _codeEintraege(roh) {
 function _ipsNarrative(text) {
   return { status: 'generated', div: '<div xmlns="http://www.w3.org/1999/xhtml">' + escapeHTML(String(text || '')) + '</div>' };
 }
-function fhirIpsBundle(jetzt) {
+function fhirIpsBundle(jetzt, opt) {
   const g  = (data && data.sektoren && data.sektoren.gesundheit) || {};
   const id = (data && data.sektoren && data.sektoren.identitaet) || {};
   const ts = (jetzt && typeof jetzt.getTime === 'function' && !isNaN(jetzt)) ? jetzt : new Date();
@@ -6960,12 +6992,70 @@ function fhirIpsBundle(jetzt) {
     text: _ipsNarrative('Patientenkurzakte (IPS) — Allergien, Medikation, Diagnosen.'),
   };
   const compFullUrl = 'urn:uuid:' + uuidV4();
+
+  // U2-ADR-079 — delegierter Bundle-Bau: die EXPORTIERENDE Anker-Person (die Eigentümerin ist im
+  // Vollmachts-Fall abwesend) erscheint als codierte RelatedPerson (ADR-064) + eine konforme
+  // Provenance (ADR-063: target/recorded/agent.who). Nur wenn der Export-Flow den Anker-Entscheid
+  // übergibt (`opt.anker`). Datenminimierung (Carola-Entscheid): Name NUR bei Einwilligung + Beziehung,
+  // KEIN Geburtsdatum (Daten einer dritten Person in einem Dokument über jemand anderen; birthDate ist
+  // FHIR-optional). Ohne Namens-Einwilligung: RelatedPerson ohne `name`, Provenance-Text „unter Vollmacht".
+  // Ehrlichkeit + FHIR-Dokument-Integrität: im delegierten Fall hat die Eigentümerin NICHT selbst
+  // zusammengestellt — die vertretende Person hat es. Also wird `Composition.author` auf die
+  // RelatedPerson gesetzt (Composition-uv-ips erlaubt RelatedPerson als Autorin — verifizierter
+  // IPS-Ausschnitt). Das macht die RelatedPerson zugleich VON der Composition referenziert und
+  // erfüllt die Dokument-Integritätsregel (jede Ressource außer Provenance muss von der Composition
+  // erreichbar sein; eine nur über Provenance erreichbare RelatedPerson würde die Validierung reißen).
+  // U2-ADR-081 (Bau 4, letzter Clean-Slate-Verlust 0.3): JEDES IPS-Bundle trägt eine
+  // Zusammenstellungs-Provenance — im Selbst-Fall `agent.who` = Patient (die Bürgerin hat selbst
+  // zusammengestellt), im delegierten Fall `agent.who` = RelatedPerson + `onBehalfOf` = Patient
+  // (s. oben). Nur die Bundle-Assembly-Provenance (target/recorded/agent) — NICHT die volle
+  // ADR-063-Option-A (keine Provenance pro Einzel-Ressource, kein inline-CodeSystem).
+  const zusatz = [];
+  let provWho = patientRef;                                 // Selbst-Fall: die Patientin ist die Handelnde
+  let provOnBehalfOf = null;
+  let provText = 'Zusammengestellt von der Patientin selbst.';
+  if (opt && opt.anker && typeof opt.anker === 'object') {
+    const code = BEZIEHUNGS_CODES[opt.anker.beziehungCode] ? opt.anker.beziehungCode : 'OTH';
+    const bez  = BEZIEHUNGS_CODES[code];
+    const rpFullUrl = 'urn:uuid:' + uuidV4();
+    const rp = {
+      resourceType: 'RelatedPerson', id: rpFullUrl.slice(9),
+      patient: { reference: patientRef },
+      relationship: [{ coding: [{ system: bez.system, code: code, display: bez.displayEn }],
+        text: (code === 'OTH') ? 'other relationship' : bez.displayEn }],
+    };
+    const ankerName = (typeof opt.anker.name === 'string') ? opt.anker.name.trim() : '';
+    if (ankerName) {
+      const teile = ankerName.split(/\s+/);
+      rp.name = (teile.length >= 2)
+        ? [{ family: teile[teile.length - 1], given: teile.slice(0, -1) }]
+        : [{ text: ankerName }];
+    }
+    rp.text = _ipsNarrative(ankerName || 'Unter Vollmacht erstellt');
+    zusatz.push({ fullUrl: rpFullUrl, resource: rp });
+    composition.author = [{ reference: rpFullUrl }];   // vertretende Person ist die Autorin (nicht die abwesende Eigentümerin)
+    provWho = rpFullUrl;
+    provOnBehalfOf = patientRef;
+    provText = ankerName ? ('Zusammengestellt von ' + ankerName + ' unter Vollmacht.') : 'Zusammengestellt unter Vollmacht.';
+  }
+  const provFullUrl = 'urn:uuid:' + uuidV4();
+  const provAgent = { who: { reference: provWho } };
+  if (provOnBehalfOf) provAgent.onBehalfOf = { reference: provOnBehalfOf };
+  zusatz.push({ fullUrl: provFullUrl, resource: {
+    resourceType: 'Provenance', id: provFullUrl.slice(9),
+    target: [{ reference: compFullUrl }],
+    recorded: stamp,
+    agent: [provAgent],
+    text: _ipsNarrative(provText),
+  }});
+
   return {
     resourceType: 'Bundle', type: 'document',
     meta: { profile: ['http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips'] },
     identifier: { system: 'urn:ietf:rfc:3986', value: 'urn:uuid:' + uuidV4() },
     timestamp: stamp,
-    entry: [{ fullUrl: compFullUrl, resource: composition }].concat(eintraege),   // Composition MUSS erster Eintrag sein
+    // Composition MUSS erster Eintrag sein; delegierte RelatedPerson/Provenance folgen NACH den Sektionen.
+    entry: [{ fullUrl: compFullUrl, resource: composition }].concat(eintraege).concat(zusatz),
   };
 }
 
@@ -6978,8 +7068,10 @@ function fhirIpsBundle(jetzt) {
 // Download „Gesundheitsdaten als maschinenlesbare Datei" (FHIR-IPS-Bundle als JSON). Geht durch die
 // Transparenz-Übersicht (Bereich Gesundheit); wird `optionen` direkt übergeben, überspringen wir sie.
 function flowGesundheitFhirExport(optionen) {
-  const ausgeben = () => {
-    const bundle = kernAPI.exportiere('fhir-ips');
+  // U2-ADR-079: delegationsOpt (optionen.anker) durchreichen → der Builder baut den delegierten
+  // Bundle (RelatedPerson + Provenance). Im Nicht-Sub-Fall bleibt delegationsOpt undefined → alt.
+  const ausgeben = (delegationsOpt) => {
+    const bundle = kernAPI.exportiere('fhir-ips', delegationsOpt);
     const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/fhir+json' });
     dateiAusgeben(blob, 'Vivodepot_Gesundheit_IPS.json', 'application/fhir+json').then((weg) => {
       if (weg !== 'abgebrochen' && weg !== 'vorschau' && typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.fhirExportiert, 'ok');
@@ -6997,11 +7089,59 @@ function flowGesundheitFhirExport(optionen) {
     });
     return;
   }
-  if (optionen !== undefined) { ausgeben(); return; }
-  if (typeof flowExportUebersicht === 'function' && typeof ui !== 'undefined' && ui.modal) {
-    return flowExportUebersicht({ sektorId: 'gesundheit', titel: STRINGS.fhirExportLabel, aufFortfahren: () => ausgeben() });
+  // Der Rest-Weg (Feld-Auswahl + Datei), mit dem delegierten Anker-Opt (oder undefined).
+  const weiter = (delegationsOpt) => {
+    if (optionen !== undefined) { ausgeben(delegationsOpt); return; }
+    if (typeof flowExportUebersicht === 'function' && typeof ui !== 'undefined' && ui.modal) {
+      return flowExportUebersicht({ sektorId: 'gesundheit', titel: STRINGS.fhirExportLabel, aufFortfahren: () => ausgeben(delegationsOpt) });
+    }
+    ausgeben(delegationsOpt);
+  };
+  // U2-ADR-079: aus einem verwalteten Sub-Depot exportiert die ANKER-Person „unter Vollmacht".
+  // Die Eigentümerin ist gerade nicht da; es gehen Daten der Anker-Person mit — also entscheidet
+  // SIE, ob ihr Name als vertretende Person (RelatedPerson) im Dokument steht. Zwei gleichwertige
+  // Wege, kein Default zieht still etwas mit. Nicht-delegierter Export: unverändert.
+  if (imSubKontext() && typeof ui !== 'undefined' && ui.modal) {
+    return flowDelegationsExportEntscheid(weiter);
   }
-  ausgeben();
+  weiter(undefined);
+}
+
+// U2-ADR-079: Einwilligungs-Gabel beim delegierten IPS-Export. Zwei gleichwertige Knöpfe:
+// „mit meinem Namen als [Beziehung]" (RelatedPerson trägt Name + Beziehungscodierung) oder
+// „nur unter Vollmacht" (RelatedPerson ohne Name, Beziehung = OTH). Kein stiller Default; der
+// dominante Knopf bricht ab (nichts geht mit). Das Geburtsdatum der Anker-Person geht NIE mit
+// (Datensparsamkeit, im ADR entschieden). Beide Wege bauen dieselbe Provenance-Kette.
+function flowDelegationsExportEntscheid(weiter) {
+  const eintrag = ((ankerDaten() && ankerDaten().verwalteteDepots) || []).find(x => x.depotUUID === aktiverSubKontext);
+  const gespeichert = (eintrag && BEZIEHUNGS_CODES[eintrag.beziehungZu]) ? eintrag.beziehungZu : '';
+  const ak = aktuellerSitzungsAkteur();
+  const ankerName = (ak && akteurName(ak.personId)) || '';
+  const optionenHTML = Object.keys(BEZIEHUNGS_CODES)
+    .filter(c => c !== 'OTH')                                  // OTH ist der „ohne"-Weg, nicht als Beziehung wählbar
+    .map(c => '<option value="' + c + '"' + (c === gespeichert ? ' selected' : '') + '>' +
+      escapeHTML(BEZIEHUNGS_CODES[c].displayDe) + '</option>').join('');
+  const koerper =
+    '<p class="einst-hint">' + escapeHTML(STRINGS.delExportInfo) + '</p>' +
+    '<div class="feld"><label for="del-bez">' + escapeHTML(STRINGS.delExportBeziehungLabel) + '</label>' +
+    '<select id="del-bez" class="eingabe">' + optionenHTML + '</select></div>' +
+    '<div class="del-wahl">' +
+      '<button type="button" class="btn btn-sek" id="del-mit">' + escapeHTML(STRINGS.delExportMit) + '</button>' +
+      '<button type="button" class="btn btn-sek" id="del-ohne">' + escapeHTML(STRINGS.delExportOhne) + '</button>' +
+    '</div>';
+  const schliessen = ui.modal({
+    titel: STRINGS.delExportTitel,
+    koerperHTML: koerper,
+    ohneAbbrechen: true,                                       // der dominante Knopf IST das Abbrechen
+    primaerLabel: STRINGS.btnAbbrechen,                        // kein Default zieht Daten mit — nichts exportieren ist die dominante Aktion
+    onPrimaer: (s) => s(),
+  });
+  const box = document.getElementById('modal-inhalt');
+  const bezWahl = () => { const s = box && box.querySelector('#del-bez'); return (s && BEZIEHUNGS_CODES[s.value]) ? s.value : 'OTH'; };
+  const bMit = box && box.querySelector('#del-mit');
+  const bOhne = box && box.querySelector('#del-ohne');
+  if (bMit) bMit.onclick = () => { const c = bezWahl(); schliessen(); weiter({ anker: { name: ankerName, beziehungCode: c } }); };
+  if (bOhne) bOhne.onclick = () => { schliessen(); weiter({ anker: { beziehungCode: 'OTH' } }); };
 }
 // Dispatcher für sektor-deklarierte Export-Knöpfe (s.exporte).
 function flowSektorExport(format) {
@@ -7110,7 +7250,7 @@ const EXPORT_FORMATE = Object.freeze([
   // 3.4 — Gesundheit als FHIR-IPS (bereits gebaut; hier in die Registry eingereiht).
   { id: 'fhir-ips', kategorie: 'sektor', sektor: 'gesundheit', label: STRINGS.fhirExportLabel,
     mime: 'application/fhir+json', endung: 'json', dateibasis: 'Vivodepot_Gesundheit_IPS',
-    toast: STRINGS.fhirExportiert, baue: (opt) => fhirIpsBundle(opt && opt.jetzt) },
+    toast: STRINGS.fhirExportiert, baue: (opt) => fhirIpsBundle(opt && opt.jetzt, opt) },
   // Export-Format 'fhir-lab' (self-erzeugter Laborbericht) entfernt — E3, Datenmodell-Konzept v1.2 §3.
   // Das gleichnamige IMPORT-Format (IMPORT_FORMATE, Klasse-4-Erkennung) bleibt: gleicher Name, anderes Schicksal.
   // 3.5 — je ein Format-Profil pro Bereich (Format-Tag der Inhalts-Spec). Bereich 1 (Identität)
@@ -7246,53 +7386,15 @@ function flowNotfallQR() {
   });
 }
 
-/* ── Sanitäter-Cache (Teil 4.1, Stufe 1 — ADR-099) ─────────────────────────────────
-   Beim Speichern wird aus DERSELBEN Akut-Allowlist (NOTFALL_KERN_FELDER) ein KLARTEXT-
-   Cache erzeugt und NEBEN den verschlüsselten Inhalt in den Umschlag gelegt. So sind die
-   Notfall-Angaben ohne Passwort lesbar (Sanitäter-Stufe), während ALLES ANDERE
-   verschlüsselt bleibt. Bewusste, dokumentierte Ausnahme — kein Bruch der Krypto:
-   die Allowlist-Werte werden hier ein zweites Mal im Klartext geführt, die Quelle der
-   Wahrheit bleibt im Ciphertext. */
-function notfallCacheBauen() {
-  // notfallKernModell liefert die bereits aufgelösten {label, wert} (Auswahl→Label, ref→Name).
-  return { stand: new Date().toISOString(), zeilen: notfallKernModell() };
-}
-// Liest den Cache aus einem Umschlag OHNE Entschlüsselung (Stufe 1). null, wenn keiner da ist.
-function notfallCacheAusUmschlag(umschlag) {
-  const c = umschlag && umschlag.notfallCache;
-  if (!c || !Array.isArray(c.zeilen)) return null;
-  return { stand: c.stand || null, zeilen: c.zeilen };
-}
-
-// Stufe-1-Einstieg vom Welcome-Screen: eine Depot-Datei wählen und NUR den Notfall-Cache
-// anzeigen — ohne Passwort, ohne den verschlüsselten Rest. Gestylter Dialog, kein prompt.
-function flowNotfallAusDatei() {
-  ui.modal({
-    titel: STRINGS.notfallAusDateiTitel,
-    koerperHTML:
-      '<p class="einst-hint">' + escapeHTML(STRINGS.notfallAusDateiHinweis) + '</p>' +
-      '<label for="nf-datei">' + STRINGS.dateiLabel + '</label>' +
-      '<input id="nf-datei" type="file">',   // B1/iOS: kein accept-Filter (sonst graut iOS .vivodepot aus); Schutz = JSON.parse + Cache-Prüfung beim Laden
-    primaerLabel: STRINGS.notfallAusDateiAnzeigen,
-    onPrimaer: async (schliessen) => {
-      const datei = document.getElementById('nf-datei').files[0];
-      if (!datei) return;
-      let umschlag;
-      try { umschlag = JSON.parse(magicStrippen(await datei.text()).json); }
-      catch (e) { ui.toast(STRINGS.notfallAusDateiUngueltig, 'fehler'); return; }
-      const cache = notfallCacheAusUmschlag(umschlag);
-      if (!cache) { ui.toast(STRINGS.notfallAusDateiKeine, 'info'); return; }
-      notfallStufe1 = cache;
-      schliessen();
-      // App-Shell ohne Daten betreten, nur die Notfall-Sicht (renderTopbar/-Footer sind im
-      // Notfall-Modus data-null-sicher). Modus-Setter rendert Topbar + Content + Footer.
-      document.getElementById('overlay').classList.add('weg');
-      document.getElementById('app').classList.add('an');
-      renderSidebar();
-      Modus._setzeIntern('notfall');
-    },
-  });
-}
+/* ── Stufe-1-Sanitäter-Cache: ERSATZLOS ENTFERNT (U2-ADR-078) ───────────────────────
+   Früher (ADR-099/109) legte depotSerialisieren aus NOTFALL_KERN_FELDER einen Klartext-
+   `notfallCache` neben den Ciphertext und eine passwortlose Tür (`flowNotfallAusDatei`)
+   zeigte ihn ohne Passwort. Das leckte vier Art-9-Felder an jeden Datei-Besitzer, ohne
+   den Sanitäter am Unfallort je zu erreichen (kein Gerät/keine App/keine IT-Freigabe).
+   Streichung: `notfallCacheBauen`, `notfallCacheAusUmschlag`, `flowNotfallAusDatei` und
+   die passwortlosen Türen (Welcome + crypto-overlay) sind weg. Der Akut-Fall bleibt
+   gedeckt durch die Papier-Notfallkarte (ADR-097, unten) und die Bürger-Live-Sicht
+   (renderNotfall, live aus `notfallKernModell` hinter dem Passwort). */
 
 /* ── Papier-Notfallkarte (Teil 4.2) — PDF über die T3-Export-Schicht (jsPDF) + QR ──────
    Kern-Akut-Daten (gleiche Allowlist) als kleine, druckbare A6-Karte fürs Portemonnaie,
@@ -10038,7 +10140,7 @@ function flowImportAuto(sektorId) {
     },
   });
 }
-// Datei wählen → Text lesen → Plan bauen → Vorschau. Spiegelt flowDepotOeffnen/flowNotfallAusDatei.
+// Datei wählen → Text lesen → Plan bauen → Vorschau. Spiegelt flowDepotOeffnen.
 function flowImportDatei(formatId) {
   const def = IMPORT_FORMAT_BY_ID[formatId];
   if (!def) return;
@@ -10247,6 +10349,7 @@ async function subDepotAnlegen({ bezeichnung, inhaberin, verwaltungsTyp, vertret
     delegationsGeschichte: [],               // leer — Schritt 2 (Blackbox-Export)
     akzent: subDepotAkzentToken(akzent),     // Palette-Token-NAME (Klartext-Metadaten), Default 'schiefer' — Auswahl-UI folgt in Commit C
     vertretungsGrundlage: grundlage,         // D35 Commit 4: rechtliche Grundlage (Klartext-Metadatum) | null
+    beziehungZu: null,                       // U2-ADR-079: HL7-V3-RoleCode Anker→Eigentümer (optional; am delegierten IPS-Export erfragt, OTH-Fallback)
     umschlag,                                // versiegelter Inhalt: nur Ciphertext + Parameter
   };
   data.verwalteteDepots.push(eintrag);
@@ -11164,9 +11267,11 @@ function mappeName(refObj) {
 // darum trifft das nur Mappen-Refs.
 function mappeEntfernen(id) {
   if (!data || !Array.isArray(data.mappe)) return false;
-  // Schema 24 (U2-ADR-045): autoritative Original-Einträge sind read-only — nicht entfernbar.
-  const _ziel = data.mappe.find(m => m && m.id === id);
-  if (_ziel && _ziel.autoritativ) return false;
+  // U2-ADR-045 (Nachtrag): autoritative Originale sind nicht BEARBEITBAR (Integrität der Attestierung —
+  // es gibt ohnehin keinen Edit-Pfad), aber SEHR WOHL ENTFERNBAR. „Es ist ihre Datei": kein Guard mehr.
+  // Der frühere `if (autoritativ) return false` war die stille Ausweitung von „nicht bearbeiten" auf
+  // „nicht löschen", für die die ADR nie argumentierte. Bereits übernommene Werte (Skalare) bleiben —
+  // die Dereferenzierung unten trifft nur `ref:mappe`-Felder (Wert = {ref:id}), keine übernommenen Werte.
   const vorher = data.mappe.length;
   data.mappe = data.mappe.filter(m => m.id !== id);
   const entfernt = data.mappe.length < vorher;
@@ -11626,7 +11731,7 @@ const kernAPI = Object.freeze({
     // Teil 3 — deklarative EXPORT_FORMATE-Registry ist der scharfe Andockpunkt.
     const def = EXPORT_FORMAT_BY_ID[format];
     if (def) return def.baue(optionen || {});
-    if (format === 'fhir-ips') return fhirIpsBundle(optionen && optionen.jetzt);   // §5.4 / T3.4 (Rückfall)
+    if (format === 'fhir-ips') return fhirIpsBundle(optionen && optionen.jetzt, optionen);   // §5.4 / T3.4 (Rückfall); U2-ADR-079: optionen.anker → delegierter Bundle-Bau
     throw new Error('Export-Format nicht angedockt (5.4): ' + format);
   },
   // Spiegelbild zu exportiere: Import-Welle 1. importVorschau liefert den reinen Plan
@@ -11754,10 +11859,8 @@ function renderWelcome() {
     // ihn ohne Anleitung finden. Führt in den Overlay-Angehörigen-Modus (Vertrauens-Passwort).
     '<p class="welcome-sek-hint"><button type="button" class="btn-dezent" id="w-angehoerige">' +
       svgIcon(ICONS.users, 16) + ' ' + escapeHTML(STRINGS.cryptoAngehoerige) + '</button></p>' +
-    // Notfall klar abgesetzt unten (eigener Block mit Trennlinie); rot via bestehendem
-    // Token --modus-notfall (referenziert, KEINE Marken-Farbe geändert/eingeführt).
-    '<div class="welcome-notfall"><button class="btn-dezent btn-notfall" id="w-notfall">' +
-      svgIcon(ICONS.alertTriangle, 16) + ' ' + escapeHTML(STRINGS.notfallAusDatei) + '</button></div>' +
+    // U2-ADR-078: die passwortlose „Für Sanitäter — Akut-Daten ohne Passwort"-Tür ist entfernt
+    // (der Stufe-1-Klartext-Cache entfällt ersatzlos; Deckung = Papier-Notfallkarte ADR-097).
     // Install-Knopf (Android/Desktop) oder Web-App-Hinweis (iOS) ganz dezent am Fuß.
     installBlock;
   // ── Härtung (Carola): Eintritts-Buttons EINZELN und null-gesichert verdrahten ──
@@ -11781,7 +11884,7 @@ function renderWelcome() {
   verdrahteEintritt('w-anfangen', () => flowVorschauBetreten());   // „Hier anfangen" — Sidebar-Sprung, passwortlos
   verdrahteEintritt('w-datei',   () => renderCryptoOverlay());     // Lage A → Lage B (vorhandene Datei öffnen)
   verdrahteEintritt('w-angehoerige', () => renderCryptoOverlay(null, false, true));   // U2-ADR-062: Vertrauensperson-Eintritt
-  verdrahteEintritt('w-notfall', () => flowNotfallAusDatei());
+  // U2-ADR-078: kein 'w-notfall' mehr (passwortlose Sanitäter-Tür entfernt).
   // Welcome-Vorlesen verdrahten (nur vorhanden, wenn die Sprachausgabe verfügbar ist).
   const wVor = document.getElementById('vorlese-sicht');
   if (wVor) wVor.onclick = () => vorleseToggle(vorleseTextWelcome());
@@ -11811,7 +11914,7 @@ function renderCryptoOverlay(vorbelegteDatei, internModus, angModus) {
   // iOS Safari graut .vivodepot sonst aus — die system-unbekannte Endung hat keine UTI und matcht
   // weder application/json noch .json, sodass die gespeicherte Datei im Files-Picker nicht
   // antippbar ist. Der echte Schutz ist JSON.parse + VdCrypto beim Laden, nicht die Endung.
-  // Gilt gleich für die anderen Depot-Öffnen-Inputs (flowDepotOeffnen, flowNotfallAusDatei).
+  // Gilt gleich für die anderen Depot-Öffnen-Inputs (flowDepotOeffnen).
   // Interner Eintritt (Etappe 5): kein Datei-Picker — der Stand liegt auf dem Gerät.
   const dateiZeile = internModus ? '' : (_cryptoDatei
     ? '<p class="crypto-datei-name">' + svgIcon(ICONS.lock, 16) + ' ' +
@@ -11837,8 +11940,7 @@ function renderCryptoOverlay(vorbelegteDatei, internModus, angModus) {
           '<p class="welcome-sek-hint"><button type="button" class="btn-dezent" id="co-angehoerige">' + escapeHTML(STRINGS.cryptoAngehoerige) + '</button></p>' +
           '<p class="einst-hint ang-login-hint">' + escapeHTML(STRINGS.cryptoAngehoerigeHint) + '</p>') +
     '</div>' +
-    '<div class="welcome-notfall"><button class="btn-dezent btn-notfall" id="co-notfall">' +
-      svgIcon(ICONS.alertTriangle, 16) + ' ' + escapeHTML(STRINGS.notfallAusDatei) + '</button></div>' +
+    // U2-ADR-078: passwortlose Sanitäter-Tür im crypto-overlay entfernt.
     '<p class="welcome-sek-hint"><button type="button" class="btn-dezent" id="co-neu">' +
       escapeHTML(STRINGS.cryptoNeuAnfangen) + '</button></p>';
   // Verdrahtung — jeder Handler null-gesichert.
@@ -11846,7 +11948,7 @@ function renderCryptoOverlay(vorbelegteDatei, internModus, angModus) {
   w('w-oeffnen', () => cryptoOverlayOeffnen());
   w('co-angehoerige', () => angehoerigenEintritt());
   w('co-ang-primaer', () => angehoerigenEintritt());   // U2-ADR-062: Primär-Aktion im Angehörigen-Overlay
-  w('co-notfall', () => flowNotfallAusDatei());
+  // U2-ADR-078: kein 'co-notfall' mehr (passwortlose Sanitäter-Tür entfernt).
   w('co-neu', () => renderWelcome());      // Lage B → Lage A
   overlayNachObenScrollen();
 }
@@ -12509,7 +12611,6 @@ function _depotSpeicherZuruecksetzen() {
   aktiveAnsicht = 'sektor';
   aktiveSituationId = null;
   aktiverWizardId = null; wizardSchrittIndex = 0; wizardFehlerGrund = null;
-  notfallStufe1 = null;
   aktiverSektorId = (SEKTOREN[0] && SEKTOREN[0].id) || null;
   _ungespeicherteAenderungen = 0;   // D40/D41: RAM verworfen → Zähler zurück
   _aktuelleDateiSicherung = false;  // Stück 1: kein Datei-Signal für eine neue/leere Sitzung
@@ -12718,7 +12819,6 @@ function geheZuZuhause() {
   aktiverWizardId = null;          // Teil 2: keinen laufenden Wizard über den Rückweg hinaus halten
   wizardSchrittIndex = 0;
   wizardFehlerGrund = null;
-  notfallStufe1 = null;            // Teil 4.1: Stufe-1-Cache nicht über den Rückweg hinaus halten
   aktiverSektorId = (SEKTOREN[0] && SEKTOREN[0].id) || null;
   // Nicht-Anker-Modus → zurück auf Anker-Standard (modus-sicher, auch wenn diese Modi später kommen).
   if (Modus.aktuell() !== 'anker') Modus._setzeIntern('anker');
@@ -12729,13 +12829,11 @@ function geheZuZuhause() {
 }
 
 // U2-ADR-059: Bürger-Einstieg in die Notfall-Sicht (Sidebar) — die EIGENEN Akut-Angaben LIVE aus dem
-// offenen Depot. Bewusst GETRENNT vom passwortlosen Sanitäter-Einstieg (Welcome/Overlay,
-// `flowNotfallAusDatei` aus Datei, setzt notfallStufe1): dieser hier setzt KEINEN Datei-Cache, sondern
-// nullt `notfallStufe1` explizit, damit `renderNotfall` live aus `notfallKernModell` baut. Geteilt wird
-// NUR das Datenmodell — die zwei Türen bleiben verschiedene Kontexte (Sidebar vs. Vor-Login-Overlay).
+// offenen Depot (`notfallKernModell`), hinter dem Passwort. Seit U2-ADR-078 ist dies der EINZIGE
+// Einstieg in die Notfall-Sicht: der passwortlose Sanitäter-aus-Datei-Weg (Welcome/Overlay) ist
+// entfernt. Die Sicht liest immer live aus `data`; es gibt keinen geladenen Datei-Cache mehr.
 function geheZuNotfall() {
   bearbeitungSpeichern();          // offene Eingaben zuerst sichern (U2-ADR-011, kein Datenverlust)
-  notfallStufe1 = null;            // Bürger-Sicht ist LIVE — nie ein geladener Sanitäter-Datei-Cache
   Modus._setzeIntern('notfall');   // Modus-Setter rendert Topbar + Content (→ renderNotfall) + Footer
 }
 
@@ -14370,9 +14468,29 @@ function renderFooter() {
     '<span class="ff-firma">' + escapeHTML(STRINGS.fussFirma) + '</span>' + t +
     '<span class="ff-lizenz">' + escapeHTML(STRINGS.fussLizenz) + '</span>' + t +
     '<span class="ff-version">' + escapeHTML(BUILD_VERSION) +
+      ' <span class="ff-schale">' + escapeHTML(STRINGS.fussSchaleLabel) + ' ' + escapeHTML(SCHALEN_STAND) + '</span>' +
+      ' <span class="ff-sw" id="ff-sw">' + escapeHTML(STRINGS.fussSwLabel) + ' ' + escapeHTML(STRINGS.fussSwLaedt) + '</span>' +
       ' <span class="ff-hash">' + escapeHTML(STRINGS.fussHashLabel) + ' ' + escapeHTML(hashWert) + '</span></span>' + t +
     '<a href="mailto:' + escapeHTML(STRINGS.fussKontakt) + '">' + escapeHTML(STRINGS.fussKontakt) + '</a>' + t +
     '<a href="https://' + escapeHTML(STRINGS.fussQuellcode) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(STRINGS.fussQuellcode) + '</a>';
+  _swCacheStandFuellen();   // den SW-Cache-Stand live nachtragen (async, CSP-erlaubt: Cache-API ≠ connect-src)
+}
+
+// Liest den aktiven Service-Worker-Cache-Namen (`vivodepot-shell-vNN`) und trägt ihn in den Fuß-Stempel
+// nach. Rein Cache-API — kein Netz (connect-src 'none' bleibt unberührt). Fehlt caches (alte Browser /
+// Test-Harness), bleibt der Platzhalter. Weicht die angezeigte SW-Generation vom SCHALEN_STAND ab, hält
+// der SW eine andere Schale als die geladene — genau der Stale-Fehler wird sichtbar.
+async function _swCacheStandFuellen() {
+  try {
+    const el = document.getElementById('ff-sw');
+    if (!el || !(window.caches && caches.keys)) return;
+    const keys = await caches.keys();
+    const gen = keys.map(k => (String(k).match(/vivodepot-shell-(v\d+)/) || [])[1])
+                    .filter(Boolean)
+                    .sort((a, b) => parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10));
+    const wert = gen.length ? gen[gen.length - 1] : STRINGS.fussSwKeiner;
+    el.textContent = STRINGS.fussSwLabel + ' ' + wert;
+  } catch (_) {}
 }
 
 // Bruch B — Einstellungen-Dialog (Topbar-Zahnrad). Vier Abschnitte; die Barrierefreiheits-
@@ -16394,12 +16512,37 @@ function flowMappeVorschau(id) {
     koerperHTML += '<button type="button" class="btn btn-sek" data-mappe-shl="' + escapeHTML(id) + '">' +
       svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.shlKnopf) + '</button>';
   }
+  // U2-ADR-045 (Nachtrag): jeder Mappe-Eintrag ist entfernbar — „es ist ihre Datei". Zweistufige
+  // Bestätigung (ehrliche Warnung bei autoritativen Originalen) in flowMappeEntfernen.
+  koerperHTML += '<button type="button" class="btn btn-sek" data-mappe-entfernen="' + escapeHTML(id) + '">' +
+    escapeHTML(STRINGS.mappeEntfernenKnopf) + '</button>';
   ui.modal({ titel, koerperHTML, primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true });
   const _mbox = document.getElementById('modal-inhalt');
   if (_mbox && _mbox.querySelector) {
     if (_uebernahme) { const b = _mbox.querySelector('[data-mappe-uebernehmen]'); if (b) b.onclick = () => flowMappeWerteUebernehmen(id); }
     const bShl = _mbox.querySelector('[data-mappe-shl]'); if (bShl) bShl.onclick = () => flowShlVorbereiten(id);
+    const bDel = _mbox.querySelector('[data-mappe-entfernen]'); if (bDel) bDel.onclick = () => flowMappeEntfernen(id);
   }
+}
+
+// U2-ADR-045 (Nachtrag): Mappe-Eintrag entfernen — zweistufige Bestätigung. Autoritative Originale
+// bekommen die EHRLICHE Warnung (nicht wiederherstellbar, evtl. nicht erneut anforderbar), eigene
+// Uploads eine schlichte Rückfrage. Löschen heißt löschen; bereits übernommene Werte (Skalare) bleiben.
+function flowMappeEntfernen(id) {
+  const e = mappeEintrag(id);
+  if (!e) return;
+  const frage = e.autoritativ ? STRINGS.mappeEntfernenAutoritativWarnung : STRINGS.mappeEntfernenFrage;
+  ui.modal({
+    titel: STRINGS.mappeEntfernenTitel,
+    koerperHTML: '<p>' + escapeHTML(frage) + '</p>',
+    primaerLabel: STRINGS.mappeEntfernenBestaetigen,
+    onPrimaer: (schliessen) => {
+      const ok = mappeEntfernen(id);
+      if (ok) { markiereUngespeichert(1); if (ui && ui.toast) ui.toast(STRINGS.mappeEntferntToast, 'ok'); }
+      schliessen();
+      if (aktiveAnsicht === 'mappe') renderMappe();
+    },
+  });
 }
 
 /* ── SHL-Provider-Test-Affordance (U2-ADR-047) ───────────────────────────────────
@@ -19154,17 +19297,13 @@ function escapeHTML(s) {
 // im jeweiligen Sektor (eigene Folge-Entscheidung). Im Fundament: Rahmen + Hinweis.
 function renderNotfall() {
   const c = document.getElementById('content');
-  // Stufe 1 (ohne Passwort, aus Datei) ODER live aus dem offenen Depot (gleiche Allowlist).
-  const cache = notfallStufe1 || notfallCacheBauen();
-  const zeilen = (cache && Array.isArray(cache.zeilen)) ? cache.zeilen : [];
+  // U2-ADR-078: LIVE aus dem offenen Depot (hinter dem Passwort) — kein passwortloser Datei-Cache mehr.
+  const zeilen = notfallKernModell();
   let html = '<div class="content-narrow notfall-rahmen">' +
     '<div class="bereich-kopf"><span class="ico">' + svgIcon(ICONS.alertTriangle, 24) + '</span>' +
     '<h2>' + STRINGS.notfallCacheTitel + '</h2></div>' +
     '<p class="gesperrt">' + svgIcon(ICONS.lock, 14) + ' ' + STRINGS.notfallHinweis + '</p>' +
     '<p class="sektor-intro">' + escapeHTML(STRINGS.notfallCacheUnterzeile) + '</p>';
-  if (cache && cache.stand) {
-    html += '<p class="notfall-stand">' + escapeHTML(STRINGS.notfallCacheStand) + ': ' + escapeHTML(datumKurz(cache.stand)) + '</p>';
-  }
   if (!zeilen.length) {
     html += '<div class="hinweis-box">' + escapeHTML(STRINGS.notfallCacheLeer) + '</div>';
   } else {
@@ -19175,17 +19314,12 @@ function renderNotfall() {
     }
     html += '</div>';
   }
-  // U2-ADR-059: im BÜRGER-Kontext (live, kein Sanitäter-Datei-Cache → `!notfallStufe1`) hängen
-  // Notfallkarte + QR an der Sicht — beide aus DEMSELBEN `notfallKernModell`. Im Sanitäter-Kontext
-  // (aus Datei, `notfallStufe1` gesetzt) NICHT: `flowNotfallkartePdf`/`flowNotfallQR` lesen das offene
-  // Depot (`data`), das im Sanitäter-Modus leer ist. QR nur bei inline-qrcode-Lib (kein toter Knopf).
-  const buergerNotfall = !notfallStufe1;
+  // Notfallkarte + QR hängen an der Live-Sicht — beide aus DEMSELBEN `notfallKernModell` (offenes
+  // `data`). QR nur bei inline-qrcode-Lib (kein toter Knopf).
   html += '<div class="bereich-aktionen">';
-  if (buergerNotfall) {
-    html += '<button type="button" class="btn btn-sek" id="n-karte">' + svgIcon(ICONS.alertTriangle) + ' ' + escapeHTML(STRINGS.notfallKarteLabel) + '</button>';
-    if (typeof window !== 'undefined' && typeof window.qrcode === 'function') {
-      html += '<button type="button" class="btn btn-sek" id="n-qr">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.exportQrLabel) + '</button>';
-    }
+  html += '<button type="button" class="btn btn-sek" id="n-karte">' + svgIcon(ICONS.alertTriangle) + ' ' + escapeHTML(STRINGS.notfallKarteLabel) + '</button>';
+  if (typeof window !== 'undefined' && typeof window.qrcode === 'function') {
+    html += '<button type="button" class="btn btn-sek" id="n-qr">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.exportQrLabel) + '</button>';
   }
   html += '<button class="btn btn-sek" id="n-schliessen">' + STRINGS.btnSchliessen + '</button></div>' +
     '</div>';
@@ -19193,10 +19327,8 @@ function renderNotfall() {
   // „Schließen" verlässt die Notfall-Sicht → Zuhause (geheZuZuhause stellt Modus auf Anker zurück).
   const b = document.getElementById('n-schliessen');
   if (b) b.onclick = geheZuZuhause;
-  if (buergerNotfall) {
-    const bk = document.getElementById('n-karte'); if (bk) bk.onclick = () => flowNotfallkartePdf();
-    const bq = document.getElementById('n-qr'); if (bq) bq.onclick = () => flowNotfallQR();
-  }
+  const bk = document.getElementById('n-karte'); if (bk) bk.onclick = () => flowNotfallkartePdf();
+  const bq = document.getElementById('n-qr'); if (bq) bq.onclick = () => flowNotfallQR();
 }
 
 /* ── Verwaltete Sub-Depots (Übergaben-Modul Schritt 1): Versiegelungs-Anzeige ──
@@ -19220,6 +19352,31 @@ function verwaltungsTypLabel(typ) {
    inhaberin, verwaltungsTyp, status, …). Befüllt wird ein optionales `vertretungsGrundlage`
    erst über den Vorsorge-Wizard (T2). Bis dahin: reine Anzeige-Schicht, Leerwert
    „nicht hinterlegt". KEIN Schema auf Verdacht schreiben. */
+// U2-ADR-079 — Beziehungs-Codierung Anker→Sub-Depot-Eigentümer (HL7-V3-RoleCode), Wiedereinbau
+// des in ADR-064 entschiedenen, im Clean-Slate verlorenen Feldsatzes. Deutsche Klartext-UI aus
+// Anker-Sicht → interner HL7-V3-Code; OTH aus dem v3-NullFlavor-System. Verifizierte Strings
+// (HL7 Terminology v2.2.0): ADOPT→CHLDADOPT (retired), NIENE→NIENEPH, OTH→NullFlavor.
+const BEZIEHUNG_ROLECODE_SYSTEM   = 'http://terminology.hl7.org/CodeSystem/v3-RoleCode';
+const BEZIEHUNG_NULLFLAVOR_SYSTEM = 'http://terminology.hl7.org/CodeSystem/v3-NullFlavor';
+const BEZIEHUNGS_CODES = Object.freeze({
+  SPS:       { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'spouse',           displayDe: 'Ich bin Ehepartner oder Lebensgefährte dieser Person' },
+  DOMPART:   { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'domestic partner', displayDe: 'Ich bin in eingetragener Lebenspartnerschaft mit dieser Person' },
+  CHILD:     { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'child',            displayDe: 'Ich bin das Kind dieser Person' },
+  STPCHLD:   { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'step child',       displayDe: 'Ich bin das Stiefkind dieser Person' },
+  CHLDADOPT: { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'adopted child',    displayDe: 'Ich bin das adoptierte Kind dieser Person' },
+  PRN:       { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'parent',           displayDe: 'Ich bin das Elternteil dieser Person' },
+  STPPRN:    { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'step parent',      displayDe: 'Ich bin der Stiefelternteil dieser Person' },
+  SIB:       { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'sibling',          displayDe: 'Ich bin Bruder oder Schwester dieser Person' },
+  GRPRN:     { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'grandparent',      displayDe: 'Ich bin Großelternteil dieser Person' },
+  GRNDCHILD: { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'grandchild',       displayDe: 'Ich bin Enkelkind dieser Person' },
+  NIENEPH:   { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'niece/nephew',     displayDe: 'Ich bin Nichte oder Neffe dieser Person' },
+  AUNT:      { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'aunt',             displayDe: 'Ich bin Tante dieser Person' },
+  UNCLE:     { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'uncle',            displayDe: 'Ich bin Onkel dieser Person' },
+  INLAW:     { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'inlaw',            displayDe: 'Ich bin Schwiegerverwandtschaft dieser Person' },
+  FRND:      { system: BEZIEHUNG_ROLECODE_SYSTEM,   displayEn: 'unrelated friend', displayDe: 'Ich bin Freund oder Freundin dieser Person (Vollmachts-Bezug)' },
+  OTH:       { system: BEZIEHUNG_NULLFLAVOR_SYSTEM, displayEn: 'other',            displayDe: 'Andere Beziehung' },
+});
+
 const VERTRETUNGS_GRUNDLAGEN = Object.freeze({
   // Erteilte Vollmacht
   vorsorge:   "Vorsorgevollmacht",
