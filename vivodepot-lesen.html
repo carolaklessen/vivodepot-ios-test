@@ -2496,6 +2496,7 @@ async function renderQrKamera() {
       '<h2>' + escapeHTML(STRINGS.qrKameraTitel) + '</h2>' +
       '<p class="hint">' + escapeHTML(STRINGS.qrKameraHinweis) + '</p>' +
       '<video id="qr-video" class="qr-video" autoplay playsinline muted></video>' +
+      '<div id="qr-kamera-debug" class="qr-fortschritt" style="color:#888;font-size:.8rem;"></div>' +
       '<div id="qr-kamera-status" class="qr-fortschritt" hidden></div>' +
       '<div class="pw-fehler" id="qr-kamera-fehler" hidden></div>' +
       '<div class="sheet-aktionen">' +
@@ -2525,17 +2526,34 @@ async function renderQrKamera() {
   video.srcObject = _qrKameraStream;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext && canvas.getContext('2d');
+  let _qrKameraFrames = 0;
   const schleife = () => {
     if (!_qrKameraStream) return;   // gestoppt (Abbruch, Fund, Sicht verlassen)
-    if (ctx && video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const bild = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = window.jsQR(bild.data, bild.width, bild.height);
-      if (code && code.data && code.data !== _qrKameraLetzterText) {
-        _qrKameraLetzterText = code.data;
-        _qrKameraVerarbeiten(code.data);
+    try {
+      if (ctx && video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth) {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const bild = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = window.jsQR(bild.data, bild.width, bild.height);
+        _qrKameraFrames++;
+        // Diagnose-Zeile (befristet, U2-ADR-082-Papier-Abnahme): zeigt live, ob Frames
+        // überhaupt verarbeitet werden und ob jsQR je etwas erkennt — ohne DevTools nötig.
+        const dbg = el('qr-kamera-debug');
+        if (dbg) dbg.textContent = 'Frame ' + _qrKameraFrames + ' · ' + canvas.width + '×' + canvas.height
+          + ' · jsQR: ' + (code ? 'ERKANNT' : 'nichts');
+        if (code && code.data && code.data !== _qrKameraLetzterText) {
+          _qrKameraLetzterText = code.data;
+          _qrKameraVerarbeiten(code.data);
+        }
+      } else {
+        const dbg = el('qr-kamera-debug');
+        if (dbg) dbg.textContent = 'wartet auf Video … readyState=' + video.readyState + ' Breite=' + video.videoWidth;
       }
+    } catch (e) {
+      const f = el('qr-kamera-fehler');
+      if (f) { f.textContent = 'Erfassungsfehler: ' + (e && e.name) + ' — ' + (e && e.message); f.hidden = false; }
+      _qrKameraStoppen();
+      return;   // Schleife bewusst beenden statt mit demselben Fehler endlos weiterzulaufen
     }
     _qrKameraRaf = requestAnimationFrame(schleife);
   };
