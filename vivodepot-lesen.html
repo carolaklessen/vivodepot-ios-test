@@ -2513,7 +2513,12 @@ async function renderQrKamera() {
     return;
   }
   try {
-    _qrKameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+    // Ohne Auflösungs-Constraint liefern viele Browser nur 640×480 — zu wenig Pixel pro Modul
+    // für einen dichten QR-Code (Geräte-Befund 13.07.: „jsQR: nichts" bei 640×480, dauerhaft).
+    // ideal, nicht exact — Geräte ohne so hohe Auflösung bekommen automatisch das Maximum.
+    _qrKameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    });
   } catch (e) {
     const f = el('qr-kamera-fehler');
     f.textContent = (e && e.name === 'NotAllowedError') ? STRINGS.qrKameraFehlerErlaubnis
