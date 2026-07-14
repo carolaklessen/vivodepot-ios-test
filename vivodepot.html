@@ -2594,7 +2594,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v63';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v64';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -12929,6 +12929,15 @@ function geheZuNotfall() {
   bearbeitungSpeichern();          // offene Eingaben zuerst sichern (U2-ADR-011, kein Datenverlust)
   Modus._setzeIntern('notfall');   // Modus-Setter rendert Topbar + Content (→ renderNotfall) + Footer
 }
+// Gegenstück zu geheZuNotfall: „Schließen" auf der Notfallkarte verlässt NUR die Notfall-Sicht,
+// zurück zur laufenden Sitzung (unveränderter Sektor/Situation) — KEIN Depot-Schließen. Geräte-Befund
+// 14.07.: der Knopf rief bislang geheZuZuhause auf (beendete die ganze Sitzung, zurück zu Welcome).
+// Notfall ändert aktiverSektorId/aktiveAnsicht nie (s. geheZuNotfall) — Modus zurück auf Anker genügt,
+// um exakt dorthin zurückzukehren, wo die Notfall-Sicht betreten wurde. Da hier nichts verlassen wird,
+// das verloren gehen könnte, ist keine INV-9-Warnung nötig (anders als bei geheZuZuhause).
+function verlasseNotfall() {
+  Modus._setzeIntern('anker');
+}
 
 /* ── Barrierefreiheit (Bruch B2) ──────────────────────────────────────────────
    Drei Topbar-Schalter setzen Klassen auf <html>. Die Schrift-Skala-Reihe ist
@@ -19513,9 +19522,9 @@ function renderNotfall() {
   html += '<button class="btn btn-sek" id="n-schliessen">' + STRINGS.btnSchliessen + '</button></div>' +
     '</div>';
   c.innerHTML = html;
-  // „Schließen" verlässt die Notfall-Sicht → Zuhause (geheZuZuhause stellt Modus auf Anker zurück).
+  // „Schließen" verlässt NUR die Notfall-Sicht (verlasseNotfall) — nicht das ganze Depot.
   const b = document.getElementById('n-schliessen');
-  if (b) b.onclick = geheZuZuhause;
+  if (b) b.onclick = verlasseNotfall;
   const bk = document.getElementById('n-karte'); if (bk) bk.onclick = () => flowNotfallkartePdf();
   const bq = document.getElementById('n-qr'); if (bq) bq.onclick = () => flowNotfallQR();
 }
