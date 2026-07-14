@@ -2594,7 +2594,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v61';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v62';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -18167,6 +18167,8 @@ async function _eudiwAusgeben(sektorId, optionen) {
 // DATEN tragen — Herausgeben ist datenlage-adaptiv: ein leerer Bereich hat nichts herzugeben. Jede Wahl
 // öffnet den bestehenden Bereichs-Chooser (flowHerausgeben: PDF / maschinenlesbar / Word / QR).
 function flowHerausgebenZentral() {
+  bearbeitungSpeichern();   // offene Edits zuerst sichern (U2-ADR-011) — sonst sieht die Bereichs-Wahl
+                            // frisch bestätigte Chips/Eingaben nicht, wenn die Sektor-Seite nicht verlassen wurde.
   const zielSektoren = SEKTOREN.filter(s => sektorHatDaten(s, (data && data.sektoren && data.sektoren[s.id]) || {}));
   let koerper = '<p class="einst-hint">' + escapeHTML(STRINGS.herausgebenWoherHinweis) + '</p>';
   koerper += '<div class="herausgeben-chooser">';
@@ -19131,9 +19133,14 @@ function _chipFelderVerdrahten(container) {
         catch (_) { return false; }
       });
     };
+    // Speicherpfad-Gate meldet sich über ein bubbelndes 'change' auf dem Feld-Container — dieselbe
+    // Konvention wie das Personen-Widget (_refMehrfachVerdrahten/melden). Ohne diese Meldung bleibt
+    // ein bestätigter/entfernter Chip im DOM sichtbar, aber `data` erfährt erst beim nächsten
+    // Navigations-Fold davon (Befund 14.07.: „Woraus herausgeben?" sah frisch angelegte Chips nicht).
+    const melden = () => { try { feldEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {} };
     const wegKnopfVerdrahten = (span) => {
       const weg = span.querySelector('[data-chip-weg]');
-      if (weg) weg.onclick = () => { if (span.remove) span.remove(); };
+      if (weg) weg.onclick = () => { if (span.remove) span.remove(); melden(); };
     };
     liste.querySelectorAll('.chip').forEach(wegKnopfVerdrahten);
     const chipHinzufuegen = (chip) => {
@@ -19144,6 +19151,7 @@ function _chipFelderVerdrahten(container) {
       span.innerHTML = chipInnerHTML(chip);
       wegKnopfVerdrahten(span);
       liste.appendChild(span);
+      melden();
     };
     const zustand = () => {
       const hat = String(eingabe.value || '').trim().length > 0;
@@ -19933,7 +19941,8 @@ function _erstEintragToastVielleicht(zielEl) {
       const t = ev && ev.target;
       if (!t || !t.getAttribute) return;
       if (t.hasAttribute('data-edit') || t.hasAttribute('data-edit-ref') ||
-          t.hasAttribute('data-edit-override') || t.hasAttribute('data-edit-code')) {
+          t.hasAttribute('data-edit-override') || t.hasAttribute('data-chip-eingabe') ||
+          t.hasAttribute('data-chip-liste')) {
         bearbeitungSpeichern();   // nur falten, NICHT neu rendern
         _erstEintragToastVielleicht(t);   // D3: Erst-Eintrag-Toast (einmal pro Sitzung, passwortlos)
       }
