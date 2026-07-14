@@ -2594,7 +2594,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v64';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v65';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -3521,7 +3521,6 @@ const STRINGS = Object.freeze({
   herausgebenGanzesDepot: "Ganzes Depot",   // U2-ADR-058: erste Zeile der Herausgeben-Tür; ruft nach U2-ADR-059 direkt die Gesamt-PDF
   herausgebenPdf: "Als PDF (zum Lesen & Drucken)",
   herausgebenMaschinell: "Maschinenlesbar",
-  herausgebenQr: "Als QR-Code (zum Scannen)",
   exportBereichPdfTitel: "Bereich als PDF",
   exportBereichPdfUntertitel: "Ein einzelner Bereich Ihres Vivodepots.",
   exportBereichPdfFertig: "Bereich als PDF gespeichert.",
@@ -3633,13 +3632,9 @@ const STRINGS = Object.freeze({
   importEintraegeNeu: "neue Einträge werden hinzugefügt",
   urheberEingelesen: "eingelesen",            // Import-Provenienz-Marker an der Feld-Zeile
 
-  // ── QR-Datenschicht (mehrteilig / „verbundene QR") ──
-  exportBereichQrTitel: "Bereich als QR-Code",
-  exportBereichQrHinweis: "Scannen Sie alle Teile der Reihe nach — die Lese-App setzt sie wieder zusammen.",
+  // ── QR-Datenschicht (mehrteilig / „verbundene QR") — geteilt mit dem EUDIW-Pfad ──
   exportBereichQrTeil: "Teil",                              // „Teil 1 von 3"
   exportBereichQrVon: "von",
-  exportBereichQrFehlt: "Der QR-Code kann hier noch nicht gezeichnet werden (QR-Bibliothek fehlt). Die Daten sind vorbereitet.",
-  exportBereichQrLeer: "Es ist nichts zum Verschlüsseln in einen QR-Code hinterlegt.",
 
   // ── An EUDI-Wallet übergeben (Best-Effort, vorläufig) — Bürger-Sprache, nie „SD-JWT"/„Claim" ──
   eudiwKnopf: "An EUDI-Wallet übergeben (experimentell)",
@@ -17878,40 +17873,19 @@ function flowBereichPdf(sektorId, optionen) {
   flowExportUebersicht({ sektorId, titel: STRINGS.exportBereichPdfTitel, aufFortfahren: bauen });
 }
 
-/* ── QR-Datenschicht pro Bereich + mehrteilige „verbundene QR" (Export-Durchgang Teil 2c) ──
-   Reine, testbare Datenschicht: aus einem Bereich ein kompaktes JSON-Objekt; bei Überlänge
-   in mehrere QR-Teile zerlegt, jeder mit Gruppen-Kennung + Index/Gesamtzahl, sodass eine
-   Lese-App sie zusammensetzt. Das tatsächliche ZEICHNEN braucht window.qrcode (qrcode-Lib,
-   in dieser Bau-Umgebung nicht beschaffbar / 3.2-Blocker) und ist sauber gegatet — wie der
-   bestehende QR-/Word-Pfad. Getrennt von der Notfall-Allowlist (eigene Logik). */
+/* ── QR-Zerlegungs-Infrastruktur (mehrteilige „verbundene QR") — geteilt mit dem EUDIW-Pfad ──
+   CC-08 (14.07., Muster „Klartext-QR-Leck", Spiegel zu CC-01): der Bereichs-Modal-QR
+   (`bereichQrModell`/`bereichQrText`/`flowBereichQr`) ist ERSATZLOS ENTFERNT. Er reichte einen
+   rohen „VDQR|…"-Klartext-Rahmen aus — bei jedem Bereich, auch Gesundheit/Finanzen/Identität.
+   Geräte-Befund: die native iOS-Kamera erkennt den Rahmen nicht als App-Format und reicht den
+   Klartext an eine Websuche weiter — ein Gesundheitsdaten-Abfluss an einen Fremd-Endpunkt, in
+   einer App, deren Versprechen „nichts verlässt das Gerät" lautet. Verschlüsseln löst es nicht
+   ohne einen zweiten, ebenso niedrigschwelligen Kanal für den Schlüssel (offene Frage für E5).
+   Der Text-Einfüge-Weg in die Lese-App bleibt unverändert (kein QR, kein Klartext-Foto-Risiko).
+   Die Zerlegungs-Infrastruktur selbst (`qrTeilePacken`/`qrTeileZusammensetzen`/Rahmen-Parsing)
+   bleibt — sie trägt weiterhin den (aktuell ausgeblendeten) EUDIW-Wallet-Übergabe-Pfad. */
 const QR_TEIL_MAX = 600;   // Zeichen Nutzlast je QR-Teil (konservativ unter der QR-Kapazität)
 
-// Datenschicht: ausgefüllte (nicht-sensible bzw. opt-in sensible) Felder eines Bereichs.
-function bereichQrModell(sektorId, optionen) {
-  const s = SEKTOR_BY_ID[sektorId];
-  if (!s) return null;
-  const inklSensibel = !!(optionen && optionen.sensibel);
-  const sektorDaten = (data && data.sektoren && data.sektoren[s.id]) || {};
-  const felder = [];
-  for (const sek of (s.sektionen || [])) {
-    for (const f of (sek.felder || [])) {
-      if (!inklSensibel && feldIstSensibel(f, s.id)) continue;
-      if (!feldSichtbar(f, sektorDaten)) continue;
-      const roh = sektorDaten[f.id];
-      if (!feldEingetragen(f, roh)) continue;
-      felder.push({ id: f.id, label: f.label, wert: feldWertText(f, roh) });
-    }
-  }
-  const d = new Date();
-  return { v: 1, typ: 'vivodepot-bereich', bereich: s.id, bereichLabel: s.label,
-    stand: d.toISOString().slice(0, 10), felder };
-}
-// Kompakter Text (JSON) der Datenschicht — Eingabe für die QR-Zerlegung. Leer, wenn nichts da ist.
-function bereichQrText(sektorId, optionen) {
-  const m = bereichQrModell(sektorId, optionen);
-  if (!m || !m.felder.length) return '';
-  return JSON.stringify(m);
-}
 // Kurze, deterministische Gruppen-Kennung (FNV-1a, KEIN Krypto — nur zum Zusammengehören der
 // Teile EINER Ausgabe). Liegt bewusst außerhalb des VdCrypto-Blocks.
 function _qrGruppenId(s) {
@@ -17964,38 +17938,6 @@ function qrTeileZusammensetzen(teile) {
   let out = '';
   for (let i = 1; i <= gesamt; i++) { if (bySeq[i] == null) return null; out += bySeq[i]; }
   return out;
-}
-// Auslöser: Bereich als (verbundene) QR-Codes. Datenschicht + Mehrteilig-Logik laufen immer;
-// das ZEICHNEN ist auf window.qrcode gegatet (graceful degradation, kein Fake). Geht durch die
-// Transparenz-Übersicht (sensibel zurückgehalten, Opt-in).
-function flowBereichQr(sektorId, optionen) {
-  if (!SEKTOR_BY_ID[sektorId]) return;
-  const ausgeben = (opt) => {
-    const text = bereichQrText(sektorId, opt);
-    if (!text) { if (ui && ui.toast) ui.toast(STRINGS.exportBereichQrLeer, 'info'); return; }
-    const teile = qrTeilePacken(text);
-    // 3.2-Gate: ohne qrcode-Lib kein Bild — sauberer Hinweis, Datenschicht ist vorbereitet.
-    if (typeof window === 'undefined' || typeof window.qrcode !== 'function') {
-      if (ui && ui.toast) ui.toast(STRINGS.exportBereichQrFehlt, 'info'); return;
-    }
-    let bilder = '';
-    for (const t of teile) {
-      let imgTag = '';
-      try { const qr = window.qrcode(0, 'M'); qr.addData(t.rahmen); qr.make(); imgTag = qr.createImgTag(4, 8); }
-      catch (e) { imgTag = ''; }
-      bilder += '<div class="qr-teil">' + imgTag +
-        '<div class="qr-teil-nr">' + escapeHTML(STRINGS.exportBereichQrTeil) + ' ' + t.index +
-        ' ' + escapeHTML(STRINGS.exportBereichQrVon) + ' ' + t.gesamt + '</div></div>';
-    }
-    ui.modal({
-      titel: STRINGS.exportBereichQrTitel,
-      koerperHTML: '<p class="einst-hint">' + escapeHTML(STRINGS.exportBereichQrHinweis) + '</p>' +
-        '<div class="qr-teile">' + bilder + '</div>',
-      primaerLabel: STRINGS.btnSchliessen, onPrimaer: (s) => s(), ohneAbbrechen: true,
-    });
-  };
-  if (optionen !== undefined) { ausgeben(optionen); return; }
-  flowExportUebersicht({ sektorId, titel: STRINGS.exportBereichQrTitel, aufFortfahren: ausgeben });
 }
 
 /* ── An EUDI-Wallet übergeben (Best-Effort, vorläufig) — SD-JWT-VC-Serialisierung ──────
@@ -18252,7 +18194,6 @@ function flowHerausgeben(sektorId) {
   if (typeof window !== 'undefined' && window.docx) {
     koerper += '<button type="button" class="btn btn-sek" data-h-docx="1">' + svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.exportDocxLabel) + '</button>';
   }
-  koerper += '<button type="button" class="btn btn-sek" data-h-qr="1">' + svgIcon(ICONS.qrCode) + ' ' + escapeHTML(STRINGS.herausgebenQr) + '</button>';
   // „An EUDI-Wallet übergeben" — nur für Bereiche mit SD-JWT-VC-Format (Identität, Finanzen, Sozialvers.).
   // AUSGEBLENDET bis EUDIW-Rollout (EUDIW_SICHTBAR, s.o.): der Code bleibt, nur der Knopf ruht — es gibt
   // noch keine Wallet, die den Ausschnitt sicher annimmt. Reaktivierung = EUDIW_SICHTBAR auf true.
@@ -18271,8 +18212,6 @@ function flowHerausgeben(sektorId) {
   if (box && box.querySelector) {
     const pdf = box.querySelector('[data-h-pdf]');
     if (pdf) pdf.onclick = () => flowBereichPdf(sektorId);
-    const qr = box.querySelector('[data-h-qr]');
-    if (qr) qr.onclick = () => flowBereichQr(sektorId);
     const docx = box.querySelector('[data-h-docx]');
     if (docx) docx.onclick = () => flowDocxExport(sektorId);
     const eudiw = box.querySelector('[data-h-eudiw]');
