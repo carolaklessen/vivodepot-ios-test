@@ -1048,6 +1048,20 @@
   .feld-code { font-size: 0.72rem; color: var(--ink3); opacity: 0.85; white-space: nowrap; }
   .feld-code-picker { display: block; }
   .feld-code-picker input { width: 100%; }
+  /* Chip-Mechanik (E1 Option C, CC-Auftrag Chip-Mechanik) — dieselbe Bestätigungs-Konvention wie
+     das Personen-Widget (.refm-*), eigene Container-Form (Chip-Wolke aus einem Eingabefeld). */
+  .chip-feld { display: block; }
+  .chip-liste { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .chip-liste:empty { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--fs-sm);
+    padding: var(--space-1) var(--space-2); border: 1px solid var(--line); border-radius: 999px;
+    background: var(--salbei-light); }
+  .chip-weg { background: none; border: none; color: var(--ink3); cursor: pointer; font-size: 1rem;
+    line-height: 1; padding: 0; min-width: 24px; min-height: 24px; }
+  .chip-eingabe-zeile { display: flex; gap: var(--space-2); align-items: center; }
+  .chip-eingabe { flex: 1 1 auto; min-width: 0; }
+  .chip-uebernehmen { color: var(--salbei-dunkel); border-color: var(--salbei-mid); background: var(--salbei-light); font-weight: 700; }
+  .chip-uebernehmen[hidden] { display: none; }
 
   /* ── iOS-Auto-Zoom-Schutz ───────────────────────────────────────────────────
      Safari/iOS zoomt beim Antippen eines Eingabefelds automatisch ein, sobald das
@@ -2580,7 +2594,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v57';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v61';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -3642,11 +3656,6 @@ const STRINGS = Object.freeze({
   eudiwDateiFertig: "Übergabe-Datei gespeichert.",
   eudiwWrapperFertig: "Abruf-Vorlage gespeichert.",
 
-  // ── Selbst-Verifikations-QR auf dem PDF (Teil 3.2) ──
-  exportPdfQrTitel: "Maschinenlesbare Selbst-Verifikation",
-  exportPdfQrHinweis: "Dieser QR-Code trägt genau die Daten dieses PDF. Wer mag, scannt ihn und prüft: das Gedruckte = die Daten. Bei mehreren Teilen alle der Reihe nach scannen — die Lese-App setzt sie zusammen.",
-  exportPdfQrFehlt: "Maschinenlesbarer QR erscheint, sobald die qrcode-Bibliothek eingebunden ist.",
-
   // ── Notfall-Dreiklang (Teil 4) — Bürger-Live-Sicht + Papier-Notfallkarte ──
   // U2-ADR-078: der passwortlose Stufe-1-Cache und seine „Für Sanitäter"-Tür sind entfernt;
   // die zugehörigen Strings (notfallAusDatei*, notfallCacheStand) sind mit ihnen weggefallen.
@@ -3679,6 +3688,9 @@ const STRINGS = Object.freeze({
   refmUebernehmen: "Übernehmen",                          // Chip-Input (Zusatz 2, 09.07.): Haken bestätigt den getippten Namen dieser Zeile
   refmUebernommen: '„%s“ übernommen',                     // sichtbare Quittung nach Enter/Haken (Toast)
   refmNeuAnlegen: "als neue Person anlegen",              // ÜBERHOLT (Zusatz 2): Anlage-Zeile entfällt — Neuanlage nur per Enter/Haken. String bleibt für Alt-Referenzen.
+  chipWeg: "Entfernen",                                   // Chip-Mechanik (E1 Option C): Chip aus der Liste entfernen
+  chipUebernehmen: "Übernehmen",                          // Haken bestätigt den getippten Text als neuen Chip
+  chipUebernommen: '„%s“ übernommen',                     // sichtbare Quittung nach Enter/Haken (Toast)
   listenEintragSg: "Eintrag",                             // „1 Eintrag"
   listenEintragPl: "Einträge",                            // „N Einträge"
   pdfSeite: "Seite",                                      // PDF-Fuß „Seite X/Y"
@@ -3760,7 +3772,7 @@ const SEKTOREN = Object.freeze([
       { id: 'person', label: 'Person', felder: [
         { id: 'vorname',         label: 'Vorname',             typ: 'text', beispiel: 'Maria' },
         { id: 'nachname',        label: 'Nachname',            typ: 'text', beispiel: 'Mustermann' },
-        { id: 'geburtsdatum',    label: 'Geburtsdatum',        typ: 'datum' },
+        { id: 'geburtsdatum',    label: 'Geburtsdatum',        typ: 'datum', keineZukunft: true, datumJahrMin: 1900 },   // = DATUM_JAHR_MIN_GEBURT (SEKTOREN ist top-level const, vor der Konstante ausgewertet — nicht referenzieren)
         { id: 'telefon',         label: 'Telefon',             typ: 'text', eingabeTyp: 'tel', beispiel: '0151 12345678' },
         { id: 'strasse',         label: 'Straße & Hausnummer', typ: 'text', beispiel: 'Lindenweg 4' },
         { id: 'plz_ort',         label: 'PLZ & Ort',           typ: 'text', beispiel: '80331 München' },
@@ -4066,11 +4078,14 @@ const SEKTOREN = Object.freeze([
             { wert: 'AB+', label: 'AB +' },{ wert: 'AB-', label: 'AB −' },
             { wert: 'unbekannt', label: 'unbekannt' },
           ] },
-          { id: 'allergien',          label: 'Allergien (Medikamente, Nahrung, Sonstiges)', typ: 'text', beispiel: 'Penicillin, Haselnuss', codeListe: 'snomedAllergen' },
-          { id: 'krankheiten',        label: 'Chronische Erkrankungen / Diagnosen',         typ: 'text', beispiel: 'Diabetes mellitus Typ 2, Bluthochdruck', codeListe: 'icd10' },
+          { id: 'allergien',          label: 'Allergien (Medikamente, Nahrung, Sonstiges)', typ: 'text', beispiel: 'Penicillin', codeListe: 'snomedAllergen',
+            hint: 'Ein Eintrag pro Chip — für jede weitere Allergie einen neuen Chip anlegen.' },
+          { id: 'krankheiten',        label: 'Chronische Erkrankungen / Diagnosen',         typ: 'text', beispiel: 'Diabetes mellitus Typ 2', codeListe: 'icd10',
+            hint: 'Ein Eintrag pro Chip — für jede weitere Diagnose einen neuen Chip anlegen.' },
           { id: 'kv_art',             label: 'Krankenversicherung',                          typ: 'text', beispiel: 'AOK Bayern',
             hint: 'Welche Krankenkasse? Nummer steht auf der Karte.' },
-          { id: 'medikamente',        label: 'Medikamente (laufend)',                        typ: 'text', beispiel: 'Ramipril 5 mg morgens, Metformin 1000 mg 2× täglich', codeListe: 'atc' },
+          { id: 'medikamente',        label: 'Medikamente (laufend)',                        typ: 'text', beispiel: 'Ramipril 5 mg morgens', codeListe: 'atc',
+            hint: 'Ein Eintrag pro Chip — für jedes weitere Medikament einen neuen Chip anlegen.' },
           { id: 'kv_nummer',          label: 'Versichertennummer',                           typ: 'text', beispiel: 'A123456789',
             hint: 'Steht auf der Krankenkassenkarte.' },
           { id: 'implantate',         label: 'Implantate / Prothesen / Schrittmacher',       typ: 'text', beispiel: 'Hüft-TEP rechts (Stryker), seit 2019',
@@ -5723,13 +5738,13 @@ const WIZARDS = Object.freeze([
     schritte: [
       { frage: 'Welche chronischen Erkrankungen oder Diagnosen haben Sie?',
         hilfetext: 'Tippen Sie einen Begriff — passende Diagnosen werden Ihnen vorgeschlagen. Freitext ist ebenfalls möglich.',
-        feld: { id: 'krankheiten', label: 'Chronische Erkrankungen / Diagnosen', typ: 'text', codeListe: 'icd10', beispiel: 'Diabetes mellitus Typ 2, Bluthochdruck' } },
+        feld: { id: 'krankheiten', label: 'Chronische Erkrankungen / Diagnosen', typ: 'text', codeListe: 'icd10', beispiel: 'Diabetes mellitus Typ 2' } },
       { frage: 'Welche Allergien oder Unverträglichkeiten haben Sie?',
-        hilfetext: 'Medikamente, Nahrung oder Sonstiges. Während des Tippens werden Vorschläge angezeigt; Freitext geht auch.',
-        feld: { id: 'allergien', label: 'Allergien', typ: 'text', codeListe: 'snomedAllergen', beispiel: 'Penicillin, Haselnuss' } },
+        hilfetext: 'Medikamente, Nahrung oder Sonstiges. Während des Tippens werden Vorschläge angezeigt; Freitext geht auch. Für jede weitere Allergie einen neuen Chip anlegen.',
+        feld: { id: 'allergien', label: 'Allergien', typ: 'text', codeListe: 'snomedAllergen', beispiel: 'Penicillin' } },
       { frage: 'Welche Medikamente nehmen Sie regelmäßig?',
-        hilfetext: 'Mit Wirkstoff und Dosierung, wenn möglich. Während des Tippens werden Vorschläge angezeigt.',
-        feld: { id: 'medikamente', label: 'Medikamente (laufend)', typ: 'text', codeListe: 'atc', beispiel: 'Ramipril 5 mg morgens, Metformin 1000 mg 2× täglich' } },
+        hilfetext: 'Mit Wirkstoff und Dosierung, wenn möglich. Während des Tippens werden Vorschläge angezeigt. Für jedes weitere Medikament einen neuen Chip anlegen.',
+        feld: { id: 'medikamente', label: 'Medikamente (laufend)', typ: 'text', codeListe: 'atc', beispiel: 'Ramipril 5 mg morgens' } },
       { frage: 'Welche Operationen oder Eingriffe hatten Sie?',
         feld: { id: 'voroperationen', label: 'Operationen / Eingriffe', typ: 'text', beispiel: 'Blinddarm 2008; Hüft-TEP rechts 2019' } },
       { frage: 'Welche Impfungen sind bei Ihnen bekannt?',
@@ -6005,7 +6020,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 37,                       // Schema 37 (U2-ADR-074, Phase 5): finanzen/konto_haupt_bank + konto_haupt_iban (ein Konto, zwei Skalarfelder) → Liste `konten` {bank · art · iban · bankvollmacht (Record-id-Verweis auf art:'bank'-Vollmacht in Vorsorge) · notiz}; Migration Skalar→Liste verlustfrei (ein Eintrag, leer→entfällt, stabile id). Art = Vorschlagsliste + frei (native datalist). VC-Export/CAMT ruhen. Schema 36 (U2-ADR-073, Phase 4 Teil 2): persoenliches/abhaengige_personen Freitext → Liste „allgemeine Abhängige" {wer · hinweis}; Migration Text→[{wer}] verlustfrei (keine „;"-Trennung), id bleibt, crossSektor-Projektion typ-generisch. Schema 35 (U2-ADR-073, Phase 4 Teil 1): fünf verstreute Slot-Gruppen → je EINE Liste — Fahrzeuge (mobilitaet: auto1/2/_ausweis/_leasing), Kreditkarten (finanzen: kreditkarte1/2), Haustiere (identitaet: tier_*), Personen-Briefe (persoenliches: brief_1/2/3), Weitere Wohnungen (wohnen: zw_*, Hybrid — Hauptwohnung bleibt Singleton). Migration Skalar→Liste verlustfrei (leere Werte fallen weg, stabile id je Eintrag). Schema 34 (U2-ADR-072, Teil 2): drei Facharzt-Slots gesundheit/facharzt_1/2/3 → EINE Liste `fachaerzte` {arzt (Person-Ref) · fach (Text)}; Migration Skalar→Liste verlustfrei (leere Slots fallen weg, stabile id je Eintrag). Schema 33 (U2-ADR-072, Phase 3): Notfallkontakte gesundheit/hauptpflegeperson ref → refMehrfach (mehrere Kontakte); Migration Einzel→Array verlustfrei, QR löst die Liste typ-generisch auf. Schema 32 (U2-ADR-071-Nachtrag): jeder Listen-Record bekommt eine stabile `id` (Cross-Sektor-Verweise überleben Umsortieren); Migration vergibt id an id-lose vollmachten-Records, verlustfrei. Schema 31 (U2-ADR-065-Nachlauf): vorsorge/erben → refMehrfach (mehrere Erben, umsortierbar); Migration Einzel→Array verlustfrei. Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: 38,                       // Schema 38 (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.2026): gesundheit/allergien, medikamente, krankheiten (Code-Slot-Felder) → Chip-Array {text, code?} statt Skalar (Freitext oder codierter Einzelwert); Migration Skalar→[EIN Chip] verlustfrei, KEIN Komma-Splitting. Schema 37 (U2-ADR-074, Phase 5): finanzen/konto_haupt_bank + konto_haupt_iban (ein Konto, zwei Skalarfelder) → Liste `konten` {bank · art · iban · bankvollmacht (Record-id-Verweis auf art:'bank'-Vollmacht in Vorsorge) · notiz}; Migration Skalar→Liste verlustfrei (ein Eintrag, leer→entfällt, stabile id). Art = Vorschlagsliste + frei (native datalist). VC-Export/CAMT ruhen. Schema 36 (U2-ADR-073, Phase 4 Teil 2): persoenliches/abhaengige_personen Freitext → Liste „allgemeine Abhängige" {wer · hinweis}; Migration Text→[{wer}] verlustfrei (keine „;"-Trennung), id bleibt, crossSektor-Projektion typ-generisch. Schema 35 (U2-ADR-073, Phase 4 Teil 1): fünf verstreute Slot-Gruppen → je EINE Liste — Fahrzeuge (mobilitaet: auto1/2/_ausweis/_leasing), Kreditkarten (finanzen: kreditkarte1/2), Haustiere (identitaet: tier_*), Personen-Briefe (persoenliches: brief_1/2/3), Weitere Wohnungen (wohnen: zw_*, Hybrid — Hauptwohnung bleibt Singleton). Migration Skalar→Liste verlustfrei (leere Werte fallen weg, stabile id je Eintrag). Schema 34 (U2-ADR-072, Teil 2): drei Facharzt-Slots gesundheit/facharzt_1/2/3 → EINE Liste `fachaerzte` {arzt (Person-Ref) · fach (Text)}; Migration Skalar→Liste verlustfrei (leere Slots fallen weg, stabile id je Eintrag). Schema 33 (U2-ADR-072, Phase 3): Notfallkontakte gesundheit/hauptpflegeperson ref → refMehrfach (mehrere Kontakte); Migration Einzel→Array verlustfrei, QR löst die Liste typ-generisch auf. Schema 32 (U2-ADR-071-Nachtrag): jeder Listen-Record bekommt eine stabile `id` (Cross-Sektor-Verweise überleben Umsortieren); Migration vergibt id an id-lose vollmachten-Records, verlustfrei. Schema 31 (U2-ADR-065-Nachlauf): vorsorge/erben → refMehrfach (mehrere Erben, umsortierbar); Migration Einzel→Array verlustfrei. Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -6903,21 +6918,52 @@ function codeSystemKuerzel(wert) {
   return '';
 }
 
-function _ipsItems(text) {
-  return String(text == null ? '' : text).split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+/* ── Chip-Mechanik (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.) ───────────────────
+   Ein Code-Slot-Feld (feld.codeListe) trägt jetzt einen Chip-Array statt eines Skalars:
+   { text: "Ampicillin", code: { system, code } }   — bestätigt aus der Liste
+   { text: "Hausstaub" }                            — freier Chip, kein Code
+   Tippen legt nie an; nur eine bewusste Bestätigung (Enter/Übernehmen-Haken) erzeugt einen
+   Chip — dieselbe Konvention wie das Personen-Widget (refMehrfach). Das Komma ist im
+   Chip-Text ein gewöhnliches Zeichen: KEIN Splitten mehr (vormals _ipsItems, ersatzlos raus —
+   der Generator erfand sonst z. B. aus „Peni" ein eigenständiges Medikament). ───────────── */
+
+// Eine Eingabe → EIN Chip (oder null bei leerem Text). codeWertAus liefert entweder den
+// codierten Treffer oder den rohen Freitext zurück; hier wird beides auf die Chip-Form gebracht.
+function chipAusEingabe(systemId, eingabe) {
+  const w = codeWertAus(systemId, eingabe);
+  if (w === '' || w == null) return null;
+  if (typeof w === 'object') return { text: w.anzeigeName, code: { system: w.system, code: w.code } };
+  return { text: String(w) };
+}
+// Dedup case-insensitiv/getrimmt gegen den Chip-Text — derselbe Mechanismus wie beim
+// Personen-Register (personFindenOderAnlegen). Liefert eine NEUE Liste (unverändert bei Duplikat).
+function chipListeMitNeuem(liste, chip) {
+  const arr = Array.isArray(liste) ? liste.slice() : [];
+  const text = (chip && typeof chip.text === 'string') ? chip.text.trim() : '';
+  if (!text) return arr;
+  const key = text.toLowerCase();
+  if (arr.some(c => String((c && c.text) || '').trim().toLowerCase() === key)) return arr;
+  const neuerChip = { text };
+  if (chip.code && typeof chip.code.system === 'string' && typeof chip.code.code === 'string') {
+    neuerChip.code = { system: chip.code.system, code: chip.code.code };
+  }
+  arr.push(neuerChip);
+  return arr;
 }
 
-// Normalisiert einen (Gesundheits-)Feldwert in Code-Einträge für den Export (F-4):
-// codierter Eintrag → { codiert:true, code, system, anzeigeName }; Freitext → je Komma/Semikolon
-// ein { codiert:false, anzeigeName }. Arrays werden flach durchlaufen (mehrere codierte Einträge).
-function _codeEintraege(roh) {
-  if (roh == null || roh === '') return [];
-  if (istCodierterWert(roh)) return [{ codiert: true, code: roh.code, system: roh.system, anzeigeName: roh.anzeigeName }];
-  if (Array.isArray(roh)) return roh.flatMap(_codeEintraege);
-  if (typeof roh === 'object') {
-    return (roh.anzeigeName ? [{ codiert: false, anzeigeName: String(roh.anzeigeName) }] : []);
-  }
-  return _ipsItems(roh).map(t => ({ codiert: false, anzeigeName: t }));
+// Normalisiert einen Chip-Array in Code-Einträge für den Export (F-4): Chip mit Code →
+// { codiert:true, code, system, anzeigeName }; Chip ohne Code → { codiert:false, anzeigeName }.
+// Jeder Chip ist bereits EIN Eintrag — von der Bürgerin einzeln bestätigt. Kein Kommasplitten.
+function _codeEintraege(chips) {
+  if (!Array.isArray(chips)) return [];
+  return chips.map(c => {
+    const anzeigeName = (c && typeof c.text === 'string') ? c.text.trim() : '';
+    if (!anzeigeName) return null;
+    if (c.code && typeof c.code.system === 'string' && typeof c.code.code === 'string') {
+      return { codiert: true, code: c.code.code, system: c.code.system, anzeigeName };
+    }
+    return { codiert: false, anzeigeName };
+  }).filter(Boolean);
 }
 function _ipsNarrative(text) {
   return { status: 'generated', div: '<div xmlns="http://www.w3.org/1999/xhtml">' + escapeHTML(String(text || '')) + '</div>' };
@@ -6940,7 +6986,10 @@ function fhirIpsBundle(jetzt, opt) {
   }
   const gMap = { m: 'male', maennlich: 'male', w: 'female', weiblich: 'female', d: 'other', divers: 'other' };
   if (id.geschlecht) patient.gender = gMap[id.geschlecht] || 'unknown';
-  if (/^\d{4}-\d{2}-\d{2}$/.test(id.geburtsdatum || '')) patient.birthDate = id.geburtsdatum;
+  // CC-02: Jahresbereich mitgeprüft, nicht nur Format (Befund 13.07.: "0111-01-01" bestand die
+  // alte Regex-Prüfung anstandslos und landete im IPS-Bundle). Unplausibel → birthDate bleibt leer,
+  // depotHatGeburtsdatum() gatet den Export bereits vorher (IPS-Pflichtfeld fehlt dann sichtbar).
+  if (_datumPlausibel(id.geburtsdatum || '', true, DATUM_JAHR_MIN_GEBURT)) patient.birthDate = id.geburtsdatum;
   patient.text = _ipsNarrative([id.vorname, id.nachname].filter(Boolean).join(' ') || 'Patient');
   const patientRef = lege(patient);
 
@@ -7892,9 +7941,12 @@ function parseVCards(text) {
   return karten;
 }
 // BDAY (vCard: YYYYMMDD oder YYYY-MM-DD) → ISO YYYY-MM-DD (Datum-Feld-Form). Umkehrung des Exports.
+// CC-02: ein unplausibles Jahr (Befund 13.07.: "0111-01-01" lief unkontrolliert durch den
+// vCard-Import) wird NICHT übernommen — leerer Rückgabewert lässt den Aufrufer das Feld auslassen.
 function _bdayZuIso(b) {
   const m = /^(\d{4})-?(\d{2})-?(\d{2})$/.exec(String(b || '').trim());
-  return m ? m[1] + '-' + m[2] + '-' + m[3] : String(b || '').trim();
+  const iso = m ? m[1] + '-' + m[2] + '-' + m[3] : String(b || '').trim();
+  return _datumPlausibel(iso, true, DATUM_JAHR_MIN_GEBURT) ? iso : '';
 }
 // Identität (eine Karte) → Sektor-Felder. Umkehrung von vcardIdentitaet (ADR ;;strasse;plz_ort;;;).
 function _vcardIdentitaetFelder(karten) {
@@ -7999,8 +8051,10 @@ function _ccText(r, codeKey) {
 }
 const _FHIR_GENDER_RUECK = Object.freeze({ male: 'm', female: 'w', other: 'd', unknown: 'k' });
 // FHIR-IPS-Bundle → Felder. Patient-Demografie zurück in Identität (vorname/nachname/geburtsdatum/
-// geschlecht), klinische Ressourcen zurück in Gesundheit (allergien/medikamente/krankheiten,
-// Mehrfach-Einträge mit „, " zusammengefügt — Umkehrung von _ipsItems). Symmetrisch zu fhirIpsBundle.
+// geschlecht), klinische Ressourcen zurück in Gesundheit (allergien/medikamente/krankheiten). Chip-
+// Mechanik (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.): jede Ressource wird EIN Chip — mit Code,
+// wenn coding vorhanden ist, sonst Freitext-Chip. Symmetrisch zu fhirIpsBundle (KEIN Zusammenfügen
+// mehr zu einem String — die drei Felder sind jetzt Chip-Arrays, kein Skalar).
 function _fhirIpsFelder(bundle) {
   const out = [];
   const patient = _fhirRessourcen(bundle, 'Patient')[0];
@@ -8008,12 +8062,26 @@ function _fhirIpsFelder(bundle) {
     const n = Array.isArray(patient.name) ? patient.name[0] : null;
     if (n && n.family) out.push({ sektorId: 'identitaet', feldId: 'nachname', wert: String(n.family).trim() });
     if (n && Array.isArray(n.given) && n.given[0]) out.push({ sektorId: 'identitaet', feldId: 'vorname', wert: String(n.given[0]).trim() });
-    if (patient.birthDate) out.push({ sektorId: 'identitaet', feldId: 'geburtsdatum', wert: String(patient.birthDate).trim() });
+    // CC-02: Format allein reichte nicht (Befund 13.07.: "0111-01-01" ist ein gültiges ISO-Datum,
+    // aber kein plausibles Geburtsdatum) — unplausibel importiert nichts, statt Müll zu übernehmen.
+    if (patient.birthDate && _datumPlausibel(String(patient.birthDate).trim(), true, DATUM_JAHR_MIN_GEBURT)) {
+      out.push({ sektorId: 'identitaet', feldId: 'geburtsdatum', wert: String(patient.birthDate).trim() });
+    }
     if (patient.gender && _FHIR_GENDER_RUECK[patient.gender]) out.push({ sektorId: 'identitaet', feldId: 'geschlecht', wert: _FHIR_GENDER_RUECK[patient.gender] });
   }
   const sammle = (typ, codeKey, feldId) => {
-    const werte = _fhirRessourcen(bundle, typ).map(r => _ccText(r, codeKey)).filter(Boolean);
-    if (werte.length) out.push({ sektorId: 'gesundheit', feldId, wert: werte.join(', ') });
+    const chips = _fhirRessourcen(bundle, typ).map(r => {
+      const text = _ccText(r, codeKey);
+      if (!text) return null;
+      const cc = r && r[codeKey];
+      const coding = (cc && Array.isArray(cc.coding)) ? cc.coding[0] : null;
+      const chip = { text };
+      if (coding && typeof coding.system === 'string' && typeof coding.code === 'string') {
+        chip.code = { system: coding.system, code: coding.code };
+      }
+      return chip;
+    }).filter(Boolean);
+    if (chips.length) out.push({ sektorId: 'gesundheit', feldId, wert: chips });
   };
   sammle('AllergyIntolerance', 'code', 'allergien');
   sammle('MedicationStatement', 'medicationCodeableConcept', 'medikamente');
@@ -8130,7 +8198,14 @@ function _xTief(node, name) {                              // erster Nachfahre b
   return undefined;
 }
 // Datum aus XML (ISO YYYY-MM-DD oder YYYY-MM-DDThh:mm:ss) → reines ISO-Datum (Datum-Feld-Form).
-function _xmlDatumIso(d) { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '').trim()); return m ? m[1] + '-' + m[2] + '-' + m[3] : String(d || '').trim(); }
+// CC-02: gilt für Geburtsdatum (XÖV) UND Buchungsdatum (CAMT) — geteilter Aufrufer, deshalb ein
+// optionaler `jahrMin` (Aufrufer entscheidet den Kontext); ohne Angabe der weite Default. Kein
+// keineZukunft (Buchungsdatum kann je nach Kontostand-Export knapp in der Zukunft liegen).
+function _xmlDatumIso(d, jahrMin) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d || '').trim());
+  const iso = m ? m[1] + '-' + m[2] + '-' + m[3] : String(d || '').trim();
+  return _datumPlausibel(iso, false, jahrMin) ? iso : '';
+}
 
 /* ── Parser: CAMT.053 (ISO 20022 camt.053.001 — Bank-Kontoauszug, XML) ─────────────
    Struktur: Document › BkToCstmrStmt › Stmt › { Acct (IBAN, Svcr, Ccy), Bal (CLBD-Saldo),
@@ -8201,7 +8276,7 @@ function parseXMeld(text) {
   const vorname = _xText(_xTief(person, 'vorname'));
   const gnNode = _xTief(person, 'geburtsname');
   const geburtsname = gnNode ? (_xTextPfad(gnNode, 'name') || _xText(gnNode)) : '';
-  const geburtsdatum = _xmlDatumIso(_xText(_xTief(person, 'geburtsdatum')));
+  const geburtsdatum = _xmlDatumIso(_xText(_xTief(person, 'geburtsdatum')), DATUM_JAHR_MIN_GEBURT);
   const geburtsort = _xText(_xTief(person, 'geburtsort'));
   const nationalitaet = _xText(_xTief(person, 'staatsangehoerigkeit')) || _xText(_xTief(person, 'staatsangehörigkeit'));
   const anschrift = _xTief(person, 'anschrift') || _xTief(person, 'wohnung');
@@ -13285,6 +13360,9 @@ function dokumentSetzen(id, feld, wert) {
     doc.mappeRef = (wert && typeof wert === 'object') ? wert : null;
   } else if (feld === 'gueltigAb' || feld === 'ablaufDatum' || feld === 'aktualisiertAm') {
     const iso = (wert && _erParseIso(wert) != null) ? String(wert).slice(0, 10) : '';
+    // CC-02: ein unplausibles Datum (Jahresbereich, Befund 13.07.: "0111-01-01") kommt NICHT
+    // ins Depot — bereits vorhandener Altbestand bleibt unverändert stehen (keine Löschung).
+    if (iso && !_datumPlausibel(iso, false)) return doc;
     doc[feld] = iso || null;
   } else {
     doc[feld] = (typeof wert === 'string') ? wert : (wert == null ? '' : String(wert));
@@ -13713,6 +13791,26 @@ function depotNormalisieren(d) {
     if (Object.keys(e).length) _finK.konten = [Object.assign({ id: uuidV4() }, e)];
   }
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 37) ziel.schemaVersion = 37;
+  // Schema 37 -> 38 (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.2026): die drei Code-Slot-Felder
+  // (gesundheit/allergien, medikamente, krankheiten) werden vom Skalar (Freitext ODER codierter
+  // Einzelwert, Paket 3) zu einem Chip-Array. Verlustfrei: der bestehende Wert wird zu GENAU EINEM
+  // Chip — auch wenn er Kommas enthält (KEIN Auto-Splitting bei der Migration, dieselbe Regel wie
+  // beim Chip-Input selbst: „Allergie gegen Penicillin, Hasel" bleibt EIN Eintrag).
+  const _gesChips = ziel.sektoren && ziel.sektoren.gesundheit;
+  if (_gesChips && typeof _gesChips === 'object') {
+    for (const _cfid of ['allergien', 'medikamente', 'krankheiten']) {
+      const _roh = _gesChips[_cfid];
+      if (_roh == null || Array.isArray(_roh)) continue;   // leer oder schon migriert
+      if (istCodierterWert(_roh)) {
+        _gesChips[_cfid] = [{ text: _roh.anzeigeName, code: { system: _roh.system, code: _roh.code } }];
+      } else if (typeof _roh === 'string' && _roh.trim() !== '') {
+        _gesChips[_cfid] = [{ text: _roh.trim() }];
+      } else {
+        delete _gesChips[_cfid];
+      }
+    }
+  }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 38) ziel.schemaVersion = 38;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -14006,7 +14104,7 @@ function dokumentPanelHTML(sektorId) {
     '<div class="doku-feld"><label class="doku-label" for="doku-neu-name">' + escapeHTML(STRINGS.dokumentNameLabel) + '</label>' +
       '<input type="text" id="doku-neu-name" class="doku-input" data-doku-neu-name="1" placeholder="' + escapeHTML(STRINGS.dokumentNamePlatzhalter) + '"></div>' +
     '<div class="doku-feld"><label class="doku-label" for="doku-neu-datum">' + escapeHTML(STRINGS.dokumentDatumLabel) + '</label>' +
-      '<input type="date" id="doku-neu-datum" class="doku-input" data-doku-neu-datum="1"></div>' +
+      '<input type="date" id="doku-neu-datum" class="doku-input" data-doku-neu-datum="1" min="' + DATUM_JAHR_MIN_WEIT + '-01-01" max="' + _datumJahrMaxZukunft() + '-12-31"></div>' +
     '<details class="doku-mehr"><summary>' + escapeHTML(STRINGS.dokumentMehrSummary) + '</summary>' +
       '<div class="doku-feld"><label class="doku-label" for="doku-neu-intervall">' + escapeHTML(STRINGS.dokumentRhythmusSummary) + '</label>' +
       '<select id="doku-neu-intervall" class="doku-select" data-doku-neu-intervall="1" aria-label="' + escapeHTML(STRINGS.dokumentRhythmusSummary) + '">' +
@@ -14036,7 +14134,7 @@ function dokumentPanelHTML(sektorId) {
         '<div class="doku-feld"><label class="doku-label" for="doku-name-' + idA + '">' + escapeHTML(STRINGS.dokumentNameLabel) + '</label>' +
           '<input type="text" id="doku-name-' + idA + '" class="doku-input" data-doku-name="' + idA + '" value="' + escapeHTML(d.name || '') + '"></div>' +
         '<div class="doku-feld"><label class="doku-label" for="doku-datum-' + idA + '">' + escapeHTML(STRINGS.dokumentDatumLabel) + '</label>' +
-          '<input type="date" id="doku-datum-' + idA + '" class="doku-input" data-doku-datum="' + idA + '" value="' + datum + '"></div>';
+          '<input type="date" id="doku-datum-' + idA + '" class="doku-input" data-doku-datum="' + idA + '" min="' + DATUM_JAHR_MIN_WEIT + '-01-01" max="' + _datumJahrMaxZukunft() + '-12-31" value="' + datum + '"></div>';
       // Gemeinsames „Mehr (optional)": Rhythmus + Feld-Verknüpfung. Alle data-doku-*-Inputs
       // bleiben im DOM (Selektoren greifen auch in geschlossene <details>).
       h += '<details class="doku-mehr"><summary>' + escapeHTML(STRINGS.dokumentMehrSummary) + '</summary>' +
@@ -14809,14 +14907,17 @@ function bearbeitungSpeichern() {
       delete neu[fid];
     }
   });
-  // c) Code-Listen-Felder (Paket 3): Autocomplete-Wert → codierter Eintrag oder Freitext.
-  c.querySelectorAll('[data-edit-code]').forEach(inp => {
-    const fid = inp.getAttribute('data-edit-code');
-    const sys = inp.getAttribute('data-codeliste');
-    const w = codeWertAus(sys, inp.value);
-    const leer = (w === '' || w == null);
-    if (!leer) neu[fid] = w; else delete neu[fid];
-    if (JSON.stringify(vorherDaten[fid]) !== JSON.stringify(leer ? undefined : w)) geaendert.push(fid);
+  // c) Chip-Listen-Felder (Code-Slots, E1 Option C): bestätigte Chips aus dem DOM lesen. Unbestätigter
+  // Text im Eingabefeld erreicht diesen Pfad NIE — der Gate ist die Bestätigung selbst (Chip im DOM),
+  // nicht diese Zeile (Muster K für diese drei Felder: derselbe Mechanismus wie beim Personen-Widget).
+  c.querySelectorAll('[data-chip-liste]').forEach(feldEl => {
+    const fid = feldEl.getAttribute('data-chip-liste');
+    const chips = Array.prototype.map.call(feldEl.querySelectorAll('.chip[data-chip]'), (el) => {
+      try { return JSON.parse(el.getAttribute('data-chip')); } catch (_) { return null; }
+    }).filter(Boolean);
+    const vorher = Array.isArray(vorherDaten[fid]) ? vorherDaten[fid] : [];
+    if (chips.length) neu[fid] = chips; else delete neu[fid];
+    if (JSON.stringify(vorher) !== JSON.stringify(chips)) geaendert.push(fid);
   });
   // d) Mehrfachauswahl (Checkboxen): data-edit-multi nach fid gruppieren → Array der angehakten Werte.
   const _multiFids = new Set();
@@ -15004,10 +15105,13 @@ function _wizardAktuellerWert() {
     return undefined;
   }
   if (feld.codeListe) {
-    // Paket 3: Autocomplete-Wert → codierter Eintrag oder Freitext (codeWertAus).
-    const ci = c.querySelector('[data-edit-code="' + feld.id + '"]');
-    if (!ci) return undefined;
-    return codeWertAus(feld.codeListe, ci.value);
+    // Chip-Mechanik: die bestätigten Chips liegen im DOM (data-chip je .chip-Element).
+    const feldEl = c.querySelector('[data-chip-liste="' + feld.id + '"]');
+    if (!feldEl) return undefined;
+    const chips = Array.prototype.map.call(feldEl.querySelectorAll('.chip[data-chip]'), (el) => {
+      try { return JSON.parse(el.getAttribute('data-chip')); } catch (_) { return null; }
+    }).filter(Boolean);
+    return chips.length ? chips : undefined;
   }
   if (feld.typ === 'mehrfachauswahl') {
     const werte = [];
@@ -16028,6 +16132,8 @@ function renderWizard() {
   if (schritt.feld.typ === 'refMehrfach' && c.querySelector) {
     _refMehrfachVerdrahten(c, (fid) => (fid === schritt.feld.id ? schritt.feld : null));
   }
+  // Chip-Mechanik (Anamnese-Wizard: krankheiten/allergien/medikamente tragen codeListe).
+  if (schritt.feld.codeListe && c.querySelector) _chipFelderVerdrahten(c);
 }
 
 // Schnitt 2.2 — datenlage-adaptiver Startknopf für einen Bereich (oder beliebigen Ort).
@@ -16266,11 +16372,13 @@ function depotHatNamen() {
   const v = id.vorname, n = id.nachname;
   return !!((typeof v === 'string' && v.trim()) || (typeof n === 'string' && n.trim()));
 }
-// IPS-Pflicht (Patient.birthDate 1..1): hat das Anker-Depot ein valides Geburtsdatum?
-// Identische Regex wie der FHIR-Generator (fhirIpsBundle) — wahr ⟺ das Bundle trägt birthDate.
+// IPS-Pflicht (Patient.birthDate 1..1): hat das Anker-Depot ein plausibles Geburtsdatum?
+// Identisches Gate wie der FHIR-Generator (fhirIpsBundle) — wahr ⟺ das Bundle trägt birthDate.
+// CC-02: Format allein reichte nicht durch (Befund 13.07.: "0111-01-01" bestand die alte Regex-
+// Prüfung anstandslos) — jetzt Jahresbereich mit, keine Zukunft (Geburtsdatum).
 function depotHatGeburtsdatum() {
   const id = (data && data.sektoren && data.sektoren.identitaet) || {};
-  return /^\d{4}-\d{2}-\d{2}$/.test(id.geburtsdatum || '');
+  return _datumPlausibel(id.geburtsdatum || '', true, DATUM_JAHR_MIN_GEBURT);
 }
 function _d37HinweisFaellig() {
   return !!(data && !imVorschau() && sessionHkdfKey && !imSubKontext()
@@ -17130,6 +17238,8 @@ function renderSektor(sektorOrId) {
     });
     // U2-ADR-065: refMehrfach-Widgets im Sektor-Edit-Modus verdrahten (Add/Entfernen/↑↓/„+ Neu").
     _refMehrfachVerdrahten(c, findeFeld);
+    // Chip-Mechanik (E1 Option C): Code-Slot-Felder (allergien/medikamente/krankheiten) im Sektor-Edit.
+    _chipFelderVerdrahten(c);
 
     // Ref-Picker im Sektor-Edit-Modus: „__neu__"-Auswahl öffnet Inline-Anlage und setzt das Feld
     // direkt (mit Stempel). Bei normaler Auswahl wird der Wert per Auto-Save (blur/change) übernommen.
@@ -17272,6 +17382,11 @@ function renderSituation(sitOrId, optionen) {
 function feldWertText(feld, roh) {
   if (!feldEingetragen(feld, roh)) return STRINGS.leerZustand;
   if (istCodierterWert(roh)) return roh.anzeigeName;   // Paket 3 (F-5): Klartext (Code bleibt aus PDF/QR)
+  if (feld.codeListe) {
+    // Chip-Mechanik (E1 Option C): Chip-Array → Klartexte, „, "-getrennt (Code bleibt aus PDF/QR).
+    const arr = Array.isArray(roh) ? roh : [];
+    return arr.map(c => (c && typeof c.text === 'string') ? c.text : '').filter(Boolean).join(', ') || STRINGS.leerZustand;
+  }
   if (feld.typ === 'ref') {
     if ((feld.entitaet || 'person') === 'mappe') {
       const e = mappeEintrag(roh && roh.ref);
@@ -17558,95 +17673,7 @@ function zeichneVollDepotPdf(doc, modell, meta) {
     y += 6;
   }
 
-  // Selbst-Verifikations-QR (Teil 3.2): die maschinenlesbare Projektion GENAU dieses Modells
-  // auf eine Abschluss-Seite — dieselben Felder, dieselbe Sensibel-Filterung (beide aus `modell`).
-  // VOR der Fuß-Nummerierung, damit die QR-Seite(n) Fuß + Seitenzahl miterhalten. Bild ist
-  // gegatet (window.qrcode) — fehlt die Lib, erscheint kein Fake, sondern eine ehrliche Zeile.
-  zeichnePdfSelbstverifQr(doc, modell, meta);
-
-  pdfFussZeichnen(doc, meta, SB, SH, RAND);   // Fuß je Seite (inkl. QR-Seiten; verbatim-Haftung ohne Überlappung)
-}
-
-/* ── Selbst-Verifikations-QR auf dem PDF (Export-Durchgang Teil 3.2) ────────────
-   Carolas Idee: „Dann weiß Oma Erna, dass kein Scheiß exportiert wird." — auf EINEM Blatt
-   das lesbare PDF UND ein maschinenlesbarer QR mit DENSELBEN Daten; wer will, scannt und
-   prüft, dass das Gedruckte = die Daten. Die Nutzlast ist eine reine Projektion GENAU des
-   gezeichneten `modell`-Objekts — derselbe Sensibel-Filter wie das lesbare PDF, weil beide
-   aus EINER Quelle stammen (`vollDepotModell`/`bereichVollModell` über _bereichSektionenModell).
-   PDF-Inhalt und QR-Inhalt können so NIE auseinanderlaufen. Bei Überlänge: vorhandene
-   „verbundene QR"-Logik (qrTeilePacken) → mehrere QR, klar nummeriert „Teil i von n". */
-
-// Reine, testbare Projektion des gezeichneten PDF-Modells in ein kompaktes Maschinen-Objekt.
-// Identische Felder/Werte wie auf dem Papier (label/wert je Zeile, leere Bereiche als {leer}).
-function pdfQrNutzlast(modell, meta) {
-  const m = modell || {};
-  const bereiche = (m.bereiche || []).map((b) => {
-    const eintrag = { id: b.id, titel: b.titel || '' };
-    if (b.leer) { eintrag.leer = true; return eintrag; }
-    eintrag.sektionen = (b.sektionen || []).map((sek) => ({
-      titel: sek.titel || '',
-      zeilen: (sek.zeilen || []).map((z) => ({ label: z.label || '', wert: z.wert == null ? '' : String(z.wert) })),
-    }));
-    return eintrag;
-  });
-  return { v: 1, typ: 'vivodepot-pdf', titel: m.titel || '', stand: (meta && meta.datum) || '', bereiche };
-}
-// Kompakter Text (JSON) der PDF-Nutzlast — Eingabe für die QR-Zerlegung. Leer, wenn das PDF
-// keinerlei ausgefüllte Felder trägt (alle Bereiche leer) → dann kein QR-Bereich.
-function pdfQrText(modell, meta) {
-  const nutz = pdfQrNutzlast(modell, meta);
-  const hatInhalt = (nutz.bereiche || []).some((b) => !b.leer && (b.sektionen || []).some((s) => (s.zeilen || []).length));
-  if (!hatInhalt) return '';
-  return JSON.stringify(nutz);
-}
-
-// Zeichnet die Selbst-Verifikations-QR(s) auf eine PDF-Abschluss-Seite. Nutzt qrTeilePacken
-// (mehrteilig, „Teil i von n") und ist auf window.qrcode gegatet: ist die Lib da → echte QR-
-// Bilder; sonst KEIN Fake-Bild, sondern eine ehrliche Zeile. Sobald die qrcode-Lib am Mac inline
-// ist, erscheinen die QR ohne weitere Code-Änderung. Read-only (nur `modell`/`meta`).
-function zeichnePdfSelbstverifQr(doc, modell, meta) {
-  const text = pdfQrText(modell, meta);
-  if (!text) return;                       // PDF ohne Daten → kein QR-Bereich
-  const teile = qrTeilePacken(text);
-  const SB = doc.internal.pageSize.getWidth();
-  const SH = doc.internal.pageSize.getHeight();
-  const RAND = 56, FUSS = 48;
-  const GOLD = [138, 109, 58], SALBEI = [92, 117, 72], GRAU = [120, 120, 120];
-
-  doc.addPage();
-  let y = RAND;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(GOLD[0], GOLD[1], GOLD[2]);
-  doc.text('VIVODEPOT', RAND, y); y += 22;
-  doc.setFont('times', 'bold'); doc.setFontSize(15); doc.setTextColor(SALBEI[0], SALBEI[1], SALBEI[2]);
-  doc.text(String(STRINGS.exportPdfQrTitel || ''), RAND, y); y += 8;
-  doc.setDrawColor(GOLD[0], GOLD[1], GOLD[2]); doc.setLineWidth(1); doc.line(RAND, y, SB - RAND, y); y += 16;
-  doc.setFont('times', 'normal'); doc.setFontSize(10); doc.setTextColor(GRAU[0], GRAU[1], GRAU[2]);
-  const hl = doc.splitTextToSize(String(STRINGS.exportPdfQrHinweis || ''), SB - 2 * RAND);
-  doc.text(hl, RAND, y); y += hl.length * 14 + 12;
-
-  const hatLib = (typeof window !== 'undefined' && typeof window.qrcode === 'function');
-  if (!hatLib) {
-    // 3.2-Gate: ohne qrcode-Lib KEIN Fake-Bild — eine kurze, ehrliche Zeile aufs Blatt.
-    doc.setFont('times', 'italic'); doc.setFontSize(10); doc.setTextColor(GRAU[0], GRAU[1], GRAU[2]);
-    const fl = doc.splitTextToSize(String(STRINGS.exportPdfQrFehlt || ''), SB - 2 * RAND);
-    doc.text(fl, RAND, y);
-    return;
-  }
-
-  const QRGR = 150, LUECKE = 28, BESCHRIFT = 16;
-  let x = RAND;
-  for (const t of teile) {
-    if (y + QRGR + BESCHRIFT > SH - FUSS) { doc.addPage(); y = RAND; x = RAND; }
-    let dataUrl = '';
-    try { const qr = window.qrcode(0, 'M'); qr.addData(t.rahmen); qr.make(); dataUrl = qr.createDataURL(4, 0); }
-    catch (e) { dataUrl = ''; }
-    if (dataUrl) doc.addImage(dataUrl, 'PNG', x, y, QRGR, QRGR);
-    doc.setFont('times', 'normal'); doc.setFontSize(9); doc.setTextColor(GRAU[0], GRAU[1], GRAU[2]);
-    doc.text(STRINGS.exportBereichQrTeil + ' ' + t.index + ' ' + STRINGS.exportBereichQrVon + ' ' + t.gesamt,
-      x, y + QRGR + 12);
-    x += QRGR + LUECKE;
-    if (x + QRGR > SB - RAND) { x = RAND; y += QRGR + BESCHRIFT + LUECKE; }
-  }
+  pdfFussZeichnen(doc, meta, SB, SH, RAND);   // Fuß je Seite (verbatim-Haftung ohne Überlappung)
 }
 
 // Auslöser: Gesamt-PDF herunterladen. jsPDF ist der inline 3. Skript-Block (immer vorhanden im
@@ -18235,6 +18262,18 @@ function feldWertHTML(feld, roh) {
     return escapeHTML(roh.anzeigeName) +
       ' <span class="feld-code">' + escapeHTML((kuerzel ? kuerzel + ' ' : '') + roh.code) + '</span>';
   }
+  if (feld.codeListe) {
+    // Chip-Mechanik (E1 Option C): jeder Chip mit Code trägt sein eigenes dezentes Code-Label.
+    const liste = liesCodeListe(feld.codeListe);
+    const arr = Array.isArray(roh) ? roh : [];
+    return arr.map(c => {
+      if (!c || typeof c.text !== 'string') return '';
+      const codeHTML = (c.code && c.code.code)
+        ? ' <span class="feld-code">' + escapeHTML(((liste && liste.kuerzel) ? liste.kuerzel + ' ' : '') + c.code.code) + '</span>'
+        : '';
+      return escapeHTML(c.text) + codeHTML;
+    }).filter(Boolean).join(', ');
+  }
   if (feld.typ === 'ref') {
     // ref:mappe (U2-ADR-013) → Thumbnail + Beschriftung; Person/Institution → Name.
     if ((feld.entitaet || 'person') === 'mappe') return mappeRefAnzeigeHTML(roh);
@@ -18342,6 +18381,33 @@ function feldEingetragen(feld, wert) {
   return false;
 }
 
+// Datums-Plausibilität (CC-02, Befund 13.07.: "0111-01-01" lief durch Feld/Speichern/Generator
+// durch — keine Stelle prüfte den Jahresbereich). Format UND Jahr, nicht nur "ist ein Datum".
+// `keineZukunft` gilt für Geburtsdaten (ein Geburtsdatum in der Zukunft ist nie plausibel);
+// Fristen/Termine (Ausweis gültig bis, Nachprüfung, Dokument gültig ab …) dürfen in der Zukunft
+// liegen und bekommen dieses Flag NICHT.
+// Untergrenze ist NICHT global (Befund 13.07.: Testament-Verweise auf Belege Dritter, Grundbuch-
+// Eintragungsdaten können weit vor 1900 liegen) — sie ist pro Feld: `feld.datumJahrMin`. Geburtsdatum
+// setzt 1900 (niemand lebt davor); alle anderen Felder fallen auf DATUM_JAHR_MIN_WEIT zurück.
+const DATUM_JAHR_MIN_GEBURT = 1900;
+const DATUM_JAHR_MIN_WEIT = 1800;
+function _datumJahrMaxZukunft() { return new Date().getUTCFullYear() + 50; }
+function _datumHeuteIso() {
+  const d = new Date();
+  const z = (n) => String(n).padStart(2, '0');
+  return d.getUTCFullYear() + '-' + z(d.getUTCMonth() + 1) + '-' + z(d.getUTCDate());
+}
+function _datumPlausibel(iso, keineZukunft, jahrMin) {
+  const min = jahrMin != null ? jahrMin : DATUM_JAHR_MIN_WEIT;
+  if (typeof iso !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const jahr = Number(iso.slice(0, 4));
+  if (jahr < min || jahr > _datumJahrMaxZukunft()) return false;
+  const d = new Date(iso + 'T00:00:00Z');
+  if (isNaN(d.getTime())) return false;
+  if (keineZukunft && iso > _datumHeuteIso()) return false;
+  return true;
+}
+
 // Plausibilitäts-Prüfung pro Feldtyp — KEINE feldspezifischen Format-Regeln (keine IBAN-, keine
 // Steuer-ID-Prüfsumme). Liefert { ok, grund? }. grund ist ein STRINGS-Schlüssel-Hinweis.
 function feldValidieren(feld, wert) {
@@ -18370,16 +18436,19 @@ function feldValidieren(feld, wert) {
   switch (feld && feld.typ) {
     case 'text':
     case 'textarea': {
-      // Paket 3 (F-2): ein codeListe-Feld darf einen codierten Wert tragen (Objekt) statt Freitext.
-      if (feld.codeListe && istCodierterWert(wert)) return { ok: true };
+      // Chip-Mechanik (E1 Option C): ein codeListe-Feld trägt einen Chip-Array, kein Skalar.
+      // Jeder Chip braucht nicht-leeren Text; der Code ist optional (Freitext-Chip ohne Treffer).
+      if (feld.codeListe) {
+        if (!Array.isArray(wert)) return { ok: false, grund: 'typ' };
+        const gueltig = wert.every(c => c && typeof c.text === 'string' && c.text.trim() !== '');
+        return gueltig ? { ok: true } : { ok: false, grund: 'typ' };
+      }
       if (typeof wert !== 'string') return { ok: false, grund: 'typ' };
       if (feld.maxLength != null && wert.length > feld.maxLength) return { ok: false, grund: 'laenge' };
       return { ok: true };
     }
     case 'datum': {
-      if (typeof wert !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(wert)) return { ok: false, grund: 'datum' };
-      const d = new Date(wert + 'T00:00:00Z');
-      if (isNaN(d.getTime())) return { ok: false, grund: 'datum' };
+      if (!_datumPlausibel(wert, !!feld.keineZukunft, feld.datumJahrMin)) return { ok: false, grund: 'datum' };
       return { ok: true };
     }
     case 'zahl': {
@@ -18470,27 +18539,52 @@ function feldInputHTML(feld, roh) {
   // Input verknüpft (Inputs tragen data-edit statt id). Jedes Eingabe-Element bekommt daher einen
   // aria-label aus der Feld-Beschriftung — deckungsgleich mit dem sichtbaren Text (auch 2.5.3).
   const al = ' aria-label="' + escapeHTML(String(feld.label != null ? feld.label : fid)).replace(/"/g, '&quot;') + '"';
-  // Paket 3 (F-2/F-3): Felder mit codeListe-Tag bekommen ein Autocomplete (native datalist) — der
-  // Bürger tippt einen Begriff, wählt aus den Anzeige-Namen; gespeichert wird code + anzeigeName
-  // (codeWertAus), Freitext bleibt als Fallback möglich. Wizard nutzt denselben Pfad (kein doppeltes UI).
+  // Chip-Mechanik (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.): Felder mit codeListe-Tag zeigen eine
+  // Chip-Wolke statt eines Einzel-Inputs. Tippen zeigt Vorschläge, legt aber NIE an — nur Enter/der
+  // Übernehmen-Haken bestätigt einen Chip (dieselbe Konvention wie das Personen-Widget/refMehrfach).
+  // Bestätigte Chips liegen als data-chip (JSON) im DOM; bearbeitungSpeichern liest sie von dort
+  // (_chipsAusContainer), nie aus dem Eingabefeld — unbestätigter Text erreicht den Speicherpfad nie.
+  // Wizard nutzt denselben Renderer (kein doppeltes UI).
   if (feld.codeListe && liesCodeListe(feld.codeListe)) {
     const liste = liesCodeListe(feld.codeListe);
-    const anzeige = istCodierterWert(roh) ? roh.anzeigeName : (typeof roh === 'string' ? roh : '');
+    const chips = Array.isArray(roh) ? roh : [];
     const listId = 'cl-' + fid;
-    let h = '<div class="feld-code-picker">';
-    h += '<input type="text" list="' + listId + '" data-edit-code="' + fid + '" data-codeliste="' + escapeHTML(feld.codeListe) + '"' + ph + al +
-      ' value="' + escapeHTML(anzeige).replace(/"/g, '&quot;') + '" autocomplete="off">';
+    let h = '<div class="chip-feld" data-chip-liste="' + fid + '" data-codeliste="' + escapeHTML(feld.codeListe) + '">';
+    h += '<div class="chip-liste">';
+    for (const c of chips) {
+      if (!c || typeof c.text !== 'string' || !c.text.trim()) continue;
+      const codeHTML = (c.code && c.code.code)
+        ? ' <span class="feld-code">' + escapeHTML((liste.kuerzel ? liste.kuerzel + ' ' : '') + c.code.code) + '</span>'
+        : '';
+      h += '<span class="chip" data-chip="' + escapeHTML(JSON.stringify(c)).replace(/"/g, '&quot;') + '">' +
+        escapeHTML(c.text) + codeHTML +
+        '<button type="button" class="chip-weg" data-chip-weg aria-label="' + escapeHTML(STRINGS.chipWeg) + '">×</button></span>';
+    }
+    h += '</div>';
+    h += '<div class="chip-eingabe-zeile">';
+    h += '<input type="text" list="' + listId + '" class="chip-eingabe" data-chip-eingabe' + ph + al + ' autocomplete="off">';
+    h += '<button type="button" class="btn-mini chip-uebernehmen" data-chip-uebernehmen aria-label="' + escapeHTML(STRINGS.chipUebernehmen) + '" hidden>✓</button>';
     h += '<datalist id="' + listId + '">';
     for (const e of liste.daten) h += '<option value="' + escapeHTML(e.anzeigeName).replace(/"/g, '&quot;') + '"></option>';
-    return h + '</datalist></div>';
+    h += '</datalist></div>';
+    return h + '</div>';
   }
   switch (feld.typ) {
     case 'textarea':
       return '<textarea data-edit="' + fid + '" data-typ="textarea"' + ph + al +
         (feld.maxLength != null ? ' maxlength="' + feld.maxLength + '"' : '') +
         '>' + escapeHTML(String(roh != null ? roh : '')) + '</textarea>';
-    case 'datum':
-      return '<input type="date" data-edit="' + fid + '" data-typ="datum"' + al + ' value="' + v + '">';
+    case 'datum': {
+      // CC-02: min/max am Input erzwingen (Befund 13.07.: ohne diese Attribute nimmt das native
+      // Datepicker-Widget jedes vierstellige Jahr an, auch "0111"). keineZukunft nur bei Geburtsdaten.
+      // Untergrenze ist NICHT global (Befund 13.07.: Testament-Verweise auf Belege Dritter,
+      // Grundbuch-Eintragungsdaten können weit vor 1900 liegen) — feld.datumJahrMin, sonst der weite
+      // Default (DATUM_JAHR_MIN_WEIT).
+      const dMin = feld.datumJahrMin != null ? feld.datumJahrMin : DATUM_JAHR_MIN_WEIT;
+      const dMax = feld.keineZukunft ? _datumHeuteIso() : (_datumJahrMaxZukunft() + '-12-31');
+      return '<input type="date" data-edit="' + fid + '" data-typ="datum"' + al +
+        ' min="' + dMin + '-01-01" max="' + dMax + '" value="' + v + '">';
+    }
     case 'zahl': {
       let attrs = '';
       if (feld.min != null) attrs += ' min="' + feld.min + '"';
@@ -18733,6 +18827,7 @@ function flowListenEintragHinzufuegen(sektorId, feld) {
   });
   _refSubPickerVerdrahten(feld);
   _refMehrfachVerdrahten(document.getElementById('modal-inhalt'), (fid) => (feld.unterFelder || []).find(u => u.id === fid));
+  _chipFelderVerdrahten(document.getElementById('modal-inhalt'));
   _listenEintragBedingungVerdrahten(feld);
 }
 function flowListenEintragBearbeiten(sektorId, feld, index) {
@@ -18753,6 +18848,7 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
   });
   _refSubPickerVerdrahten(feld);
   _refMehrfachVerdrahten(document.getElementById('modal-inhalt'), (fid) => (feld.unterFelder || []).find(u => u.id === fid));
+  _chipFelderVerdrahten(document.getElementById('modal-inhalt'));
   _listenEintragBedingungVerdrahten(feld);
 }
 
@@ -18815,7 +18911,7 @@ function _refSubPickerVerdrahten(feld) {
       // Minderjährigkeit bleibt ABGELEITET, nie gespeichert). Geburtsjahr allein genügt der Alters-Kette.
       const mitGeburt = !!uf.mitGeburt && uf.entitaet !== 'institution';
       const geburtHTML = mitGeburt
-        ? '<input type="date" data-neu-geburtsdatum="' + fid + '" aria-label="Geburtsdatum"> ' +
+        ? '<input type="date" data-neu-geburtsdatum="' + fid + '" aria-label="Geburtsdatum" min="' + DATUM_JAHR_MIN_GEBURT + '-01-01" max="' + _datumHeuteIso() + '"> ' +
           '<input type="text" inputmode="numeric" maxlength="4" size="6" data-neu-geburtsjahr="' + fid + '" placeholder="Geburtsjahr (falls Tag unbekannt)"> '
         : '';
       const inline = document.createElement('div');
@@ -19006,6 +19102,73 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
     };
   });
 }
+// Chip-Mechanik-Verdrahtung (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.): geteilte Bestätigungs-
+// Logik mit dem Personen-Widget (Tippen legt nie an, nur Enter/Übernehmen-Haken bestätigt), aber
+// eigene Container-Form (eine Chip-Wolke aus einem Eingabefeld statt Zeilen mit Auf/Ab/Weg). Neue
+// Chips werden direkt ins DOM gehängt — KEIN renderContent (kein Sprung, UX-Spec).
+// bearbeitungSpeichern liest die bestätigten Chips aus dem DOM (data-chip je .chip-Element), nie aus
+// dem Eingabefeld — unbestätigter Text erreicht den Speicherpfad nie.
+function _chipFelderVerdrahten(container) {
+  if (!container || !container.querySelectorAll) return;
+  container.querySelectorAll('[data-chip-liste]').forEach(feldEl => {
+    const sys = feldEl.getAttribute('data-codeliste');
+    const liste = feldEl.querySelector('.chip-liste');
+    const eingabe = feldEl.querySelector('[data-chip-eingabe]');
+    const uebernehmenBtn = feldEl.querySelector('[data-chip-uebernehmen]');
+    if (!liste || !eingabe) return;
+    const kuerzelVoran = () => { const l = liesCodeListe(sys); return (l && l.kuerzel) ? l.kuerzel + ' ' : ''; };
+    const chipInnerHTML = (chip) => {
+      const codeHTML = (chip.code && chip.code.code)
+        ? ' <span class="feld-code">' + escapeHTML(kuerzelVoran() + chip.code.code) + '</span>'
+        : '';
+      return escapeHTML(chip.text) + codeHTML +
+        '<button type="button" class="chip-weg" data-chip-weg aria-label="' + escapeHTML(STRINGS.chipWeg) + '">×</button>';
+    };
+    const dedupVorhanden = (text) => {
+      const key = text.trim().toLowerCase();
+      return Array.prototype.some.call(liste.querySelectorAll('[data-chip]'), (el) => {
+        try { return String(JSON.parse(el.getAttribute('data-chip')).text || '').trim().toLowerCase() === key; }
+        catch (_) { return false; }
+      });
+    };
+    const wegKnopfVerdrahten = (span) => {
+      const weg = span.querySelector('[data-chip-weg]');
+      if (weg) weg.onclick = () => { if (span.remove) span.remove(); };
+    };
+    liste.querySelectorAll('.chip').forEach(wegKnopfVerdrahten);
+    const chipHinzufuegen = (chip) => {
+      if (dedupVorhanden(chip.text)) return;
+      const span = document.createElement('span');
+      span.className = 'chip';
+      span.setAttribute('data-chip', JSON.stringify(chip));
+      span.innerHTML = chipInnerHTML(chip);
+      wegKnopfVerdrahten(span);
+      liste.appendChild(span);
+    };
+    const zustand = () => {
+      const hat = String(eingabe.value || '').trim().length > 0;
+      if (uebernehmenBtn) uebernehmenBtn.hidden = !hat;
+    };
+    // Bewusste Bestätigung (Chip-Input): Enter oder Übernehmen-Haken erzeugt EINEN Chip aus dem
+    // aktuellen Eingabewert. Kein Splitten am Komma — das Komma ist im Chip-Text ein gewöhnliches
+    // Zeichen (CC-Auftrag Chip-Mechanik: „Allergie gegen Penicillin, Hasel" wird EIN Chip).
+    const bestaetige = () => {
+      const chip = chipAusEingabe(sys, eingabe.value);
+      eingabe.value = '';
+      zustand();
+      if (!chip) return;
+      chipHinzufuegen(chip);
+      try { ui.toast(STRINGS.chipUebernommen.replace('%s', chip.text), 'ok'); } catch (_) {}
+    };
+    eingabe.oninput = zustand;
+    eingabe.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); bestaetige(); } };
+    // Verlassen ohne Bestätigung: NICHTS anlegen (dieselbe Konvention wie das Personen-Widget) —
+    // mousedown auf dem Haken feuert VOR blur (preventDefault hält den Fokus).
+    eingabe.onblur = () => { setTimeout(() => { eingabe.value = ''; zustand(); }, 150); };
+    if (uebernehmenBtn) uebernehmenBtn.onmousedown = (e) => { try { e.preventDefault(); } catch (_) {} bestaetige(); };
+    zustand();
+  });
+}
 function flowListenEintragEntfernen(sektorId, feld, index) {
   listenEintragEntfernen(sektorId, feld.id, index);
   renderContent();
@@ -19135,7 +19298,7 @@ const MENSCHEN_REGISTER_FELD = Object.freeze({
   unterFelder: [
     { id: 'name',         label: 'Name',              typ: 'text', beispiel: 'Anna Schmidt' },
     { id: 'beziehung',    label: 'Rolle / Beziehung', typ: 'text', beispiel: 'Schwester · Freundin · Patin' },
-    { id: 'geburtsdatum', label: 'Geburtsdatum',      typ: 'datum' },
+    { id: 'geburtsdatum', label: 'Geburtsdatum',      typ: 'datum', keineZukunft: true, datumJahrMin: DATUM_JAHR_MIN_GEBURT },
     { id: 'geburtsjahr',  label: 'Geburtsjahr (falls der Tag unbekannt ist)', typ: 'text', eingabeTyp: 'numeric', beispiel: '1995' },
     { id: 'geburtsort',   label: 'Geburtsort',        typ: 'text', beispiel: 'München' },
     { id: 'tel',          label: 'Telefon',           typ: 'text', eingabeTyp: 'tel',   beispiel: '0151 12345678' },
