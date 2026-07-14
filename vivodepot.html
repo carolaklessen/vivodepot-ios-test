@@ -2594,7 +2594,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v62';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v63';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -12745,7 +12745,13 @@ function flowSchliessenWarnung(opts) {
 // D40 — Schließen-Schutz für die ECHTE Sitzung: drei bewusste Wege, KEIN stilles Verwerfen.
 // [Sichern und schließen] → Datei schreiben, dann schließen (nur wenn der Save nicht abbrach).
 // [Trotzdem schließen] → bewusst verwerfen. [Abbrechen] → Modal-X (zurück in die App).
-function flowSchliessenWarnungEchteSitzung() {
+// INV-9 (Testkonzept-Katalog): ein Depot mit ungesicherten Änderungen darf NIE kommentarlos
+// verschwinden, egal welcher Pfad den Zustand verlässt. `weiter` ist die Fortsetzung NACH einer
+// bewussten Entscheidung (Sichern-und-fortfahren ODER Trotzdem-fortfahren) — Default bleibt der
+// App-Schließen-Pfad (flowTrotzdemSchliessen), damit flowAppSchliessen() unverändert bleibt.
+// Andere Aufrufer (z. B. geheZuZuhause) geben ihre eigene Fortsetzung mit, statt die App zu schließen.
+function flowSchliessenWarnungEchteSitzung(weiter) {
+  const weiterFn = (typeof weiter === 'function') ? weiter : flowTrotzdemSchliessen;
   // Stück 2 (Variante B): zwei Fälle. (a) ungespeicherte Edits → IDB-Save-Wortlaut; (b) sonst (Inhalt,
   // aber KEINE aktuelle Sicherungsdatei) → „Vor dem Schließen"-Wortlaut + Datei-Sicherung. „Trotzdem
   // schließen" quittiert den Verlust (kein erneutes Nerven bis zur nächsten Änderung).
@@ -12762,14 +12768,14 @@ function flowSchliessenWarnungEchteSitzung() {
       if (typeof schliessen === 'function') schliessen();
       if (dirty) { try { await kernAPI.speichern(); } catch (_) {} }
       else { if (!(await _dateiNameSicherstellen())) return; try { await depotInDateiSichern(); } catch (_) {} }
-      // Nur schließen, wenn wirklich gesichert wurde (Teilen-/Datei-Dialog nicht abgebrochen) — sonst
+      // Nur fortfahren, wenn wirklich gesichert wurde (Teilen-/Datei-Dialog nicht abgebrochen) — sonst
       // bliebe es still verloren. Bei Abbruch: zurück in die App, Status unverändert.
       const gesichert = dirty ? !istUngespeichert() : _aktuelleDateiSicherung;
-      if (gesichert) flowTrotzdemSchliessen();
+      if (gesichert) weiterFn();
     },
     zweitAktion: {
       label: STRINGS.d40TrotzdemSchliessen,
-      handler: (schliessen) => { if (typeof schliessen === 'function') schliessen(); _dateiVerlustQuittiert = true; flowTrotzdemSchliessen(); },
+      handler: (schliessen) => { if (typeof schliessen === 'function') schliessen(); _dateiVerlustQuittiert = true; weiterFn(); },
     },
   });
 }
@@ -12888,15 +12894,27 @@ function geheZuZuhause() {
   // Aus dem Sub-Kontext zuerst SAUBER heraus (re-versiegeln, data→Anker, Akteur zurück, Modus→anker),
   // sonst lägen Anker-Farben über Sub-Daten (Farb-/Daten-Vermischung). Danach erst Zuhause.
   if (imSubKontext()) { subKontextVerlassen().then(() => geheZuZuhause()); return; }
-  // Sicht-Zustand zurücksetzen, damit beim nächsten Betreten kein alter Zustand durchscheint.
-  aktiveAnsicht = 'sektor';
-  aktiveSituationId = null;
-  aktiverWizardId = null;          // Teil 2: keinen laufenden Wizard über den Rückweg hinaus halten
-  wizardSchrittIndex = 0;
-  wizardFehlerGrund = null;
-  aktiverSektorId = (SEKTOREN[0] && SEKTOREN[0].id) || null;
-  // Nicht-Anker-Modus → zurück auf Anker-Standard (modus-sicher, auch wenn diese Modi später kommen).
-  if (Modus.aktuell() !== 'anker') Modus._setzeIntern('anker');
+  // INV-9: „Zuhause" verlässt die echte Sitzung genauso wie der Topbar-Schließen-Knopf — ohne
+  // diese Prüfung verschwanden ungesicherte Änderungen kommentarlos (Geräte-Befund 14.07., auch
+  // über die Notfallkarte reproduzierbar, die denselben Rückweg ruft). Dieselbe Zusicherung wie
+  // flowAppSchliessen(), nur mit einer anderen Fortsetzung (zurück auf Welcome, nicht App-Schließen).
+  const weiter = () => {
+    // Sicht-Zustand zurücksetzen, damit beim nächsten Betreten kein alter Zustand durchscheint.
+    aktiveAnsicht = 'sektor';
+    aktiveSituationId = null;
+    aktiverWizardId = null;          // Teil 2: keinen laufenden Wizard über den Rückweg hinaus halten
+    wizardSchrittIndex = 0;
+    wizardFehlerGrund = null;
+    aktiverSektorId = (SEKTOREN[0] && SEKTOREN[0].id) || null;
+    // Nicht-Anker-Modus → zurück auf Anker-Standard (modus-sicher, auch wenn diese Modi später kommen).
+    if (Modus.aktuell() !== 'anker') Modus._setzeIntern('anker');
+    document.getElementById('app').classList.remove('an');
+    document.getElementById('overlay').classList.remove('weg');
+    renderWelcome();
+  };
+  if (schliessenWarnungNoetig()) { flowSchliessenWarnungEchteSitzung(weiter); return; }
+  weiter();
+  return;
   // DOM: App aus, Welcome ein (kein Reload).
   document.getElementById('app').classList.remove('an');
   document.getElementById('overlay').classList.remove('weg');
