@@ -379,7 +379,9 @@
   .logo-mark svg { width: 28px; height: 28px; display: block; }
   .logo-wort { font-weight: 700; letter-spacing: 0.10em; font-size: var(--fs-lg); }
   .lw-vivo { color: #edefea; }
-  .lw-depot { color: #a7c3b0; }
+  /* WCAG-Kontrast-Fix (15.07.2026): #a7c3b0 auf --salbei-dunkel (#4F6539) lag bei 3.4:1
+     (Pflicht 4.5:1). Aufgehellt, Farbfamilie/Bedeutung unverändert — nur die Helligkeit. */
+  .lw-depot { color: #d5e3d9; }
   /* Logo auf Welcome + Anlass-Auswahl (heller Hintergrund): Bildmarke (via <use>) + Wortzug in
      Markenfarben — VIVO Salbei, DEPOT Gold. Dasselbe Symbol wie die Topbar, keine Duplizierung. */
   .welcome-brand { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-3); }
@@ -414,7 +416,8 @@
   .topbar .btn:hover { background: color-mix(in srgb, var(--vm-chrome-text) 26%, transparent); }
 
   .sidebar { background: var(--salbei-dunkel); color: var(--white); padding: var(--space-4) 0; overflow-y: auto; }
-  .sidebar .gruppe-titel { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.55); padding: var(--space-3) var(--space-5) var(--space-2); }
+  /* WCAG-Kontrast-Fix (15.07.2026): 0.55 Deckkraft auf --salbei-dunkel lag bei 3.2:1. */
+  .sidebar .gruppe-titel { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.78); padding: var(--space-3) var(--space-5) var(--space-2); }
   .nav-item {
     display: flex; align-items: center; gap: var(--space-3); width: 100%;
     background: transparent; border: none; color: rgba(255,255,255,0.9);
@@ -429,7 +432,9 @@
   .nav-item .ico { flex: 0 0 auto; opacity: 0.9; }
   /* Zweizeiliger Nav-Eintrag (Label + dezenter Untertitel, z. B. „Prüftermine / Was wann erneuern"). */
   .nav-item-text { display: flex; flex-direction: column; line-height: 1.25; }
-  .nav-item-sub { font-size: var(--fs-sm); opacity: 0.7; }
+  /* WCAG-Kontrast-Fix (15.07.2026): 0.7 (auf .nav-item's eigenes rgba(255,255,255,0.9),
+     kombiniert effektiv ~3.67:1) angehoben. */
+  .nav-item-sub { font-size: var(--fs-sm); opacity: 0.86; }
 
   /* ── Bruch C — Vollmacht-Modus färbt die Fläche schieferblau ──────────────────
      Außen dunkel (Topbar/Sidebar), innen sehr hell (Content). Nur Vollmacht, weil
@@ -538,7 +543,8 @@
   .app-fuss .ff-trenner { color: rgba(212,222,215,0.5); }
   .app-fuss a { color: #d4ded7; text-decoration: none; }
   .app-fuss a:hover { text-decoration: underline; }
-  .app-fuss .ff-hash { color: rgba(212,222,215,0.8); }
+  /* WCAG-Kontrast-Fix (15.07.2026): rgba(212,222,215,0.8) auf --salbei-dunkel lag bei 3.63:1. */
+  .app-fuss .ff-hash { color: rgba(226,235,228,0.9); }
   /* ── Angehörigen-Modus — read-only Vollbild ohne Sidebar, Gold-soft (CC-Auftrag 30.05.) ── */
   #app.ang-vollbild { grid-template-columns: 1fr; }       /* Sidebar-Spalte entfällt */
   #app.ang-vollbild .sidebar { display: none; }
@@ -703,9 +709,11 @@
   .deckblatt-foto { width: 76px; height: 76px; border-radius: 50%; overflow: hidden; border: none; padding: 0; background: transparent; cursor: pointer; flex: 0 0 auto; }
   .deckblatt-foto:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
   .deckblatt-bild { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* WCAG-Kontrast-Fix (15.07.2026): var(--gold) (#8a6d3a) auf dem Platzhalter-Hintergrund lag
+     bei 4.24:1 (Pflicht 4.5:1) — nur der Text-Farbwert gedunkelt, Rahmen bleibt var(--gold). */
   .deckblatt-platzhalter { width: 76px; height: 76px; border-radius: 50%; border: 2px dashed var(--gold);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-    color: var(--gold); font-size: 10px; background: rgba(35,71,49,0.06); }
+    color: #765c30; font-size: 10px; background: rgba(35,71,49,0.06); }
   .deckblatt-platzhalter svg { width: 22px; height: 22px; }
   .deckblatt-name { font-family: var(--font-narrativ); font-size: var(--fs-xl); color: var(--salbei-dunkel); }
   #app.modus-vollmacht .deckblatt-name { color: var(--vm-chrome); }
@@ -714,7 +722,11 @@
   .liste-eintrag-zusammenfassung { color: var(--ink2); }
   .btn-mini { font-size: var(--fs-xs); padding: var(--space-1) var(--space-2); background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-sm, 4px); color: var(--ink2); cursor: pointer; }
   .btn-mini:hover { background: var(--gold-soft); }
-  .liste-eintraege li { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) 0; }
+  /* Muster E, Fix 1 (15.07.2026): flex-wrap ergänzt — ohne sie brach die Zeile bei langem
+     Namen/voller Adresse oder vielen Knöpfen (Kind-Zeile trägt seit Muster H bis zu fünf
+     Elemente) aus, statt umzubrechen. Reines Sicherheitsnetz: greift nur, wenn der Inhalt
+     nicht in eine Zeile passt. */
+  .liste-eintraege li { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-1) 0; }
   /* Sub-Inputs im Eintrag-Modal — engere Zeilen als Top-Felder. */
   .liste-eintrag-form .feld-zeile-sub { grid-template-columns: 160px 1fr; padding: var(--space-1) 0; border-top: none; }
   /* U2-ADR-064: conditional Unterfeld-Zeile ausgeblendet (schlägt das grid-display der .feld-zeile). */
@@ -864,7 +876,10 @@
   /* Dialog nie höher als der Schirm; langer Inhalt (z. B. Foto-/Dokument-Upload mit Vorschau,
      Beschriftung und Bereichswahl) scrollt INNERHALB des Dialogs — so bleiben „Speichern" und
      „Abbrechen/Schließen" auch am Handy immer erreichbar, statt unten aus dem Bild zu fallen. */
-  .modal { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-strong); max-width: 460px; width: 100%; padding: var(--space-6); max-height: calc(100vh - 2 * var(--space-5)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  /* Muster E, Fix 2 (15.07.2026): dvh ergänzt (vh bleibt als Fallback für Browser ohne dvh-
+     Support stehen, dvh überschreibt dort, wo unterstützt) — dieselbe iOS-Falle, die die
+     App-Hülle am Handy schon umgangen hat (100vh zählt die Adressleiste mit, dvh nicht). */
+  .modal { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow-strong); max-width: 460px; width: 100%; padding: var(--space-6); max-height: calc(100vh - 2 * var(--space-5)); max-height: calc(100dvh - 2 * var(--space-5)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .modal h3 { margin: 0 0 var(--space-3) 0; color: var(--salbei-dunkel); display: flex; align-items: center; gap: var(--space-2); }
   /* Vivodepot-Bildmarke im Dialog-Titel (z. B. Speichern/Anlegen) — Branding-Konsistenz,
      auf Desktop wie auf Mobile sichtbar. */
@@ -1357,7 +1372,7 @@
        (statt vertikal zentriert mit großem Leerraum — Carolas „Position auf der
        Mitte der Seite"). Höhe auf den Schirm begrenzt, Inhalt scrollt innen. ── */
     #modal-rueck { padding: var(--space-3); align-items: flex-start; }
-    .modal { padding: var(--space-5) var(--space-4); max-height: calc(100vh - 2 * var(--space-3)); }
+    .modal { padding: var(--space-5) var(--space-4); max-height: calc(100vh - 2 * var(--space-3)); max-height: calc(100dvh - 2 * var(--space-3)); }
     .modal-aktionen .btn { min-height: 44px; }
 
     /* ── Wizard: eine Frage pro Schritt, Knöpfe groß ──────────────────────── */
@@ -1396,7 +1411,11 @@
      ════════════════════════════════════════════════════════════════════════ */
   /* Teil 1 — ruhigere Optik: Provenienz/Quelle/Sensibel-Marker treten zurück (dezent,
      klein), damit die Oberfläche standardmäßig ruhig wirkt — Detail erst auf Tipp. */
-  .feld-urheber, .quelle-tag { opacity: 0.7; }
+  .feld-urheber { opacity: 0.7; }
+  /* WCAG-Kontrast-Fix (15.07.2026): .quelle-tag lief bisher mit derselben opacity:0.7 wie
+     .feld-urheber — var(--ink3) blendete auf 2.78:1 (Pflicht 4.5:1). Entkoppelt: eigene
+     volle Deckkraft, Farbe (--ink3) unverändert (voll deckend erreicht 4.91:1). */
+  .quelle-tag { opacity: 1; }
   .sensibel-marker { opacity: 0.85; }
   /* Mehr Weißraum zwischen Sektionen und um die Zusatz-Aktionen. */
   .sektion { margin-bottom: var(--space-5); }
@@ -2594,7 +2613,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v65';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v66';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -3306,6 +3325,10 @@ const STRINGS = Object.freeze({
   verwalteteLeer: "Noch keine verwalteten Sub-Depots. Ein Sub-Depot hat ein eigenes Passwort und schützt seinen Inhalt unabhängig von Ihrem.",
   btnSubAnlegen: "Sub-Depot anlegen",
   subAnlegenTitel: "Neues Sub-Depot anlegen",
+  // Muster H (15.07.2026): echter Link von der kinder-Liste (sorgerecht_kind-Hint) zum Sub-Depot-Flow.
+  kindSubDepotKnopf: "Sub-Depot für dieses Kind anlegen",
+  kindSubDepotVorhanden: "Sub-Depot bereits angelegt",
+  kindSubDepotOhnePerson: "Für diese Zeile ist noch keine Person im Register hinterlegt — zuerst das Kind eintragen.",
   subBezeichnungLabel: "Bezeichnung dieses Depots",
   subInhaberinLabel: "Inhaberin / Inhaber",
   subFarbeLabel: "Akzentfarbe (Sub-Depot-Ansicht)",
@@ -3451,9 +3474,12 @@ const STRINGS = Object.freeze({
   exportBildungLabel: "Bildungsnachweise (maschinenlesbar)",
   exportBildungFertig: "Bildungsnachweise als Datei gespeichert.",
   // Weitere Format-Exporte — Bürger-Sprache, nie die Format-Abkürzung
-  exportFinanzenLabel: "Finanzdaten als signiertes Credential (für Banken-Apps)",
+  // U2-ADR-030-Nachtrag Muster H (15.07.): Wortlaut korrigiert — "signiertes"/"für Banken-Apps"/
+  // "für Wallet-Apps" behaupteten mehr, als die Funktion hält (sdJwtVcFinanzen/-Sozialversicherung
+  // sind laut eigenem _hinweis-Feld unsigniert, Wallet-/Banken-Annahme ist nicht gesichert).
+  exportFinanzenLabel: "Finanzdaten als Selbstauskunft-Credential (unsigniert, experimentell)",
   exportFinanzenFertig: "Finanzdaten als Datei gespeichert.",
-  exportSozialversicherungLabel: "Sozialversicherungs-Daten als digitales Credential (für Wallet-Apps)",
+  exportSozialversicherungLabel: "Sozialversicherungs-Daten als Selbstauskunft-Credential (unsigniert, experimentell)",
   exportSozialversicherungFertig: "Sozialversicherungs-Daten als Datei gespeichert.",
   // U2-ADR-030 (Nachtrag): ehrlicher Hinweis, wenn geprüft-stämmige Angaben aus der Selbstauskunft fielen.
   exportZurueckgehaltenVerifiziert: "Hinweis: Einzelne geprüfte Angaben wurden nicht in diese Selbstauskunft aufgenommen — eine Selbstauskunft trägt nur selbst erklärte Angaben. Die Angaben bleiben in Ihrem Depot.",
@@ -3504,7 +3530,7 @@ const STRINGS = Object.freeze({
   herausgebenKnopf: "Herausgeben",
   herausgebenTitel: "Herausgeben",
   pvDokumentKnopf: "Patientenverfügung als Dokument ansehen / drucken",  // Vorsorge: erzeugtes PV-Dokument erneut öffnen
-  kiDokumentKnopf: "Mein digitales Weiterleben als Testament-Anlage ansehen / drucken",  // Verwaltung: erzeugte KI-Verfügung erneut öffnen
+  kiDokumentKnopf: "Verfügung zur digitalen Nachbildung als Testament-Anlage ansehen / drucken",  // Verwaltung: erzeugte KI-Verfügung erneut öffnen
   // Bild C (U2-Auftrag 11.07.) — Regal + Cross-Sektor-Verweise
   regalTitel: "Meine Vorsorge auf einen Blick",
   regalVerweiseTitel: "Aus anderen Bereichen",
@@ -3562,6 +3588,8 @@ const STRINGS = Object.freeze({
   mappeEntfernenAutoritativWarnung: "Dies ist ein Original von einer Institution. Es lässt sich nicht wiederherstellen, und Sie können es möglicherweise nicht erneut anfordern. Bereits in Ihre Felder übernommene Werte bleiben — nur das Dokument geht. Trotzdem entfernen?",
   mappeEntfernenBestaetigen: "Entfernen",
   mappeEntferntToast: "Aus der Mappe entfernt.",
+  // U2-ADR-086 — Klasse-4-Datei-Export (Durchreiche): das Original unverändert herunterladen.
+  mappeHerunterladenKnopf: "Original herunterladen",
   shlLabel: "Laborbefund",                                 // U2-ADR-047 — Default-Label im shlink:/-Payload
   // U2-ADR-047 — SHL-Provider-Test-Affordance (manueller Host, z. B. IONOS). Sichtbarer Text jargon-frei
   // (kein „SHL"/„JWE"). Experimentell: die SHL-Verschlüsselung wartet auf externe Krypto-Prüfung.
@@ -3827,8 +3855,11 @@ const SEKTOREN = Object.freeze([
             hint: 'Jedes Tier als eigener Eintrag.',
             unterFelder: [
               { id: 'name',      label: 'Tier — Name & Art',                       typ: 'text', beispiel: 'Felix, Katze' },
-              { id: 'betreuung', label: 'Betreuung im Notfall — Person & Kontakt', typ: 'text', beispiel: 'Nachbarin Sarah, 0151 9876543' },
-              { id: 'tierarzt',  label: 'Tierarzt — Name & Kontakt',               typ: 'text', beispiel: 'Dr. Sommer, Tierarztpraxis Süd' },
+              // E2 D1 (15.07.2026): Freitext → ref-Widget (Weiche B — kein Doppel-Register-Modus;
+              // eine anonyme Praxis/Person ohne Register-Eintrag läuft über den Freitext-Override,
+              // der beim ref-Widget bereits existiert).
+              { id: 'betreuung', label: 'Betreuung im Notfall — Person & Kontakt', typ: 'ref', entitaet: 'person' },
+              { id: 'tierarzt',  label: 'Tierarzt — Name & Kontakt',               typ: 'ref', entitaet: 'person' },
               { id: 'futter',    label: 'Futter / Besonderheiten / Medikamente',   typ: 'text', beispiel: 'trocken, 2× täglich; Tabletten gegen Diabetes morgens' },
               { id: 'sonstiges', label: 'Weitere Hinweise',                        typ: 'text', beispiel: 'scheu vor lauten Geräuschen' },
             ] },
@@ -3858,7 +3889,8 @@ const SEKTOREN = Object.freeze([
       { id: 'kinder-sek', label: 'Kinder', felder: [
         { id: 'kinder', label: 'Kinder', typ: 'liste',
           unterFelder: [
-            { id: 'kind',               label: 'Kind',                        typ: 'ref',   entitaet: 'person', mitGeburt: true },
+            { id: 'kind',               label: 'Kind',                        typ: 'ref',   entitaet: 'person', mitGeburt: true,
+              verweisZweck: 'familiaer' },
             // U2-ADR-036 (A): Kind-Beziehung als strukturiertes Enum (faktische Kategorie, KEIN trust-
             // tragender Rechts-Code → reine Anzeige; bewusster Grenzfall zu ADR-029) plus Freitext daneben
             // für Nuancen, die das Enum nicht trägt.
@@ -3897,7 +3929,7 @@ const SEKTOREN = Object.freeze([
       { id: 'unterhalt-sek', label: 'Unterhalt', felder: [
         { id: 'unterhalt', label: 'Unterhaltsverpflichtungen und -ansprüche', typ: 'liste', ebene: 'modul',
           unterFelder: [
-            { id: 'person',    label: 'Person',      typ: 'ref', entitaet: 'person' },
+            { id: 'person',    label: 'Person',      typ: 'ref', entitaet: 'person', verweisZweck: 'familiaer' },
             { id: 'art',       label: 'Art',         typ: 'text', beispiel: 'Kindesunterhalt · Trennungsunterhalt' },
             { id: 'betrag',    label: 'Betrag',      typ: 'text', inputmode: 'decimal', beispiel: '450 EUR / Monat' },
             { id: 'richtung',  label: 'Richtung',    typ: 'text', beispiel: 'zahle · bekomme' },
@@ -3925,6 +3957,7 @@ const SEKTOREN = Object.freeze([
         hint: 'Wenn jemand pflegebedürftig wird: wer übernimmt die Pflege im engsten Kreis?',
         felder: [
           { id: 'pflege_hauptperson', label: 'Wer übernimmt die Hauptpflege?', typ: 'ref', entitaet: 'person', rolle: 'pflegeperson',
+            verweisZweck: 'familiaer',
             hint: 'Die Person, die die Pflege im Alltag trägt — oft eine Angehörige.' },
           { id: 'pflegezeit',         label: 'Pflegezeit / Familienpflegezeit', typ: 'text', beispiel: 'Pflegezeit beim Arbeitgeber beantragt, 3 Monate ab 09/2026',
             hint: 'Beschäftigte können sich für die Pflege naher Angehöriger freistellen lassen — Pflegezeit (bis 6 Monate) oder Familienpflegezeit (Teilzeit, bis 24 Monate).' },
@@ -3935,6 +3968,7 @@ const SEKTOREN = Object.freeze([
         hint: 'Ihre Ehe- oder eingetragene Lebenspartner*in — als Mensch, der Ihnen wichtig ist.',
         felder: [
           { id: 'ehepartner', label: 'Ehe- / Lebenspartner*in', typ: 'ref', entitaet: 'person', rolle: 'partner',
+            verweisZweck: 'familiaer',
             hint: 'Über „Neue Person anlegen" direkt erfassen. Der Familienstand selbst steht im Bereich Identität.' },
         ] },
     ] },
@@ -4017,13 +4051,13 @@ const SEKTOREN = Object.freeze([
             { id: 'notiz', label: 'Notiz', typ: 'text', beispiel: 'Gemeinschaftskonto mit … · besondere Unterlagen im Ordner Finanzen' },
           ] },
         // Modul (mehr-Block)
-        { id: 'steuerberater',     label: 'Steuerberater',                     typ: 'ref',  entitaet: 'person', ebene: 'modul',
+        { id: 'steuerberater',     label: 'Steuerberater',                     typ: 'ref',  entitaet: 'person', ebene: 'modul', verweisZweck: 'geschaeftlich',
           hint: 'Wichtig für die letzte Steuererklärung und die Erbschaftssteuer.' },
         { id: 'steuerberater_tel', label: 'Kontakt Steuerberater',             typ: 'text', eingabeTyp: 'tel', ebene: 'modul', beispiel: '089 12345-678' },
         { id: 'steuer_ablage',     label: 'Letzte Steuererklärung — Ablageort', typ: 'text', ebene: 'modul', beispiel: 'Ordner „Steuern 2024"' },
         { id: 'steuer_software',   label: 'Steuer-Software',                   typ: 'text', ebene: 'modul', beispiel: 'WISO Steuer 2024' },
         { id: 'steuer_besonders',  label: 'Steuerliche Besonderheiten',        typ: 'text', ebene: 'modul', beispiel: 'Einkünfte aus Vermietung, Ehegattensplitting' },
-        { id: 'finanzberater',     label: 'Finanzberatung — Name & Kontakt',   typ: 'ref',  entitaet: 'person', ebene: 'modul' },
+        { id: 'finanzberater',     label: 'Finanzberatung — Name & Kontakt',   typ: 'ref',  entitaet: 'person', ebene: 'modul', verweisZweck: 'geschaeftlich' },
         { id: 'schulden',          label: 'Laufende Kredite & Schulden',       typ: 'text', ebene: 'modul', beispiel: 'Baudarlehen bei DKB, 1.200 EUR/Monat' },
         { id: 'wertgegenstaende',  label: 'Wertgegenstände & Ablageorte',      typ: 'text', ebene: 'modul', beispiel: 'Schmuck im Tresor, Münzsammlung im Schrank' },
         { id: 'digitale_guthaben', label: 'Digitale Guthaben',                 typ: 'text', ebene: 'modul', beispiel: 'PayPal-Guthaben, Apple-Geschenkkarten' },
@@ -4054,7 +4088,7 @@ const SEKTOREN = Object.freeze([
       { id: 'notfall-aerzte', label: 'Notfall, Ärzte, Impfungen, Befunde',
         hint: 'Allergien, Medikamente, Blutgruppe — im Notfall sofort zur Hand.',
         felder: [
-          { id: 'hausarzt',           label: 'Hausärztin / Hausarzt',                       typ: 'ref', entitaet: 'person', rolle: 'arzt' },
+          { id: 'hausarzt',           label: 'Hausärztin / Hausarzt',                       typ: 'ref', entitaet: 'person', rolle: 'arzt', verweisZweck: 'aerztlich' },
           // U2-ADR-072 (Phase 3, Teil 2): die früheren drei Facharzt-Slots (facharzt_1/2/3) sind EINE
           // Liste {arzt (Person-Ref) · fach (Fachgebiet)} — beliebig viele Fachärzt*innen, je mit Fach.
           // Migration 33→34 überführt die drei Skalar-Slots verlustfrei in Einträge (Standard-Muster,
@@ -4062,7 +4096,8 @@ const SEKTOREN = Object.freeze([
           { id: 'fachaerzte',         label: 'Fachärztinnen und Fachärzte',                 typ: 'liste',
             hint: 'Behandelnde Onkolog*in, Kardiolog*in, Neurolog*in oder andere Fachärzt*innen, die Sie regelmäßig sehen — je eine Person mit ihrem Fachgebiet.',
             unterFelder: [
-              { id: 'arzt', label: 'Fachärztin / Facharzt', typ: 'ref', entitaet: 'person', rolle: 'facharzt' },
+              { id: 'arzt', label: 'Fachärztin / Facharzt', typ: 'ref', entitaet: 'person', rolle: 'facharzt',
+                verweisZweck: 'aerztlich', verweisKontextFeld: 'fach' },
               { id: 'fach', label: 'Fachgebiet', typ: 'text', beispiel: 'Kardiologie · Onkologie · Neurologie' },
             ] },
           { id: 'behandlung_aktuell', label: 'Laufende Behandlung / nächste Termine',       typ: 'text', beispiel: 'Reha-Termine bis 15.07., Nachsorge alle 3 Monate' },
@@ -4094,6 +4129,7 @@ const SEKTOREN = Object.freeze([
           // id bleibt `hauptpflegeperson` (Migration + NOTFALL_KERN_FELDER + Rollup + cross-Sektor referenzieren sie).
           // Der Notfall-QR löst die Liste über das typ-generische feldWertText zu „Name1, Name2" auf.
           { id: 'hauptpflegeperson',  label: 'Notfallkontakte',                              typ: 'refMehrfach', entitaet: 'person', rolle: 'pflegeperson', ebene: 'modul',
+            verweisZweck: 'pflege',
             hint: 'Wer kümmert sich im Notfall? Mehrere möglich — im Notfall-QR erscheinen alle. Für Arztberichte und Entlassungsplanung.' },
           { id: 'kv_versicherter',    label: 'Versichert über',                              typ: 'text', ebene: 'modul', beispiel: 'eigene Versicherung',
             hint: 'Bei Familienversicherung: über wen sind Sie versichert?' },
@@ -4117,7 +4153,7 @@ const SEKTOREN = Object.freeze([
           // (voroperationen, impfungen_detail) im Andock-Mechanismus. Kommt mit dem Andock-Auftrag.
           { id: 'arztberichte_stick', label: 'Befunde auf USB-Stick?',                       typ: 'text', ebene: 'modul', beispiel: 'Stick im Schrank, Fach „Gesundheit"' },
           { id: 'vorsorge_uebersicht', label: 'Vorsorgeuntersuchungen — letzte Termine',     typ: 'text', ebene: 'modul', beispiel: 'Mammographie 03/2024, Koloskopie 2022' },
-          { id: 'zahnarzt',           label: 'Zahnarzt — Name & Kontakt',                    typ: 'ref', entitaet: 'person', rolle: 'zahnarzt', ebene: 'modul' },
+          { id: 'zahnarzt',           label: 'Zahnarzt — Name & Kontakt',                    typ: 'ref', entitaet: 'person', rolle: 'zahnarzt', ebene: 'modul', verweisZweck: 'aerztlich' },
           { id: 'bonusheft_ort',      label: 'Bonusheft — Ablageort',                        typ: 'text', ebene: 'modul', beispiel: 'Schreibtisch oben links' },
           // Cross-Ref-Quellen (in Sozialvers. sichtbar): Krankenkasse, Versichertennummer, EHIC.
           // Kreditkarten leben in Finanzen (kreditkarte1/2) — kk-id war v1-Fehlbenennung, aufgelöst 30.05.
@@ -4142,7 +4178,7 @@ const SEKTOREN = Object.freeze([
         { id: 'schulabschluss',         label: 'Schulabschluss',                                     typ: 'text', beispiel: 'Abitur 1985, Maximiliansgymnasium München',
           hint: 'Relevant für Rentenansprüche (Ausbildungszeiten) und bei der Heimaufnahme als Teil Ihrer Biografie.' },
         { id: 'schule_name',            label: 'Schule',                                              typ: 'text', beispiel: 'Maximiliansgymnasium, München',
-          hint: 'Name und Ort der Schule — hilft Angehörigen beim Nachvollziehen Ihrer Lebensgeschichte und bei der Beschaffung von Ersatzdokumenten.' },
+          hint: 'Teil Ihrer Bildungsbiografie — und hilft, Zeugnisse oder Ersatzdokumente später wiederzufinden.' },
         { id: 'ausbildung',             label: 'Berufsausbildung',                                    typ: 'text', beispiel: 'Bankkauffrau, IHK München, 1988',
           hint: 'Berufsausbildung mit Abschlussjahr. Relevant für Betriebsrenten, Versorgungsansprüche und die Biografie im Heimaufnahme-Paket.' },
         { id: 'studium',                label: 'Studium',                                             typ: 'text', beispiel: 'Diplom-Volkswirtin, LMU München, 1995',
@@ -4150,16 +4186,19 @@ const SEKTOREN = Object.freeze([
         { id: 'dok_abschluss',          label: 'Zeugnisse / Abschlüsse — Ablageort',                  typ: 'text', beispiel: 'Ordner „Zeugnisse", Aktenschrank Schlafzimmer' },
         { id: 'beruf',                  label: 'Beruf / Tätigkeit',                                   typ: 'text', beispiel: 'Volkswirtin, Bayerische Landesbank',
           hint: 'Aktueller oder früherer Hauptberuf. Wichtig für Biografie und für Rentenansprüche, Betriebsrenten oder Versorgungswerks-Leistungen.' },
-        { id: 'arbeitgeber',            label: 'Arbeitgeber',                                         typ: 'ref', entitaet: 'institution' },
+        { id: 'arbeitgeber',            label: 'Arbeitgeber',                                         typ: 'ref', entitaet: 'institution', verweisZweck: 'geschaeftlich' },
         { id: 'arbeitgeber_adresse',    label: 'Arbeitgeber-Adresse',                                 typ: 'text', beispiel: 'Brienner Str. 18, 80333 München',
-          hint: 'Die vollständige Adresse des Arbeitgebers wird für den Elterngeldantrag benötigt.' },
+          // Muster D (15.07.2026): Behörden-Anlass (Elterngeldantrag) durch Vivodepot-eigenen Zweck ersetzt.
+          hint: 'Damit die Adresse griffbereit ist, wenn Sie oder Angehörige sie brauchen — etwa für Rentenauskünfte oder Nachfragen.' },
         { id: 'letzter_arbeitgeber',    label: 'Letzter Arbeitgeber',                                 typ: 'text', beispiel: 'Bayerische Landesbank',
-          hint: 'Der letzte Arbeitgeber muss im Todesfall informiert werden — wegen Betriebsrente, Sterbegeld oder laufendem Gehalt.' },
+          hint: 'Gehört zu Ihrer beruflichen Übersicht — und ist der Kontakt für spätere Fragen zu Rente oder Zeugnissen.' },
         { id: 'einkommensart',          label: 'Einkommensart',                                       typ: 'text', beispiel: 'Angestellt · Selbstständig · Rente' },
         { id: 'brutto_monat',           label: 'Brutto-Monatseinkommen',                              typ: 'text', inputmode: 'decimal', beispiel: '5.200 EUR',
-          hint: 'Ihr aktuelles Bruttogehalt pro Monat. Pflichtangabe für den Elterngeldantrag und für die Berechnung von Pflegekassenleistungen.' },
+          hint: 'Ihr aktuelles Bruttogehalt pro Monat — für Ihre eigene Übersicht und dort, wo Einkommensnachweise gebraucht werden.' },
         { id: 'netto_monat',            label: 'Netto-Monatseinkommen',                               typ: 'text', inputmode: 'decimal', beispiel: '3.150 EUR',
-          hint: 'Ihr Nettoeinkommen pro Monat. Pflichtangabe für Grundsicherung (SGB II / SGB XII) und wohnungsbezogene Leistungen.' },
+          // Muster D (15.07.2026): Grundsicherung-Anlass ganz gestrichen (nicht ersetzt) — jeder genannte
+          // Zweck an diesem Feld zöge eine Bedürftigkeits-Lebenslage herein, die die meisten nicht betrifft.
+          hint: 'Ihr Nettoeinkommen pro Monat — für Ihre eigene Übersicht.' },
         { id: 'gehaltsnachweis_ort',    label: 'Gehaltsnachweis (Ablageort)',                         typ: 'text', beispiel: 'Online im BayernLB-Postfach, PDF in „Finanzen 2024"',
           hint: 'Behörden verlangen diesen als Beleg — die Angabe hilft Angehörigen und Ihnen beim schnellen Auffinden.' },
         { id: 'qualifikationen',        label: 'Qualifikationen',                                     typ: 'text', beispiel: 'Bilanzbuchhalterin (IHK), Erste-Hilfe-Trainerin' },
@@ -4207,6 +4246,7 @@ const SEKTOREN = Object.freeze([
         // Pflegedienst & Pflegegeld zogen aus Gesundheit hierher (U2-ADR-019, Auflösung pflegegrad-sek) —
         // operative Pflege-Organisation rund um den Pflegegrad, jetzt am selben Ort wie Pflegegrad/Pflegekasse.
         { id: 'pflegedienst_kontakt', label: 'Pflegedienst — Name & Kontakt', typ: 'ref', entitaet: 'institution', art: 'pflegedienst',
+          verweisZweck: 'aerztlich',
           hint: 'Welcher ambulante Pflegedienst betreut die Pflege? Über „Neue Institution anlegen" direkt erfassen.' },
         { id: 'pflegegeld',      label: 'Pflegegeld / Pflegeleistungen', typ: 'text', beispiel: 'Pflegegeld Pflegegrad 3, 599 EUR/Monat; Kombinationsleistung' },
       ] },
@@ -4223,7 +4263,7 @@ const SEKTOREN = Object.freeze([
         { id: 'schwerbehindertenausweis_gueltig', label: 'Ausweis gültig bis',                   typ: 'datum',
           hint: 'Schwerbehindertenausweise sind oft befristet (5 Jahre). Frühzeitig erneuern — Antrag beim Versorgungsamt 3 Monate vor Ablauf.' },
         // Modul
-        { id: 'pflegedienst',     label: 'Ambulanter Pflegedienst — Name & Kontakt', typ: 'ref',  entitaet: 'institution', ebene: 'modul' },
+        { id: 'pflegedienst',     label: 'Ambulanter Pflegedienst — Name & Kontakt', typ: 'ref',  entitaet: 'institution', ebene: 'modul', verweisZweck: 'aerztlich' },
         { id: 'pflegeheim',       label: 'Pflegeheim / Betreutes Wohnen',            typ: 'text', ebene: 'modul', beispiel: 'Caritas-Seniorenheim, München-Schwabing',
           hint: 'Falls bereits ein Pflegeheim oder Betreutes Wohnen gewählt wurde oder geplant ist.' },
         { id: 'pflegevertrag_ort',label: 'Pflegevertrag — Ablageort',                typ: 'text', ebene: 'modul', beispiel: 'Ordner „Pflege", Wohnzimmerschrank' },
@@ -4296,7 +4336,10 @@ const SEKTOREN = Object.freeze([
             ] },
             // U2-ADR-065: eine Vollmacht kann an MEHRERE Personen gehen (gemeinsam oder als Ersatz-
             // Reihenfolge) → refMehrfach (Register-Mehrfachpick, umsortierbar). Reihenfolge = Bürger-Wille.
-            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person(en)', typ: 'refMehrfach', entitaet: 'person', rolle: 'bevollmaechtigte' },
+            // E2 D0: Verweis-Export-Regel (Zweck 'vollmacht') — die koppelnde Stelle (`stelle`,
+            // Sibling-Feld im selben Vollmacht-Eintrag) geht als Kontext mit.
+            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person(en)', typ: 'refMehrfach', entitaet: 'person', rolle: 'bevollmaechtigte',
+              verweisZweck: 'vollmacht', verweisKontextFeld: 'stelle' },
             // Vertretungs-Modus erscheint NUR bei mehr als einer Person (minAnzahl 2).
             { id: 'vertretungsModus', label: 'Wie vertreten die Personen?', typ: 'auswahl',
               sichtbarWenn: { feld: 'bevollmaechtigter', minAnzahl: 2 },
@@ -4337,6 +4380,7 @@ const SEKTOREN = Object.freeze([
           hint: 'Idealerweise beim Hausarzt hinterlegt und im Portemonnaie einen Hinweiszettel tragen.' },
         // Modul
         { id: 'patientenverf_arzt',          label: 'Patientenverfügung — ärztlich begleitet durch',   typ: 'ref',  entitaet: 'person', rolle: 'arzt', ebene: 'modul',
+          verweisZweck: 'aerztlich',
           sichtbarWenn: { feld: 'patientenverf_vorhanden', wert: ['ja', 'plant'] } },
         // Pflege-Übernahme (pflwiz, B8-Teil): Stand der Vorsorgedokumente, wenn jemand pflegebedürftig wird.
         { id: 'pflege_vorsorge_geprueft',    label: 'Vorsorgedokumente bei Pflegebedarf geprüft?',     typ: 'auswahl', ebene: 'modul', optionen: [
@@ -4356,7 +4400,7 @@ const SEKTOREN = Object.freeze([
         { id: 'testament_datum',             label: 'Datum der letzten Änderung',                      typ: 'datum',
           sichtbarWenn: { feld: 'testament_vorhanden', wert: ['ja', 'plant'] } },
         // Erbe-Inhalt gilt AUCH ohne Testament (gesetzliche Erbfolge) → bewusst NICHT ans Testament-Gate gekoppelt.
-        { id: 'erben',                       label: 'Erben — Kurzübersicht',                           typ: 'refMehrfach', entitaet: 'person' },
+        { id: 'erben',                       label: 'Erben — Kurzübersicht',                           typ: 'refMehrfach', entitaet: 'person', verweisZweck: 'familiaer' },
         { id: 'erbfolge_hinweis',            label: 'Gesetzliche Erbfolge oder abweichender Wille?',   typ: 'auswahl', optionen: [
           { wert: 'gesetzlich', label: 'Die gesetzliche Erbfolge soll gelten' },
           { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
@@ -4388,9 +4432,11 @@ const SEKTOREN = Object.freeze([
             { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
           ] },
           { id: 'betreuung_person',   label: 'Betreuungsverfügung — vorgeschlagene Person',  typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
+            verweisZweck: 'vollmacht',
             sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] },
             hint: 'Wen soll das Gericht als rechtliche Betreuung bestellen, falls eine Betreuung nötig wird? Anders als eine Vollmacht ist das ein Vorschlag an das Betreuungsgericht (Betreuungsrecht, §§ 1814 ff. BGB).' },
           { id: 'betreuung_ersatz',   label: 'Betreuungsverfügung — Ersatzperson',           typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
+            verweisZweck: 'vollmacht',
             sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] } },
           { id: 'betreuung_wuensche', label: 'Was die Betreuung regeln soll',                typ: 'textarea', beispiel: 'Wohnung halten, solange es geht; vertraute Hausärztin behalten',
             sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] } },
@@ -4407,9 +4453,11 @@ const SEKTOREN = Object.freeze([
           ],
             hint: 'Eine Sorgerechtsverfügung benennt, wer die Sorge für Ihre minderjährigen Kinder übernehmen soll, wenn Sie es nicht mehr können (§ 1782 BGB). Sie ist eine eigene Verfügung — keine erteilte Vollmacht.' },
           { id: 'sorgerechtsverfuegung_person',  label: 'Sorgerechtsverfügung — vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'familie',
+            verweisZweck: 'vollmacht',
             sichtbarWenn: { feld: 'sorgerechtsverfuegung', wert: ['ja', 'plant'] },
             hint: 'Wen schlagen Sie als Vormund / Sorgeberechtigte für Ihre Kinder vor?' },
           { id: 'sorgerechtsverfuegung_ersatz',  label: 'Sorgerechtsverfügung — Ersatzperson',      typ: 'ref', entitaet: 'person', rolle: 'familie',
+            verweisZweck: 'vollmacht',
             sichtbarWenn: { feld: 'sorgerechtsverfuegung', wert: ['ja', 'plant'] } },
           { id: 'sorgerechtsverfuegung_wuensche', label: 'Wünsche zur Erziehung & Betreuung',        typ: 'textarea', beispiel: 'Geschwister sollen zusammenbleiben; gewohnte Schule beibehalten',
             sichtbarWenn: { feld: 'sorgerechtsverfuegung', wert: ['ja', 'plant'] } },
@@ -4436,7 +4484,7 @@ const SEKTOREN = Object.freeze([
         { id: 'bundid_email',       label: 'BundID — E-Mail-Adresse',           typ: 'text', eingabeTyp: 'email', beispiel: 'maria.mustermann@example.de',
           hint: 'Die BundID ist Ihr digitaler Personalausweis für Behördengänge (Elterngeld, Wohngeld, Rentenantrag, Ummeldung).' },
         { id: 'bundid_ort',         label: 'BundID — Unterlagen (Ablageort)',   typ: 'text', beispiel: 'Ordner „Digitale Zugänge", Schreibtisch',
-          hint: 'Angehörige brauchen ggf. Zugang zu Ihrer BundID — z. B. um Sterbeurkunde digital zu beantragen.' },
+          hint: 'Damit Sie und im Ernstfall Angehörige wissen, wo Ihre BundID-Zugangsdaten liegen.' },
         { id: 'bundid_status',      label: 'BundID — Verifizierungsstufe',      typ: 'text', beispiel: 'Niveau hoch (mit eID-Funktion)' },
         { id: 'pw_manager',         label: 'Passwort-Manager',                  typ: 'text', beispiel: 'Bitwarden · 1Password · KeePass' },
         { id: 'pw_masterkey_ort',   label: 'Master-Passwort (Ablageort)',       typ: 'text', beispiel: 'Küchenschrank',
@@ -4472,14 +4520,17 @@ const SEKTOREN = Object.freeze([
         { id: 'email_haupt',          label: 'Haupt-E-Mail-Adresse',              typ: 'text', eingabeTyp: 'email', ebene: 'modul', beispiel: 'maria.mustermann@example.de' },
         { id: 'email2',               label: 'Weitere E-Mail-Adresse',            typ: 'text', ebene: 'modul', beispiel: 'mariam@gmx.de (alte Adresse)' },
       ] },
-      // KI-Verfügung „Mein digitales Weiterleben" — seit U2-ADR-069 eine Instanz des geteilten
-      // Dokument-Generators (KI_KORPUS + KI_MODUL). Die fünf v0-1-Felder werden über den kiwiz-Wizard
+      // KI-Verfügung — seit U2-ADR-069 eine Instanz des geteilten Dokument-Generators (KI_KORPUS +
+      // KI_MODUL). Umbenannt von "Mein digitales Weiterleben" (Muster H, 15.07.2026): der alte Name
+      // klang breiter als das Feature — es regelt NUR Zustimmung/Grenzen zu einer KI-Nachbildung der
+      // eigenen Person, keine Verwaltung digitaler Konten/Social-Media (die existiert nur als Freitext
+      // an erb_digitales/social_media, unverändert). Die fünf v0-1-Felder werden über den kiwiz-Wizard
       // erfasst (verbatim-Bausteine, im Wizard lesbar — nicht als Dropdown hier); aus den Angaben stellt
       // Vivodepot eine Testament-Anlage zusammen (Knopf in der Sektor-Sicht, s. renderSektor). Die alten
       // ki_verhalten_*-Felder verwaisen (weiter lesbar; Umzug an den Zielort mit der Gesamt-Migration /
       // Bild C). Kein Schema-Bump, additive ki_*-Felder.
-      { id: 'ki-verfuegung', label: 'Mein digitales Weiterleben',
-        hint: 'KI-Systeme können aus Ihren digitalen Spuren eine Nachbildung Ihrer Person erstellen, die nach Ihrem Tod weiter „handelt". Über den geführten Weg „Mein digitales Weiterleben" legen Sie fest, ob und unter welchen Bedingungen das erlaubt sein soll; daraus entsteht ein Entwurf zum eigenhändigen Unterschreiben und Beilegen zu Ihrem Testament (§ 2247 BGB).',
+      { id: 'ki-verfuegung', label: 'Verfügung zur digitalen Nachbildung',
+        hint: 'KI-Systeme können aus Ihren digitalen Spuren eine Nachbildung Ihrer Person erstellen, die nach Ihrem Tod weiter „handelt". Über den geführten Weg „Verfügung zur digitalen Nachbildung" legen Sie fest, ob und unter welchen Bedingungen das erlaubt sein soll; daraus entsteht ein Entwurf zum eigenhändigen Unterschreiben und Beilegen zu Ihrem Testament (§ 2247 BGB).',
         felder: [] },
     ] },
   { id: 'wohnen',            label: 'Wohnen & Eigentum',    format: SEKTOR_FORMATE.GENERISCH,  icon: 'home',
@@ -4500,7 +4551,8 @@ const SEKTOREN = Object.freeze([
             { wert: 'sonstige', label: 'andere Wohnform (z. B. Genossenschaft)' },
           ] },
           { id: 'vermieter',        label: 'Vermieter / Hausverwaltung',       typ: 'ref', entitaet: 'person', rolle: 'vermieter',
-            hint: 'Auch bei Familienangehörigen als Vermieter*in: Namen und Kontakt eintragen. Bei Tod des/der Vermieter*in übernehmen die Erben — die müssen dann informiert werden.' },
+            verweisZweck: 'wohnen',
+            hint: 'Auch bei Familienangehörigen als Vermieter*in: Namen und Kontakt eintragen — damit die Anlaufstelle klar ist, wenn sich etwas ändert.' },
           { id: 'vermieter_tel',    label: 'Kontakt Vermieter',                typ: 'text', beispiel: '089 12345-678 · vermieter@example.de' },
           { id: 'miete',            label: 'Monatliche Miete / HV-Kosten',     typ: 'text', beispiel: '1.250 EUR warm' },
           { id: 'kaution',          label: 'Mietkaution — Bank & Betrag',      typ: 'text', beispiel: 'Sparkasse München, 3.000 EUR auf Sperrkonto',
@@ -4529,7 +4581,7 @@ const SEKTOREN = Object.freeze([
                 { wert: 'miete',    label: 'Miete' },
                 { wert: 'sonstige', label: 'andere Wohnform (z. B. Genossenschaft)' },
               ] },
-              { id: 'vermieter',       label: 'Vermieter / Hausverwaltung',   typ: 'ref', entitaet: 'person', rolle: 'vermieter' },
+              { id: 'vermieter',       label: 'Vermieter / Hausverwaltung',   typ: 'ref', entitaet: 'person', rolle: 'vermieter', verweisZweck: 'wohnen' },
               { id: 'vermieter_tel',   label: 'Kontakt Vermieter',            typ: 'text', beispiel: '08051 12345 · vermieter-chiemsee@example.de' },
               { id: 'miete',           label: 'Monatliche Miete / HV-Kosten', typ: 'text', beispiel: '650 EUR warm' },
               { id: 'kaution',         label: 'Mietkaution — Bank & Betrag',  typ: 'text', beispiel: 'Sparkasse Rosenheim, 1.500 EUR' },
@@ -4575,6 +4627,7 @@ const SEKTOREN = Object.freeze([
           { id: 'religion',                 label: 'Religionszugehörigkeit / Konfession',               typ: 'text', beispiel: 'römisch-katholisch · evangelisch · konfessionslos · jüdisch',
             hint: 'Relevant für Krankenhausseelsorge im Notfall und für die Gestaltung der Trauerfeier.' },
           { id: 'seelsorger',               label: 'Seelsorgerin / Seelsorger',                          typ: 'ref', entitaet: 'person', rolle: 'seelsorger',
+            verweisZweck: 'vollmacht',
             hint: 'Falls Sie eine bestimmte Person wünschen, die Sie begleitet oder die Trauerfeier gestaltet.' },
           { id: 'spirituelle_wuensche',     label: 'Rituale, Gebete, spirituelle Wünsche',              typ: 'textarea', beispiel: 'Psalm 23 zur Beisetzung; stille Gebete erwünscht' },
           { id: 'brief_notarzt',            label: 'Brief für Szenario „Notarzt"',                       typ: 'textarea', beispiel: 'Liebe Helferin, lieber Helfer — bitte rufen Sie meine Tochter an …' },
@@ -4638,6 +4691,14 @@ const INSTITUTION_ART = Object.freeze({
   BANK: 'bank', VERSICHERUNG: 'versicherung',
   STANDESAMT: 'standesamt', MELDEBEHOERDE: 'meldebehoerde',
   ARBEITGEBER: 'arbeitgeber',
+});
+// Bürger-Labels zu INSTITUTION_ART (E2 D3) — nur für die Auswahl in der Institutions-Eingabemaske.
+const INSTITUTION_ART_LABEL = Object.freeze({
+  krankenkasse: 'Krankenkasse', pflegekasse: 'Pflegekasse',
+  pflegedienst: 'Pflegedienst', krankenhaus: 'Krankenhaus',
+  bestatter: 'Bestatter', bank: 'Bank', versicherung: 'Versicherung',
+  standesamt: 'Standesamt', meldebehoerde: 'Meldebehörde',
+  arbeitgeber: 'Arbeitgeber',
 });
 // Cross-Sektor-Sichtbarkeit (Produktiv-ADR-075 verallgemeinert): deklarative Liste.
 // Eintragsform: { quelle: '<sektorId>', feld: '<feldId>', ziel: '<sektorId>' }. Daten leben
@@ -4727,7 +4788,7 @@ const SITUATIONEN = Object.freeze([
       ] },
       { titel: 'Rund um die Geburt', eintraege: [
         { feld: { id: 'geburt_klinik',      label: 'Geburtsklinik / Geburtsort',         typ: 'text', beispiel: 'Klinikum Großhadern, München' } },
-        { feld: { id: 'geburt_hebamme',     label: 'Hebamme — Name & Kontakt',           typ: 'text', beispiel: 'Sabine Wagner, 0151 2345678' } },
+        { feld: { id: 'geburt_hebamme',     label: 'Hebamme — Name & Kontakt',           typ: 'ref', entitaet: 'person' } },   // E2 D1: Freitext → ref-Widget (Weiche B)
         { feld: { id: 'geburt_urkunde',     label: 'Geburtsurkunde — beantragt / Ablageort', typ: 'text', beispiel: 'beim Standesamt beantragt; Ordner „Kind"' } },
         { feld: { id: 'geburt_elterngeld',  label: 'Elterngeld — Antrag',                typ: 'text', beispiel: 'Antrag bei der Elterngeldstelle gestellt 06/2026' } },
         { feld: { id: 'geburt_kindergeld',  label: 'Kindergeld — Familienkasse',         typ: 'text', beispiel: 'Antrag bei der Familienkasse; Kindergeld-Nr. folgt' } },
@@ -4986,7 +5047,7 @@ const SITUATIONEN = Object.freeze([
         { feld: { id: 'erb_digitales',           label: 'Digitale Konten & Abos',                   typ: 'textarea', beispiel: 'E-Mail, Social Media (Gedenkzustand), Cloud, PayPal — schließen oder übertragen; Zugänge im Bereich Verwaltung' } },
       ] },
       { titel: 'Kontakte fürs Erbe', eintraege: [
-        { feld: { id: 'erb_notar',               label: 'Notar / Nachlassverwalter — Kontakt',      typ: 'text', beispiel: 'Notariat Dr. Kessler, 089 …' } },
+        { feld: { id: 'erb_notar',               label: 'Notar / Nachlassverwalter — Kontakt',      typ: 'ref', entitaet: 'person' } },   // E2 D1: Freitext → ref-Widget (Weiche B)
         { feld: { id: 'erb_steuerberater',       label: 'Steuerberater — Erbschaftssteuer',         typ: 'text', beispiel: 'Kanzlei Berg; für Erbschaftssteuererklärung' } },
         { feld: { id: 'erb_zu_informieren',      label: 'Wer ist zu informieren',                   typ: 'textarea', beispiel: 'Arbeitgeber, Krankenkasse, Versicherer, Vereine, Vermieter, Hausverwaltung' } },
       ] },
@@ -5424,7 +5485,7 @@ const PV_BMJ = Object.freeze({
   aerztlicheBestaetigung: 'Herr/Frau … wurde von mir am … bezüglich der möglichen Folgen dieser Patientenverfügung aufgeklärt. Er/Sie war in vollem Umfang einwilligungsfähig. Datum · Unterschrift/Stempel der Ärztin/des Arztes.',
 });
 
-/* ── KI_KORPUS — Wortlaut-Quelle der KI-Verfügung („Mein digitales Weiterleben") ──────────────
+/* ── KI_KORPUS — Wortlaut-Quelle der KI-Verfügung („Verfügung zur digitalen Nachbildung") ──────────────
    Zweite Instanz des geteilten Dokument-Generators (U2-ADR-069). Aufbau analog zu PV_BMJ: EINE
    Quelle speist Wizard (kiwiz) UND Generator (KI_MODUL). Unterschied zur PV: die Bausteine sind
    FORSCHUNGSSYNTHESE (Edilife/Cambridge/Zürich), kein amtlicher Standard — die Bindung entsteht
@@ -5546,7 +5607,7 @@ const WIZARDS = Object.freeze([
         feld: { id: 'geburt_klinik', label: 'Geburtsklinik / Geburtsort', typ: 'text', beispiel: 'Klinikum Großhadern, München' } },
       { frage: 'Wer ist Ihre Hebamme — und wie ist sie erreichbar?',
         hilfetext: 'Name und Telefon genügen. Falls noch keine feststeht, lassen Sie das Feld frei.',
-        feld: { id: 'geburt_hebamme', label: 'Hebamme — Name & Kontakt', typ: 'text', beispiel: 'Sabine Wagner, 0151 2345678' } },
+        feld: { id: 'geburt_hebamme', label: 'Hebamme — Name & Kontakt', typ: 'ref', entitaet: 'person' } },   // E2 D1: Freitext → ref-Widget (Weiche B)
       { frage: 'Ist die Geburtsurkunde beantragt — und wo wird sie abgelegt?',
         hilfetext: 'Die Geburtsurkunde beantragen Sie beim Standesamt. Sie wird für Elterngeld, Kindergeld und die Krankenversicherung gebraucht.',
         feld: { id: 'geburt_urkunde', label: 'Geburtsurkunde — beantragt / Ablageort', typ: 'text', beispiel: 'beim Standesamt beantragt; Ordner „Kind"' } },
@@ -5609,12 +5670,12 @@ const WIZARDS = Object.freeze([
     ],
     abschluss: { toast: 'Ihre Angaben sind gespeichert. Vivodepot stellt jetzt Ihr Dokument zusammen — zum Ausdrucken und Unterschreiben.', dokument: 'pv' } },
 
-  // ── kiwiz — KI-Verfügung „Mein digitales Weiterleben" (U2-ADR-069). Zweite Instanz des geteilten
+  // ── kiwiz — KI-Verfügung „Verfügung zur digitalen Nachbildung" (U2-ADR-069). Zweite Instanz des geteilten
   //    Generators: Schritte aus KI_KORPUS.steps (eine Quelle für Wizard UND Generator, wie PV_BMJ→pvwiz).
   //    Ziel: Sektor 'verwaltung' (heutige Heimat; der Umzug an den Zielort reitet mit der Gesamt-Migration,
   //    Bild C). Anders als die PV: Forschungssynthese, kein amtlicher Standard — Bindung erst über § 2247 BGB.
   //    Feld 1 (Grundentscheidung) ist der Eingang; bei „Untersagung" filtert der Generator die Felder 2–5. ──
-  { id: 'kiwiz', titel: 'Mein digitales Weiterleben', icon: 'fileText',
+  { id: 'kiwiz', titel: 'Verfügung zur digitalen Nachbildung', icon: 'fileText',
     ziel: { sektor: 'verwaltung' },
     einleitung: 'KI-Systeme können aus Ihren digitalen Spuren eine Nachbildung Ihrer Person erstellen — als Chatbot, Stimme oder Avatar. Hier legen Sie fest, ob das nach Ihrem Tod erlaubt sein soll und unter welchen Bedingungen.\n\nAnders als die Patientenverfügung beruht diese Verfügung nicht auf amtlichen Vorlagen, sondern auf Forschung (Edilife/Cambridge/Zürich). Bindend wird sie erst, wenn Sie das erzeugte Dokument eigenhändig unterschreiben und Ihrem Testament beilegen (§ 2247 BGB).\n\nSie beantworten Frage für Frage; am Ende stellt Vivodepot daraus einen druckbaren Entwurf zusammen. Sie können jederzeit pausieren.',
     schritte: [
@@ -7019,21 +7080,59 @@ function fhirIpsBundle(jetzt, opt) {
     clinicalStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-clinical', code: 'active' }] },
     code: _cc(e), subject: { reference: patientRef }, text: _ipsNarrative(e.anzeigeName) }));
 
+  // eu-eps Pflicht-Sektion „History of Procedures" (LOINC 47519-4). `voroperationen` ist EIN
+  // Freitextfeld (kein Chip-Array wie oben) — genau EIN Procedure-Entry mit dem ganzen String als
+  // code.text. Kein Parsen/Splitten (auch nicht an „;"): das würde erfundene Einzeleinträge aus
+  // unstrukturiertem Text erzeugen, die die Bürgerin nie als getrennte Einträge angelegt hat.
+  const voroperationenText = (typeof g.voroperationen === 'string') ? g.voroperationen.trim() : '';
+  const procedureRefs = voroperationenText ? [lege({
+    resourceType: 'Procedure',
+    meta: { profile: ['http://hl7.org/fhir/uv/ips/StructureDefinition/Procedure-uv-ips'] },
+    status: 'completed',
+    code: { text: voroperationenText },
+    subject: { reference: patientRef },
+    text: _ipsNarrative(voroperationenText),
+  })] : [];
+
+  // eu-eps Pflicht-Sektion „Medical Devices" (LOINC 46264-8). OFFENE FRAGE, nicht selbst
+  // entschieden (CC-Auftrag Stufe 2, 14.07.2026): DeviceUseStatement-eu-eps verlangt zwingend
+  // `timing[x]` (min=1) — `implantate` ist ein Freitextfeld ohne strukturiertes Datum
+  // ("Hüft-TEP rechts (Stryker), seit 2019"). Ein Datum aus dem Text zu raten wäre dieselbe
+  // Klasse Fehler wie das verbotene Semikolon-Parsen; ein erfundenes Platzhalter-Datum wäre ein
+  // Bruch der Zertifizierungs-Doktrin. Bis Carola entscheidet (leer lassen trotz Inhalt / Datenmodell
+  // um ein Datumsfeld ergänzen / anderer Weg), bleibt diese Sektion IMMER leer mit emptyReason —
+  // auch wenn `implantate` gefüllt ist. `deviceRefs` bewusst nie befüllt, kein totes totes Feld.
+  const deviceRefs = [];
+
   const sektionen = [
     sektion('Allergien und Unverträglichkeiten', '48765-2', allergieRefs, 'Keine Allergien hinterlegt.'),
     sektion('Medikation',                        '10160-0', medRefs,      'Keine Medikamente hinterlegt.'),
     sektion('Probleme und Diagnosen',            '11450-4', condRefs,     'Keine Diagnosen hinterlegt.'),
+    sektion('Operationen und Eingriffe',         '47519-4', procedureRefs, 'Keine Operationen/Eingriffe hinterlegt.'),
+    sektion('Medizinprodukte',                   '46264-8', deviceRefs,   'Keine Medizinprodukte hinterlegt.'),
   ];
 
+  // CC-Auftrag Stufe 2 (14.07.2026): Bundle+Composition zusätzlich auf HL7 Europe Patient Summary
+  // (eu-eps#1.0.0-ballot) profiliert — Gazelle-Testcase 205 verlangt eu-eps, nicht nur uv-ips.
+  // Beide Profile geführt (nicht ersetzt): das Bundle ist strukturell weiterhin ein gültiges
+  // uv-ips-Dokument, eu-eps kommt zusätzlich dazu. Ob der Validator beide gleichzeitig akzeptiert,
+  // ist offen — Ergebnis wird separat gemeldet.
   const composition = {
     resourceType: 'Composition', status: 'final',
-    meta: { profile: ['http://hl7.org/fhir/uv/ips/StructureDefinition/Composition-uv-ips'] },
+    meta: { profile: [
+      'http://hl7.org/fhir/uv/ips/StructureDefinition/Composition-uv-ips',
+      'http://hl7.eu/fhir/eps/StructureDefinition/composition-eu-eps',
+    ] },
+    // eu-eps verlangt Composition.identifier (min=1) — uv-ips nicht; ohne dieses Feld schlägt
+    // auch der profil-diskriminierte Bundle.entry:composition-Slice fehl (Discriminator prüft
+    // volle Konformität gegen composition-eu-eps, nicht nur die meta.profile-Deklaration).
+    identifier: { system: 'urn:ietf:rfc:3986', value: 'urn:uuid:' + uuidV4() },
     type: { coding: [{ system: 'http://loinc.org', code: '60591-5' }] },
     subject: { reference: patientRef }, date: stamp,
     author: [{ reference: patientRef }],   // Bürger-App: selbst zusammengestellt
     title: 'Patientenkurzakte (International Patient Summary)',
     section: sektionen,
-    text: _ipsNarrative('Patientenkurzakte (IPS) — Allergien, Medikation, Diagnosen.'),
+    text: _ipsNarrative('Patientenkurzakte (IPS) — Allergien, Medikation, Diagnosen, Operationen.'),
   };
   const compFullUrl = 'urn:uuid:' + uuidV4();
 
@@ -7095,7 +7194,10 @@ function fhirIpsBundle(jetzt, opt) {
 
   return {
     resourceType: 'Bundle', type: 'document',
-    meta: { profile: ['http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips'] },
+    meta: { profile: [
+      'http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips',
+      'http://hl7.eu/fhir/eps/StructureDefinition/bundle-eu-eps',
+    ] },
     identifier: { system: 'urn:ietf:rfc:3986', value: 'urn:uuid:' + uuidV4() },
     timestamp: stamp,
     // Composition MUSS erster Eintrag sein; delegierte RelatedPerson/Provenance folgen NACH den Sektionen.
@@ -7798,7 +7900,23 @@ function docxBereichModell(sektorId) {
       if (f.sensibel) continue;                       // sensible Felder nicht in den Auto-Export
       const roh = daten[f.id];
       if (!feldEingetragen(f, roh)) continue;
-      zeilen.push({ label: f.label, wert: feldWertText(f, roh) });
+      // E2 D0 (15.07.2026): Verweis-Export-Regel — Felder mit `verweisZweck` (Top-Level ref/
+      // refMehrfach) bzw. Listen-Unterfelder mit `verweisZweck` (z. B. fachaerzte.arzt,
+      // vollmachten.bevollmaechtigter) reichern den bisherigen bloßen Namen um die für ihren
+      // Zweck erlaubten Register-Felder an (s. verweisExportFelder). Andere Felder unverändert.
+      let wert;
+      if (f.verweisZweck && f.typ === 'ref') {
+        wert = _verweisExportZeile(f.entitaet || 'person', f.verweisZweck, roh) || feldWertText(f, roh);
+      } else if (f.verweisZweck && f.typ === 'refMehrfach') {
+        const arr = Array.isArray(roh) ? roh : [];
+        wert = arr.map(e => _verweisExportZeile(f.entitaet || 'person', f.verweisZweck, e)).filter(Boolean).join('; ') || feldWertText(f, roh);
+      } else if (f.typ === 'liste' && Array.isArray(f.unterFelder) && f.unterFelder.some(u => u.verweisZweck)) {
+        const liste = Array.isArray(roh) ? roh : [];
+        wert = liste.map(e => _verweisListenEintragZusammenfassung(f, e)).filter(Boolean).join('; ') || STRINGS.leerZustand;
+      } else {
+        wert = feldWertText(f, roh);
+      }
+      zeilen.push({ label: f.label, wert });
     }
   }
   return { titel: sek.label, zeilen };
@@ -10391,7 +10509,7 @@ function istEntsiegelt(depotUUID) { return sessionSubKeys.has(depotUUID); }
 // Legt ein neues Sub-Depot an: versiegelt den (leeren) Inhalt unter dem eigenen
 // Passwort und hängt nur Metadaten + Umschlag an die verwaltende Struktur.
 // Speichert WEDER das Passwort NOCH einen abgeleiteten Schlüssel.
-async function subDepotAnlegen({ bezeichnung, inhaberin, verwaltungsTyp, vertretungsGrundlage, vorname, nachname, akzent }, subPasswort) {
+async function subDepotAnlegen({ bezeichnung, inhaberin, verwaltungsTyp, vertretungsGrundlage, vorname, nachname, akzent, kindRegisterId }, subPasswort) {
   if (!data) throw new Error('Kein offenes Depot.');
   if (!Array.isArray(data.verwalteteDepots)) data.verwalteteDepots = [];
   const typ = (verwaltungsTyp === 'delegiert') ? 'delegiert' : 'verwaltet';
@@ -10420,6 +10538,12 @@ async function subDepotAnlegen({ bezeichnung, inhaberin, verwaltungsTyp, vertret
     akzent: subDepotAkzentToken(akzent),     // Palette-Token-NAME (Klartext-Metadaten), Default 'schiefer' — Auswahl-UI folgt in Commit C
     vertretungsGrundlage: grundlage,         // D35 Commit 4: rechtliche Grundlage (Klartext-Metadatum) | null
     beziehungZu: null,                       // U2-ADR-079: HL7-V3-RoleCode Anker→Eigentümer (optional; am delegierten IPS-Export erfragt, OTH-Fallback)
+    // Muster H (15.07.2026): Verknüpfung zur Kind-Person im Register (data.menschen[].id), NUR
+    // gesetzt, wenn die Anlage vom „Sub-Depot für dieses Kind"-Knopf an der kinder-Liste ausging
+    // (flowKindSubDepotAnlegen). Löst das an sorgerecht_kind hinterlegte Versprechen ein — vorher
+    // gab es dort nur den Hinweistext, keinen echten Link. `beziehungZu` bleibt ein separates Feld
+    // (HL7-RoleCode für den delegierten IPS-Export), keine Verwechslung der beiden Zwecke.
+    kindRegisterId: kindRegisterId || null,
     umschlag,                                // versiegelter Inhalt: nur Ciphertext + Parameter
   };
   data.verwalteteDepots.push(eintrag);
@@ -11070,14 +11194,22 @@ function personName(refObj) {
   const p = (data && Array.isArray(data.menschen) ? data.menschen : []).find(m => m.id === refObj.ref);
   return (p && p.name) || '';
 }
-// Vorschlag für die Inline-Anlage/Dropdown: liefert IMMER ALLE Personen aus data.menschen[]
-// als {id, name}-Paare. A1 (U2-ADR-021): rollenloses Register — KEIN Rollen-Filter mehr. Die
-// Rolle ist Eigenschaft des FELDS, in dem die Person referenziert wird, nicht der Person; so
-// erscheint jede Person (inkl. Sitzungs-Akteur) in jedem Person-Ref-Feld als Auswahl. Der
-// frühere `rolle`-Parameter ist entfallen; Aufrufer dürfen weiter einen übergeben — er wird ignoriert.
-function personenVorschlag() {
+// Vorschlag für die Inline-Anlage/Dropdown: liefert Personen aus data.menschen[] als
+// {id, name}-Paare. A1 (U2-ADR-021): rollenloses Register — KEIN Rollen-Filter mehr. Die
+// Rolle ist Eigenschaft des FELDS, in dem die Person referenziert wird, nicht der Person.
+// E2 D4 (15.07.2026): Die Inhaberin (`sitzungsAkteur.personId`) ist an der AUFRUFSTELLE
+// ausgeschlossen, nicht im Register selbst (ADR-021 bleibt unberührt, Register bleibt
+// rollenlos, bleibt vollständig — z. B. für den vCard-Gesamtexport). Grund: ein Verweis
+// zeigt fast immer auf eine ANDERE Person (Gegenpartei) — die Erhebung zu den 27 Verweis-
+// Feldern (CC-Erhebung Selbstbezug 15.07.) fand KEIN Feld, bei dem die Inhaberin selbst die
+// legitime Antwort ist. `selbstbezug: true` (heute an keinem echten Feld gesetzt) hebt den
+// Ausschluss für ein Feld auf, sobald ein solches Feld entsteht (z. B. ein künftiges
+// Eigentümer-/Halter-/Kontoinhaber-Feld) — der Mechanismus steht, bevor er gebraucht wird.
+function personenVorschlag(selbstbezug) {
   const liste = (data && Array.isArray(data.menschen) ? data.menschen : []);
-  return liste.map(p => ({ id: p.id, name: p.name }));
+  const eigeneId = sitzungsAkteur && sitzungsAkteur.personId;
+  const gefiltert = selbstbezug ? liste : liste.filter(p => p.id !== eigeneId);
+  return gefiltert.map(p => ({ id: p.id, name: p.name }));
 }
 
 /* ── Rechenbares Alter / abgeleitete Minderjährigkeit (U2-ADR-023) ───────────────
@@ -11198,6 +11330,27 @@ function institutionName(refObj) {
   const i = (data && Array.isArray(data.institutionen) ? data.institutionen : []).find(x => x.id === refObj.ref);
   return (i && i.name) || '';
 }
+// E2 D3 — Institutions-Eingabemaske (analog Personen-Register-Editor): `art` entfällt aus der
+// Maske, wenn der Ref-Kontext sie schon vorgibt (z. B. pflegedienst_kontakt setzt art:'pflegedienst'
+// programmatisch) — dann bleibt das bestehende Verhalten unverändert. Ohne vorgegebene Art wählt
+// die Bürgerin selbst aus INSTITUTION_ART. `email`/`anmerkung` sind erfassbar, gehen aber laut
+// D0-Verweis-Export-Regel nicht mit (Datenschutz-Zuschnitt lebt in der Export-Regel, nicht hier).
+function _institutionFelder(vorgegebenesArt) {
+  const unterFelder = [
+    { id: 'name', label: 'Name', typ: 'text', beispiel: 'Praxis Dr. Müller' },
+  ];
+  if (!vorgegebenesArt) {
+    unterFelder.push({ id: 'art', label: 'Art', typ: 'auswahl',
+      optionen: Object.values(INSTITUTION_ART).map(w => ({ wert: w, label: INSTITUTION_ART_LABEL[w] })) });
+  }
+  unterFelder.push(
+    { id: 'tel',       label: 'Telefon',   typ: 'text', eingabeTyp: 'tel',   beispiel: '089 12345678' },
+    { id: 'adresse',   label: 'Adresse',   typ: 'text', beispiel: 'Musterstraße 1, 80331 München' },
+    { id: 'email',     label: 'E-Mail',    typ: 'text', eingabeTyp: 'email', beispiel: 'kontakt@praxis.de' },
+    { id: 'anmerkung', label: 'Anmerkung', typ: 'text', beispiel: 'nur nachmittags erreichbar' },
+  );
+  return { id: 'institution-eintrag', label: 'Institution', typ: 'liste', unterFelder };
+}
 function institutionenVorschlag(art) {
   const liste = (data && Array.isArray(data.institutionen) ? data.institutionen : []);
   if (!art) return liste.map(i => ({ id: i.id, name: i.name }));
@@ -11211,6 +11364,119 @@ function entitaetAnzeige(refObj, typ) {
   if (typ === 'mappe') return mappeName(refObj);
   if (typ === 'bankvollmacht') return bankvollmachtAnzeige(refObj);
   return personName(refObj);
+}
+
+/* ── E2 D0 — Verweis-Export-Regel (15.07.2026, D0-Matrix) ────────────────────────────────────
+   Ein Verweis (ref/refMehrfach auf Person oder Institution) verschwindet heute an der Sektor-
+   Grenze bis auf den bloßen Namen (personName/institutionName geben NUR den Namen zurück — Muster
+   A). Diese Regel baut die Mitnahme neu, mit Zuschnitt pro Zweck: pro Verweis gehen NUR die Felder
+   mit, die für den jeweiligen Zweck als „ja" markiert sind — nie mehr.
+
+   Zwei Quellen (D0-Auftrag): 1) Felder aus dem Personen-/Institutions-Register (hier), 2) zeilen-
+   gebundene Felder des koppelnden Sektor-Eintrags (`fach`/`stelle` — als `kontextWert` übergeben,
+   vom Aufrufer aus dem SELBEN Listen-Eintrag gelesen, s. `_verweisListenEintragZusammenfassung`).
+
+   GENERATORAGNOSTISCH: diese Funktion kennt weder docx noch FHIR noch vCard — sie nimmt einen
+   aufgelösten Register-Eintrag entgegen und liefert ein reines Datenobjekt zurück. Genau deshalb
+   ist sie die eine Stelle, an der spätere Generatoren (FHIR/Finanzen/Bildung, eigener Nachzug)
+   andocken, ohne diese Regel neu zu schreiben.
+
+   Datenschutz-Begründung (fest verankert, D0-Matrix): `beziehung` geht NIE mit — die Rolle wird
+   über den Verweis-Kontext (Feldname/Zweck) transportiert, `beziehung` ist reine Bürger-Notiz und
+   kann Sensibles enthalten (z. B. eine Diagnose-artige Angabe). Geburtsdatum/-jahr/-ort gehen NIE
+   mit — sie beschreiben die VERWIESENE Person, nicht die Inhaberin, und ein Bereichs-Export handelt
+   von der Inhaberin. `email`/`aufgabe`/`anmerkung`/`id` gehen NIE mit (reine Bürger-Notizen bzw.
+   technisch). Das gilt NUR für diesen Verweis-Export — der Register-Gesamtexport der „Meine
+   Menschen"-Liste (vCard, U2-ADR-022) bleibt davon unberührt: dort exportiert die Bürgerin ihre
+   eigene Kontaktliste, nicht einen Verweis aus fremdem Sektor-Kontext (zwei verschiedene Dinge,
+   Stufe-1-Befund E2-Bauauftrag 15.07.). */
+const PERSON_VERWEIS_MATRIX = Object.freeze({
+  aerztlich:     Object.freeze({ name: true, tel: true, adresse: true }),
+  vollmacht:     Object.freeze({ name: true, tel: true, adresse: true }),
+  familiaer:     Object.freeze({ name: true, tel: true, adresse: false }),
+  pflege:        Object.freeze({ name: true, tel: true, adresse: true }),
+  geschaeftlich: Object.freeze({ name: true, tel: true, adresse: true }),
+  wohnen:        Object.freeze({ name: true, tel: true, adresse: true }),
+});
+const INSTITUTION_VERWEIS_MATRIX = Object.freeze({
+  aerztlich:     Object.freeze({ name: true, art: true, tel: true, adresse: true }),
+  vollmacht:     Object.freeze({ name: true, art: true, tel: true, adresse: true }),
+  pflege:        Object.freeze({ name: true, art: true, tel: true, adresse: true }),
+  geschaeftlich: Object.freeze({ name: true, art: true, tel: true, adresse: true }),
+  wohnen:        Object.freeze({ name: true, art: true, tel: true, adresse: true }),
+});
+// Reine Filterfunktion: Register-Eintrag + Zweck → nur die erlaubten Felder. `kontextWert` (fach/
+// stelle) ist KEIN Register-Feld — wird separat unter `_kontext` angehängt, damit Aufrufer ihn von
+// echten Register-Feldern unterscheiden können. null, wenn Zweck/Eintrag fehlt (nichts geht mit).
+function verweisExportFelder(zweck, entitaet, registerEintrag, kontextWert) {
+  const matrix = (entitaet === 'institution' ? INSTITUTION_VERWEIS_MATRIX : PERSON_VERWEIS_MATRIX)[zweck];
+  if (!matrix || !registerEintrag || typeof registerEintrag !== 'object') return null;
+  const out = {};
+  for (const k of Object.keys(matrix)) {
+    if (matrix[k] && registerEintrag[k]) out[k] = registerEintrag[k];
+  }
+  if (kontextWert) out._kontext = kontextWert;
+  return out;
+}
+// Browser-Brücke (docx-Ebene): löst roh (ref-Objekt {ref,override}) auf den Register-Eintrag auf,
+// filtert per verweisExportFelder, formt einen Anzeige-String „Name · Art · Telefon · Adresse ·
+// Kontext". Freitext-Override (keine Register-Person/-Institution) liefert NUR den Freitext zurück —
+// für ihn gibt es kein Register, also keine Anreicherung, kein Datenschutz-Risiko.
+function _verweisExportZeile(entitaet, zweck, roh, kontextWert) {
+  if (!roh) return '';
+  if (typeof roh === 'string') return roh;
+  if (typeof roh.override === 'string' && roh.override) return roh.override;
+  if (!roh.ref) return '';
+  const eintrag = (entitaet === 'institution')
+    ? (data && Array.isArray(data.institutionen) ? data.institutionen : []).find(x => x.id === roh.ref)
+    : (data && Array.isArray(data.menschen) ? data.menschen : []).find(m => m.id === roh.ref);
+  if (!eintrag) return '';
+  const gefiltert = verweisExportFelder(zweck, entitaet, eintrag, kontextWert);
+  if (!gefiltert) return '';
+  const teile = [gefiltert.name, gefiltert.art, gefiltert.tel, gefiltert.adresse].filter(Boolean);
+  if (gefiltert._kontext) teile.push(gefiltert._kontext);
+  return teile.join(' · ');
+}
+// Spiegel zu listenEintragZusammenfassung, NUR für den docx-Export: ein Listen-Unterfeld mit
+// `verweisZweck` (z. B. `fachaerzte.arzt`, `vollmachten.bevollmaechtigter`) wird über
+// _verweisExportZeile gerendert, inkl. koppelndem Sektor-Eintrags-Feld (`verweisKontextFeld`, z. B.
+// `fach`/`stelle`, aus DEMSELBEN Eintrag). Der Kontext-Feld-Wert wird NICHT zusätzlich als eigene
+// Zeile ausgegeben (steckt schon im Verweis-Text) — alle anderen Unterfelder unverändert wie bisher.
+function _verweisListenEintragZusammenfassung(feld, eintrag) {
+  if (!eintrag || typeof eintrag !== 'object') return '';
+  // Felder, die als Kontext EINES ANDEREN Unterfelds dienen (fach/stelle), werden übersprungen —
+  // sie stecken schon im Verweis-Text der referenzierenden Zeile, nicht als eigene Zeile.
+  const kontextFeldIds = new Set(
+    (feld.unterFelder || []).map(u => u.verweisKontextFeld).filter(Boolean)
+  );
+  const teile = [];
+  for (const uf of (feld.unterFelder || [])) {
+    const w = eintrag[uf.id];
+    if (kontextFeldIds.has(uf.id)) continue;
+    if (!feldEingetragen(uf, w)) continue;
+    if (uf.verweisZweck && uf.typ === 'ref') {
+      const kontext = uf.verweisKontextFeld ? eintrag[uf.verweisKontextFeld] : null;
+      const t = _verweisExportZeile(uf.entitaet || 'person', uf.verweisZweck, w, kontext);
+      if (t) teile.push(t);
+    } else if (uf.verweisZweck && uf.typ === 'refMehrfach') {
+      const kontext = uf.verweisKontextFeld ? eintrag[uf.verweisKontextFeld] : null;
+      const namen = (Array.isArray(w) ? w : [])
+        .map(e => _verweisExportZeile(uf.entitaet || 'person', uf.verweisZweck, e, kontext)).filter(Boolean);
+      if (namen.length) teile.push(namen.join(', '));
+    } else if (uf.typ === 'ref') {
+      const n = entitaetAnzeige(w, uf.entitaet || 'person');
+      if (n) teile.push(n);
+    } else if (uf.typ === 'refMehrfach') {
+      const namen = (Array.isArray(w) ? w : []).map(e => entitaetAnzeige(e, uf.entitaet || 'person')).filter(Boolean);
+      if (namen.length) teile.push(namen.join(', '));
+    } else if (uf.typ === 'auswahl') {
+      const opt = (Array.isArray(uf.optionen) ? uf.optionen : []).find(o => o.wert === w);
+      teile.push((opt && opt.label) || String(w));
+    } else {
+      teile.push(String(w));
+    }
+  }
+  return teile.join(' · ');
 }
 
 // U2-ADR-074 (Konten, Teil 2): Bankvollmacht-Verweis PRO KONTO auf die stabile Record-id einer
@@ -12417,9 +12683,11 @@ function _depotIdentitaetUndPasswortAbfragen(opts) {
   ui.modal({
     titel: opts.titel,
     koerperHTML:
-      '<label for="id-vorname">' + STRINGS.idVornameLabel + '</label><input id="id-vorname" type="text" autocomplete="given-name">' +
+      // Muster H (15.07.2026): Vorbefüllung, wenn der Aufruf vom Kind-Zeilen-Link kam (vorausgefüllt,
+      // nicht gesperrt — die Bürgerin sieht/korrigiert den Namen vor dem Anlegen).
+      '<label for="id-vorname">' + STRINGS.idVornameLabel + '</label><input id="id-vorname" type="text" autocomplete="given-name" value="' + escapeHTML(opts.vornameDefault || '') + '">' +
       '<div id="id-vorname-fehler" class="feld-inline-fehler" role="alert" hidden></div>' +
-      '<label for="id-nachname">' + STRINGS.idNachnameLabel + (sub ? (' <span style="color:var(--ink3); font-weight:400">' + escapeHTML(STRINGS.optionalKlammer) + '</span>') : '') + '</label><input id="id-nachname" type="text" autocomplete="family-name">' +
+      '<label for="id-nachname">' + STRINGS.idNachnameLabel + (sub ? (' <span style="color:var(--ink3); font-weight:400">' + escapeHTML(STRINGS.optionalKlammer) + '</span>') : '') + '</label><input id="id-nachname" type="text" autocomplete="family-name" value="' + escapeHTML(opts.nachnameDefault || '') + '">' +
       '<div id="id-nachname-fehler" class="feld-inline-fehler" role="alert" hidden></div>' +
       (sub ? ('<label for="sub-grundlage">' + STRINGS.subGrundlageLabel + '</label><select id="sub-grundlage">' + vertretungsGrundlageOptionenHTML('') + '</select>') : '') +
       (sub ? farbwahlAuswahlHTML(gewaehlterAkzent) : '') +
@@ -15741,7 +16009,7 @@ function pvDokumentOeffnen() {
   const sc = document.getElementById('pv-dok-schliessen'); if (sc) sc.onclick = () => ov.remove();
 }
 
-/* ── KI-Verfügungs-Dokument („Mein digitales Weiterleben", U2-ADR-069) ─────────────────────────
+/* ── KI-Verfügungs-Dokument („Verfügung zur digitalen Nachbildung", U2-ADR-069) ─────────────────────────
    Zweite Instanz des geteilten Generators. Liest data.sektoren.verwaltung (ki_*-Felder, vom kiwiz
    geschrieben), Wortlaut-Quelle KI_KORPUS. Ausgabe = Testament-Anlage (kopfseitig gekennzeichnet),
    Herkunftsanzeige durchgängig, Schluss verweist auf § 2247 BGB. Nachlassverwalter über den Personen-
@@ -15899,7 +16167,7 @@ const VORSORGE_MODULE = Object.freeze([
     istAnlage: false, generator: null },
   // KI-Verfügung: volle Instanz, aber Forschungssynthese + Testament-Anlage; Heimat heute Verwaltung
   // (zieht mit der Gesamt-Migration an ihren Zielort). Erscheint im Bild-C-Regal (CC-Auftrag).
-  { id: 'ki-verfuegung', titel: 'Mein digitales Weiterleben', mehrfach: false,
+  { id: 'ki-verfuegung', titel: 'Verfügung zur digitalen Nachbildung', mehrfach: false,
     herkunft: { art: 'forschung', beleg: 'Edilife/Cambridge/Zürich', hinweis: 'kein amtlicher Standard' },
     form: { paragraf: '§ 2247 BGB' }, sektor: 'verwaltung', wizardId: 'kiwiz', dokumentTyp: null,
     istAnlage: true, anlageZu: 'testament', generator: KI_MODUL,
@@ -15956,7 +16224,7 @@ function _vollmachtArtLabel(wert) {
 }
 
 // Schritt 1 — das Vorsorge-Regal: je Modul EINE gleichrangige Karte (Titel · Herkunft · Status).
-// „Mein digitales Weiterleben" ist gleichrangig (keine Sonderabsetzung, Herkunft „eigenhändig").
+// „Verfügung zur digitalen Nachbildung" ist gleichrangig (keine Sonderabsetzung, Herkunft „eigenhändig").
 // Die Karten sind zugleich Sprungmarken (ersetzen die TOC, U2-ADR-071-Nachtrag): eine HEIMAT-Karte
 // (m.sektor == 'vorsorge') springt als Anker auf ihren Abschnitt (Sektion-id == Modul-id); eine Karte,
 // deren Heimat ein FREMDER Sektor ist (KI → Verwaltung), springt IN den Heimatsektor (mit Rückweg) —
@@ -16637,6 +16905,11 @@ function flowMappeVorschau(id) {
       '<button type="button" class="btn btn-sek" data-mappe-uebernehmen="' + escapeHTML(id) + '">' +
       svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.mappeUebernehmenKnopf) + '</button>';
   }
+  // U2-ADR-086: Klasse-4-Original unverändert als Datei herunterladen (Durchreiche, kein Neubau).
+  if (e.autoritativ) {
+    koerperHTML += '<button type="button" class="btn btn-sek" data-mappe-herunterladen="' + escapeHTML(id) + '">' +
+      svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.mappeHerunterladenKnopf) + '</button>';
+  }
   // U2-ADR-047: autoritative Originale sicher weitergeben (SHL-Provider-Weg, manueller Host).
   if (e.autoritativ) {
     koerperHTML += '<button type="button" class="btn btn-sek" data-mappe-shl="' + escapeHTML(id) + '">' +
@@ -16650,9 +16923,25 @@ function flowMappeVorschau(id) {
   const _mbox = document.getElementById('modal-inhalt');
   if (_mbox && _mbox.querySelector) {
     if (_uebernahme) { const b = _mbox.querySelector('[data-mappe-uebernehmen]'); if (b) b.onclick = () => flowMappeWerteUebernehmen(id); }
+    const bHerunterladen = _mbox.querySelector('[data-mappe-herunterladen]');
+    if (bHerunterladen) bHerunterladen.onclick = () => flowMappeOriginalHerunterladen(id);
     const bShl = _mbox.querySelector('[data-mappe-shl]'); if (bShl) bShl.onclick = () => flowShlVorbereiten(id);
     const bDel = _mbox.querySelector('[data-mappe-entfernen]'); if (bDel) bDel.onclick = () => flowMappeEntfernen(id);
   }
+}
+
+// U2-ADR-086: Klasse-4-Original unverändert herunterladen — Bytes rein, Bytes raus, kein Neubau,
+// keine Performer-Ableitung. Liest _autoritativKlartext (byte-identisch zum Import) und reicht es
+// unverändert an dateiAusgeben durch — derselbe Mechanismus wie jeder andere Datei-Export.
+async function flowMappeOriginalHerunterladen(id) {
+  const e = mappeEintrag(id);
+  if (!e || !e.autoritativ) { if (ui && ui.toast) ui.toast(STRINGS.importUngueltig, 'fehler'); return; }
+  const klartext = _autoritativKlartext(e);
+  if (klartext == null) { if (ui && ui.toast) ui.toast(STRINGS.importUngueltig, 'fehler'); return; }
+  const basis = (String(e.beschriftung || e.dateiname || 'Dokument'))
+    .replace(/[^\p{L}\p{N}_-]+/gu, '-').replace(/^-+|-+$/g, '') || 'Dokument';
+  const mime = e.mime || 'application/fhir+json';
+  await dateiAusgeben(new Blob([klartext], { type: mime }), basis + '.json', mime);
 }
 
 // U2-ADR-045 (Nachtrag): Mappe-Eintrag entfernen — zweistufige Bestätigung. Autoritative Originale
@@ -17181,7 +17470,7 @@ function renderSektor(sektorOrId) {
   c.querySelectorAll('[data-pv-dokument]').forEach(b => {
     b.onclick = () => pvDokumentOeffnen();
   });
-  // Verwaltung: „Mein digitales Weiterleben" (KI-Verfügung) → Testament-Anlage-Overlay (wie Wizard-Abschluss).
+  // Verwaltung: „Verfügung zur digitalen Nachbildung" (KI-Verfügung) → Testament-Anlage-Overlay (wie Wizard-Abschluss).
   c.querySelectorAll('[data-ki-dokument]').forEach(b => {
     b.onclick = () => kiDokumentOeffnen();
   });
@@ -17239,6 +17528,14 @@ function renderSektor(sektorOrId) {
         const fid = btn.getAttribute('data-eintrag-hinzufuegen');
         const feld = findeFeld(fid);
         if (feld) flowListenEintragHinzufuegen(sektorId, feld);
+      };
+    });
+    // Muster H (15.07.2026): „Sub-Depot für dieses Kind anlegen" an der kinder-Liste.
+    c.querySelectorAll('[data-kind-subdepot]').forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.getAttribute('data-kind-subdepot'), 10);
+        const feld = findeFeld('kinder');
+        if (feld) flowKindSubDepotAnlegen(sektorId, feld, idx);
       };
     });
     // U2-ADR-065: Listen-Einträge umsortieren (↑/↓) — persistente Reihenfolge via listenEintragVerschieben.
@@ -17391,6 +17688,33 @@ function renderSituation(sitOrId, optionen) {
   if (pdfBtn) pdfBtn.onclick = () => flowSituationPdf(sitId);
   // Umbau „immer editierbar": kein Bearbeiten/Fertig mehr — die eigenen Felder sind dauerhaft
   // Eingabefelder; Auto-Save pro Feld läuft über den delegierten blur/change-Listener auf #content.
+
+  // E2 D1 (15.07.2026, Stufe-1-Fund): Ref-Picker in Situationsblättern hatten KEINE „__neu__"-
+  // Verdrahtung — der Sektor-Pfad (renderSektor) setzt sie hartcodiert auf sektorFeldSetzen. Ohne
+  // diese Verdrahtung wäre „+ Neue Person anlegen" in geburt_hebamme/erb_notar ein toter Menüpunkt
+  // (der globale Auto-Save-Listener behandelt „__neu__" nur sicher als leer, öffnet aber nichts).
+  // Spiegelt den Sektor-Pfad, schreibt aber über situationFeldSetzen in data.situationen[sitId].
+  const findeEigenesFeld = (fid) => {
+    for (const block of (si.bloecke || [])) {
+      for (const eintrag of (block.eintraege || [])) {
+        if (eintrag && eintrag.feld && typeof eintrag.feld === 'object' && eintrag.feld.id === fid) return eintrag.feld;
+      }
+    }
+    return null;
+  };
+  c.querySelectorAll('[data-edit-ref]').forEach(sel => {
+    sel.onchange = () => {
+      if (sel.value !== '__neu__') return;
+      const fid = sel.getAttribute('data-edit-ref');
+      const feld = findeEigenesFeld(fid);
+      if (!feld) return;
+      sel.value = '';   // Zurücksetzen, bis Inline-Anlage durch ist
+      flowRefNeueEntitaet(feld, (newId) => {
+        situationFeldSetzen(sitId, fid, { ref: newId, override: '' });
+        renderContent();
+      });
+    };
+  });
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -17882,8 +18206,10 @@ function flowBereichPdf(sektorId, optionen) {
    einer App, deren Versprechen „nichts verlässt das Gerät" lautet. Verschlüsseln löst es nicht
    ohne einen zweiten, ebenso niedrigschwelligen Kanal für den Schlüssel (offene Frage für E5).
    Der Text-Einfüge-Weg in die Lese-App bleibt unverändert (kein QR, kein Klartext-Foto-Risiko).
-   Die Zerlegungs-Infrastruktur selbst (`qrTeilePacken`/`qrTeileZusammensetzen`/Rahmen-Parsing)
-   bleibt — sie trägt weiterhin den (aktuell ausgeblendeten) EUDIW-Wallet-Übergabe-Pfad. */
+   Die Zerlegungs-Infrastruktur (`qrTeilePacken`/Rahmen-Parsing) bleibt — sie trägt weiterhin
+   den (aktuell ausgeblendeten) EUDIW-Wallet-Übergabe-Pfad. `qrTeileZusammensetzen` (das
+   Gegenstück zum Zusammensetzen) ist mit U2-ADR-085 §5 entfernt: kein Aufrufer setzt je etwas
+   zusammen, die Wallet ist der einzige Empfänger und hat ihre eigene Implementierung. */
 const QR_TEIL_MAX = 600;   // Zeichen Nutzlast je QR-Teil (konservativ unter der QR-Kapazität)
 
 // Kurze, deterministische Gruppen-Kennung (FNV-1a, KEIN Krypto — nur zum Zusammengehören der
@@ -17923,22 +18249,10 @@ function _qrRahmenParsen(rahmen) {
   if (!mm) return null;
   return { gruppe: gid, index: +mm[1], gesamt: +mm[2], nutzlast: s.slice(p3 + 1) };
 }
-// Setzt mehrteilige Teile (strukturiert ODER Rahmen-Strings) wieder zum Original-Text zusammen.
-// null bei Lücken/Inkonsistenz (fehlender Teil, gemischte Gruppen/Gesamtzahlen).
-function qrTeileZusammensetzen(teile) {
-  if (!Array.isArray(teile) || !teile.length) return null;
-  const parsed = teile.map(t => (typeof t === 'string') ? _qrRahmenParsen(t) : t).filter(Boolean);
-  if (!parsed.length) return null;
-  const gesamt = parsed[0].gesamt, gid = parsed[0].gruppe;
-  const bySeq = {};
-  for (const p of parsed) {
-    if (p.gruppe !== gid || p.gesamt !== gesamt) return null;
-    bySeq[p.index] = p.nutzlast;
-  }
-  let out = '';
-  for (let i = 1; i <= gesamt; i++) { if (bySeq[i] == null) return null; out += bySeq[i]; }
-  return out;
-}
+// U2-ADR-085 §5: qrTeileZusammensetzen entfernt (Carola, 14.07.2026, gegen CCs Empfehlung).
+// Kein Produktiv-Aufrufer: EUDIW erzeugt (qrTeilePacken), setzt aber nie zusammen — der
+// Empfänger ist eine fremde Wallet mit eigener Implementierung, nie die Lese-App (die hat
+// ihre eigene, unabhängige qrTeilAufnehmen). Bei EUDIW-Reaktivierung: neu bauen, mit Begründung.
 
 /* ── An EUDI-Wallet übergeben (Best-Effort, vorläufig) — SD-JWT-VC-Serialisierung ──────
    BEST-EFFORT gegen den aktuellen SD-JWT-VC-/EUDI-Entwurf, NICHT garantiert interoperabel.
@@ -18610,7 +18924,7 @@ function feldInputHTML(feld, roh) {
       }
       const vorschlaege = (entitaet === 'institution')
         ? institutionenVorschlag(feld.art)
-        : personenVorschlag(feld.rolle);
+        : personenVorschlag(feld.selbstbezug);
       let h = '<div class="feld-ref-picker">';
       h += '<select data-edit-ref="' + fid + '" data-typ="ref" data-entitaet="' + entitaet + '"' + al + '>';
       h += '<option value=""></option>';
@@ -18660,6 +18974,20 @@ function feldInputHTML(feld, roh) {
           STRINGS.btnBearbeiten + '</button> ';
         h += '<button type="button" class="btn-mini" data-eintrag-entfernen="' + i + '">' +
           STRINGS.btnEntfernen + '</button>';
+        // Muster H (15.07.2026): echter Link zum Sub-Depot-Anlegen an der kinder-Liste — löst das
+        // Versprechen am sorgerecht_kind-Hint ein. Nur, wenn das Kind eine Register-Person ist UND
+        // noch kein Sub-Depot mit dieser kindRegisterId existiert (keine Dopplung anbieten).
+        if (fid === 'kinder') {
+          const kindRef = liste[i] && liste[i].kind && typeof liste[i].kind === 'object' ? liste[i].kind.ref : '';
+          const schonVorhanden = kindRef && (data && Array.isArray(data.verwalteteDepots)) &&
+            data.verwalteteDepots.some(d => d.kindRegisterId === kindRef);
+          if (kindRef && !schonVorhanden) {
+            h += ' <button type="button" class="btn-mini" data-kind-subdepot="' + i + '">' +
+              escapeHTML(STRINGS.kindSubDepotKnopf) + '</button>';
+          } else if (schonVorhanden) {
+            h += ' <span class="fs-xs" style="color:var(--ink3)">' + escapeHTML(STRINGS.kindSubDepotVorhanden) + '</span>';
+          }
+        }
         h += '</li>';
       }
       h += '</ul>';
@@ -18936,14 +19264,18 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
     const vorschlaegeFuer = (text) => {
       const t = String(text || '').trim().toLowerCase();
       if (!t) return [];
-      const alle = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.rolle);
+      const alle = (entitaet === 'institution') ? institutionenVorschlag(feld.art) : personenVorschlag(feld.selbstbezug);
       return alle.filter(v => String(v.name || '').toLowerCase().indexOf(t) !== -1).slice(0, 5);
     };
     // (Chip-Input, Zusatz 2: die frühere `exaktVorhanden`-Prüfung diente nur der entfallenen „…anlegen"-Zeile
     //  und ist damit weg. Dedup passiert jetzt bei der bewussten Bestätigung über personFindenOderAnlegen.)
-    // Personen-Widget: EIN Feld = Eingabe + Suche. Auswahl setzt die verborgene ref; freier Name legt beim
-    // Verlassen stumm eine Register-Person an (Dedup via personFindenOderAnlegen). Alles rein im DOM — KEIN
-    // renderContent, damit die Scroll-Position am Widget bleibt (UX-Spec: „kein Sprung nach oben").
+    // Personen-Widget: EIN Feld = Eingabe + Suche. Auswahl setzt die verborgene ref; freier, getippter
+    // Name legt NIE beim Verlassen an (Kommentar-Korrektur E2 D1, 15.07.2026 — stand hier vorher
+    // fälschlich umgekehrt: „legt beim Verlassen stumm an"; das war der schon zweimal gefixte
+    // Registermüll-Bug. Tatsächliches Verhalten, s. `bestaetige()`/`onblur` unten: NUR Enter oder der
+    // „Übernehmen"-Haken rufen personFindenOderAnlegen, Blur verwirft unbestätigten Freitext). Alles
+    // rein im DOM — KEIN renderContent, damit die Scroll-Position am Widget bleibt (UX-Spec: „kein
+    // Sprung nach oben").
     const comboVerdrahten = (z) => {
       const eingabe = z.querySelector('[data-edit-refm-override]');
       const refFeld = z.querySelector('[data-edit-refm]');
@@ -19235,8 +19567,31 @@ function liesEintragAusDOM(modalEl, feld) {
 // und gibt die neue ID an den Aufrufer zurück. UI-Brücke; Daten-Schicht ist testbar.
 function flowRefNeueEntitaet(refFeld, onAnlegen) {
   const entitaet = refFeld.entitaet || 'person';
-  const titel = entitaet === 'institution' ? STRINGS.refNeueInstitutionTitel : STRINGS.refNeuePersonTitel;
-  const labelName = entitaet === 'institution' ? STRINGS.refNeueInstitutionName : STRINGS.refNeuePersonName;
+  // E2 D3: Institutionen bekommen die volle Eingabemaske (name/art/tel/adresse/email/anmerkung) —
+  // vier der sieben Register-Felder hatten bis dahin keinen Eingabepfad. `art` entfällt, wenn der
+  // Ref-Kontext sie schon vorgibt (z. B. pflegedienst_kontakt). Personen bleiben beim schmalen
+  // Namensfeld — das volle Personen-Formular lebt weiterhin in „Meine Menschen" (Bereich 2).
+  if (entitaet === 'institution') {
+    const institutionFeld = _institutionFelder(refFeld.art);
+    const koerperHTML = listenEintragInputsHTML(institutionFeld, {});
+    ui.modal({
+      titel: STRINGS.refNeueInstitutionTitel,
+      koerperHTML,
+      primaerLabel: STRINGS.btnSpeichern,
+      onPrimaer: (schliessen) => {
+        const modalEl = document.getElementById('modal-inhalt');
+        const werte = liesEintragAusDOM(modalEl, institutionFeld);
+        if (!werte.name) return;
+        if (refFeld.art) werte.art = refFeld.art;   // vorgegebene Art bleibt programmatisch, nicht Teil der Maske
+        const id = institutionHinzufuegen(werte);
+        if (typeof schliessen === 'function') schliessen();
+        if (typeof onAnlegen === 'function') onAnlegen(id);
+      },
+    });
+    return;
+  }
+  const titel = STRINGS.refNeuePersonTitel;
+  const labelName = STRINGS.refNeuePersonName;
   const koerperHTML = '<div class="feld-zeile feld-zeile-sub"><div class="feld-label">' + labelName +
     ' <span class="feld-pflicht-marker" aria-label="' + STRINGS.pflichtMarker + '">*</span></div>' +
     '<div class="feld-wert"><input type="text" id="ref-neu-name"></div></div>';
@@ -19251,9 +19606,7 @@ function flowRefNeueEntitaet(refFeld, onAnlegen) {
       const inp = document.getElementById('ref-neu-name');
       const name = (inp && inp.value && inp.value.trim()) || '';
       if (!name) return;
-      const id = (entitaet === 'institution')
-        ? institutionHinzufuegen({ name, art: refFeld.art })
-        : personHinzufuegen({ name });   // A1: rollenloses Register — Rolle steckt im Feld refFeld
+      const id = personHinzufuegen({ name });   // A1: rollenloses Register — Rolle steckt im Feld refFeld
       if (typeof schliessen === 'function') schliessen();
       if (typeof onAnlegen === 'function') onAnlegen(id);
     },
@@ -19665,12 +20018,15 @@ function renderVerwalteteDepots() {
   });
 }
 
-function flowSubDepotAnlegen() {
+function flowSubDepotAnlegen(vorausfuellen) {
   // D35-Fix: KEIN stiller Redirect mehr. In Lage A (Vorschau) ist „Sub-Depot anlegen"
   // sichtbar-aber-deaktiviert; Erklärtext + Link „Passwort jetzt setzen →" führen bewusst
   // zum eigenen Anker-Depot (renderVerwalteteDepots). Hier nur noch defensiver Riegel:
   // sollte der Flow im Vorschau-Zustand doch erreicht werden, passiert NICHTS (kein Schreiben).
   if (imVorschau()) return;
+  // Muster H (15.07.2026): optionaler Vorausfüll-/Verknüpfungs-Parameter, gesetzt vom Kind-
+  // Zeilen-Knopf (flowKindSubDepotAnlegen). Ohne Aufrufer (normaler Sidebar-Weg) unverändert leer.
+  const vf = vorausfuellen || {};
   // D36 (Strang 6): ausdrücklicher Sub-Anlege-Eintritt → gemeinsame Identitäts-Eingabe in der
   // Sub-Variante (Grundlage + Farbe DAVOR, dann Passwort). Vorname/Nachname der Inhaberin werden
   // als KLARTEXT-Metadaten im Eintrag abgelegt (Carola-Entscheid). Min-8 greift über die Funktion.
@@ -19680,8 +20036,10 @@ function flowSubDepotAnlegen() {
     primaerLabel: STRINGS.btnAnlegen,
     akzentDefault: naechsterFreierAkzent((data && data.verwalteteDepots) || []),
     unterHinweis: STRINGS.subPwHinweis,
+    vornameDefault: vf.vornameDefault || '',
+    nachnameDefault: vf.nachnameDefault || '',
     onFertig: async ({ vorname, nachname, grundlage, akzent, passwort }) => {
-      await subDepotAnlegen({ vorname, nachname, vertretungsGrundlage: grundlage, akzent }, passwort);
+      await subDepotAnlegen({ vorname, nachname, vertretungsGrundlage: grundlage, akzent, kindRegisterId: vf.kindRegisterId || null }, passwort);
       // D40-Behebung: Sub-Anlegen ist eine Struktur-Mutation → SOFORT in die Datei sichern.
       // (Genau das fehlte und kostete „Sophie Klessen".) markiere zuerst „ungespeichert",
       // damit ein abgebrochenes Teilen-Blatt korrekt als ungespeichert sichtbar bleibt.
@@ -19690,6 +20048,24 @@ function flowSubDepotAnlegen() {
     },
     nachher: () => { ui.toast(STRINGS.subAngelegt, 'ok'); renderSidebar(); renderContent(); },
   });
+}
+
+// Muster H (15.07.2026): echter Link von der kinder-Liste zum Sub-Depot-Anlegen-Flow — löst das
+// Versprechen am `sorgerecht_kind`-Hint ein ("Diese Angabe ist die Grundlage, falls Sie später ein
+// eigenes Depot für Ihr Kind anlegen"). Liest den Namen der referenzierten Register-Person, teilt ihn
+// naiv in Vorname/Nachname (erstes Wort/Rest — die Bürgerin sieht die Felder vor dem Anlegen und kann
+// sie korrigieren), und übergibt die Register-id zur Verknüpfung (`kindRegisterId`).
+function flowKindSubDepotAnlegen(sektorId, feld, idx) {
+  const liste = (data && data.sektoren && data.sektoren[sektorId] && data.sektoren[sektorId][feld.id]) || [];
+  const eintrag = liste[idx] || null;
+  if (!eintrag) return;
+  const ref = eintrag.kind && typeof eintrag.kind === 'object' ? eintrag.kind.ref : '';
+  if (!ref) { ui.toast(STRINGS.kindSubDepotOhnePerson, 'fehler'); return; }
+  const name = personName(eintrag.kind);
+  const teile = name.trim().split(/\s+/).filter(Boolean);
+  const vornameDefault = teile[0] || '';
+  const nachnameDefault = teile.slice(1).join(' ');
+  flowSubDepotAnlegen({ kindRegisterId: ref, vornameDefault, nachnameDefault });
 }
 
 function flowSubDepotEntsiegeln(depotUUID) {
