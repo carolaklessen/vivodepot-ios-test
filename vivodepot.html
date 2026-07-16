@@ -567,6 +567,19 @@
   .basis-ablauf-banner .bab-x { background: rgba(0,0,0,0.10); color: var(--ink); border: 1px solid rgba(0,0,0,0.2);
     border-radius: var(--radius-sm); width: 1.6rem; height: 1.6rem; line-height: 1; cursor: pointer; }
   .basis-ablauf-banner .bab-x:hover { background: rgba(0,0,0,0.2); }
+  /* CC-Bauauftrag Service-Worker-Update (16.07.2026), Stufe 2: neuer Worker hat übernommen —
+     Hinweis statt Zwangs-Reload (offenes, ungespeichertes Depot darf nicht mitten in der Sitzung
+     umschalten). Gleiche Bühne wie der Ablauf-Banner, eigene Farbfamilie (neutral, kein Alarm). */
+  .sw-update-banner { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: center; gap: var(--space-3); flex-wrap: wrap;
+    background: var(--ink); color: var(--white); padding: var(--space-2) var(--space-4);
+    font-size: var(--fs-sm); font-weight: 600; box-shadow: 0 -2px 8px rgba(0,0,0,0.2); }
+  .sw-update-banner[hidden] { display: none; }
+  .sw-update-banner .swb-neu { background: var(--white); color: var(--ink); border: none;
+    border-radius: var(--radius-sm); padding: var(--space-1) var(--space-3); font-weight: 700; cursor: pointer; }
+  .sw-update-banner .swb-x { background: rgba(255,255,255,0.15); color: var(--white); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: var(--radius-sm); width: 1.6rem; height: 1.6rem; line-height: 1; cursor: pointer; }
+  .sw-update-banner .swb-x:hover { background: rgba(255,255,255,0.25); }
   /* Vollmacht-Banner (Durchbau T1) — Dauer-Hinweis im Sub-Kontext, Schieferblau-Familie. */
   .vollmacht-banner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
     flex-wrap: wrap; background: var(--vm-chrome); color: #fff;
@@ -737,6 +750,14 @@
   /* Layout-Fix F1 (16.07.2026): gap auf space-3 angehoben (war space-2) — Luft zwischen Name
      und Knopfgruppe, damit sie nicht aneinanderkleben ("Frau Schenk[Bearbeiten]"). */
   .liste-eintraege li { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-1) 0; }
+  /* Layout-Fix F1-Nachtrag (16.07.2026, Geräte-Befund): menschenRegisterHTML() (Übersicht
+     „Meine Menschen" > MENSCHEN) rendert über eine eigene, bisher UNGESTYLTE Markup-Variante
+     (.liste-eintrag/-text/-aktionen statt .liste-eintraege li/.liste-eintrag-zusammenfassung) —
+     der F1-Fix von eben griff hier nicht, weil die Klassen schlicht keine CSS-Regel hatten
+     (Name klebte direkt am Bearbeiten-Knopf, kein flex, kein gap). Gleiche Lösung wie F1. */
+  .menschen-register .liste-eintrag { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-1) 0; }
+  .menschen-register .liste-eintrag-text { flex: 1 1 auto; min-width: 0; color: var(--ink2); }
+  .menschen-register .liste-eintrag-aktionen { display: flex; gap: var(--space-2); flex-wrap: wrap; }
   /* Sub-Inputs im Eintrag-Modal — engere Zeilen als Top-Felder.
      Layout-Fix F3/F5 (16.07.2026, Geräte-Abnahme): unconditional Label-über-Feld statt der
      160px/1fr-Zwei-Spalten-Regel. Der bisherige Umbruch griff nur unter dem Viewport-Breakpoint
@@ -2290,6 +2311,9 @@
 <div id="app">
   <!-- 1F/b1: persistenter Ablauf-Vorwarn-Banner — gefüllt/gezeigt von _basisAblaufBannerVielleicht (Boot). -->
   <div id="basis-ablauf-banner" class="basis-ablauf-banner" role="status" hidden><span class="bab-text"></span><button type="button" class="bab-x" id="basis-ablauf-x" aria-label="Hinweis schließen">×</button></div>
+  <!-- CC-Bauauftrag Service-Worker-Update (16.07.2026), Stufe 2: Hinweis statt Zwangs-Reload —
+       gefüllt/gezeigt von _swUpdateHinweisZeigen() bei erkanntem Worker-Wechsel (controllerchange). -->
+  <div id="sw-update-banner" class="sw-update-banner" role="status" hidden><span class="swb-text"></span><button type="button" class="swb-neu" id="sw-update-neu">Neu laden</button><button type="button" class="swb-x" id="sw-update-x" aria-label="Hinweis schließen">×</button></div>
   <header class="topbar">
     <button type="button" class="a11y-btn tb-menue" id="tb-menue" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar"><span class="ico" data-icon="menu"></span></button>
     <button type="button" class="marke" id="tb-marke" aria-label="Zur Startseite">
@@ -2637,7 +2661,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v66';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v68';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -3215,6 +3239,8 @@ const STRINGS = Object.freeze({
   amtlicherWortlautBadge: "amtlicher Wortlaut",      // 1E: Badge am aufklappbaren Wortlaut-Block
   amtlicheVorlageVeraltet: "veraltet — App aktualisieren",   // 1F/b2: Marker an abgelaufen-aber-gültiger Basis-Vorlage
   amtlicheVorlagenAblaufWarnung: "Die amtlichen Vorlagen sind noch bis {datum} signiert. Bitte aktualisieren Sie die App rechtzeitig.",  // 1F/b1: Vorwarnung < 90 Tage
+  swUpdateVerfuegbar: "Eine neue Version ist verfügbar.",  // CC-Bauauftrag Service-Worker-Update, 16.07.2026, Stufe 2
+  swUpdateNeuLaden: "Neu laden",
   // ── Erkennung bestehender Standard-Dokumente (U2-ADR-014) — Vorschlag, nie Auto-Anlegen ──
   dokumentErkanntTitel: "Aus Ihren Angaben erkannt",
   dokumentErkanntTextVorsorgevollmacht: "Sie haben eine Vorsorgevollmacht hinterlegt. Möchten Sie an die regelmäßige Auffrischung erinnert werden?",
@@ -20406,11 +20432,53 @@ function _swRegistrierenErlaubt() {
     return !!(navigator.serviceWorker && typeof navigator.serviceWorker.register === 'function');
   } catch (_) { return false; }
 }
+// CC-Bauauftrag Service-Worker-Update (16.07.2026): Stufe 1 (aktiv auf sw.js-Änderung prüfen,
+// wenn die Seite wieder Fokus bekommt — sonst kann der Browser lange am HTTP-Cache der sw.js-
+// Datei selbst hängen bleiben) + Stufe 2 (Hinweis statt Zwangs-Reload bei Worker-Wechsel).
+// Stufe 3 (skipWaiting) bleibt ausdrücklich AUS — der bewusste Schnitt (Aktivierung erst, wenn
+// alle Tabs/die App zu sind) bleibt der sichere Pfad gegen ein Umschalten mitten in einer
+// offenen, ungespeicherten Depot-Sitzung (CC-Bericht Stufe 1 Service-Worker-Update, F3).
+var _swUpdateHinweisGezeigt = false;
+function _swUpdateHinweisZeigen() {
+  try {
+    var el = document.getElementById('sw-update-banner'); if (!el) return;
+    var t = el.querySelector('.swb-text'); if (t) t.textContent = STRINGS.swUpdateVerfuegbar;
+    var neu = document.getElementById('sw-update-neu');
+    if (neu && !neu._gebunden) { neu._gebunden = true; neu.addEventListener('click', function () { location.reload(); }); }
+    var x = document.getElementById('sw-update-x');
+    if (x && !x._gebunden) { x._gebunden = true; x.addEventListener('click', function () { el.hidden = true; }); }
+    el.hidden = false;
+  } catch (_) {}
+}
 function serviceWorkerRegistrieren() {
   try {
     if (!_swRegistrierenErlaubt()) return;
     var reg = function () {
-      try { navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (_) {}
+      try {
+        // Schon vor dem (erneuten) register() gemerkt: hatte diese Seite bereits einen aktiven
+        // Controller? Wenn nein, ist der erste 'controllerchange' nur der Erst-Erwerb der
+        // Kontrolle (clients.claim() beim allerersten Laden) — KEINE „neue Version", also kein
+        // Hinweis dafür. Erst ein SPÄTERER Wechsel ist ein echtes Update.
+        var hatteBereitsController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+        if (navigator.serviceWorker.addEventListener) {
+          navigator.serviceWorker.addEventListener('controllerchange', function () {
+            if (!hatteBereitsController) { hatteBereitsController = true; return; }
+            if (_swUpdateHinweisGezeigt) return;
+            _swUpdateHinweisGezeigt = true;
+            _swUpdateHinweisZeigen();
+          });
+        }
+        navigator.serviceWorker.register('sw.js').then(function (registrierung) {
+          if (!registrierung) return;
+          var pruefen = function () { try { registrierung.update(); } catch (_) {} };
+          if (typeof document !== 'undefined' && document.addEventListener) {
+            document.addEventListener('visibilitychange', function () {
+              if (document.visibilityState === 'visible') pruefen();
+            });
+          }
+          if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('focus', pruefen);
+        }).catch(function () {});
+      } catch (_) {}
     };
     if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('load', reg);
     else reg();
