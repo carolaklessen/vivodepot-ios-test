@@ -777,9 +777,17 @@
   .feld-ref-picker { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
   .feld-ref-picker select, .feld-ref-picker input { font-size: var(--fs-sm); padding: var(--space-1); flex: 1 1 160px; min-width: 0; }
   .feld-ref-picker select { text-overflow: ellipsis; }
-  /* Inline-Anlage einer neuen Person/Institution direkt unter dem Ref-Picker — ohne Modal-Stack. */
-  .inline-neu { display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-2); padding: var(--space-2); background: var(--gold-soft); border: 1px solid var(--gold); border-radius: var(--radius-sm, 4px); grid-column: 1 / -1; }
-  .inline-neu input { font-size: var(--fs-sm); padding: var(--space-1); flex: 1; }
+  /* Inline-Anlage einer neuen Person/Institution direkt unter dem Ref-Picker — ohne Modal-Stack.
+     Nachbesserung (16.07.2026, Geräte-Abnahme, Restfund zu F5): fünf Elemente (Name, Datum,
+     Geburtsjahr, zwei Knöpfe) teilten sich die Zeile mit GLEICHEM flex:1 auf allen Inputs —
+     das Namensfeld (das wichtigste) bekam dadurch nicht mehr Platz als das 4-stellige
+     Geburtsjahr-Feld und schnitt normale Vornamen ab („Emiliane" passte nicht). Unconditional
+     flex-wrap (dieselbe Umbruch-statt-Kollision-Logik wie F1/F2) + das Namensfeld bekommt
+     einen größeren Flex-Anteil und eine Mindestbreite, die schmalen Felder bleiben kompakt. */
+  .inline-neu { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-2); padding: var(--space-2); background: var(--gold-soft); border: 1px solid var(--gold); border-radius: var(--radius-sm, 4px); grid-column: 1 / -1; }
+  .inline-neu input { font-size: var(--fs-sm); padding: var(--space-1); }
+  .inline-neu input[data-neu-name] { flex: 2 1 160px; min-width: 140px; }
+  .inline-neu input:not([data-neu-name]) { flex: 0 1 auto; }
   .bereich-kopf .ico { color: var(--akzent); }
 
   .sektion { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); margin: var(--space-4) 0; box-shadow: var(--shadow-soft); }
@@ -954,12 +962,20 @@
   /* Einstellungen-Dialog (Bruch B) */
   .einst-abschnitt { padding: var(--space-3) 0; border-top: 1px solid var(--line); }
   .einst-abschnitt:first-child { border-top: none; }
-  .einst-abschnitt h4 { margin: 0 0 var(--space-2); font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold); }
+  /* B1-Nachbesserung Fix 2 (16.07.2026): Über-Bereich nach Style-Guide (vivodepot-style-guide-v2).
+     Gold ist im UI ausschließlich Echtheitsmerkmal, nie Deko-Farbe für Abschnittsüberschriften
+     (Style-Guide: „Gold lebt ausschließlich im Logo-Artwork"/„Im UI nicht als Fläche verwenden") —
+     Überschriften-Rolle ist --salbei-dunkel („Chrome, zugleich Überschriften-Text"). */
+  .einst-abschnitt h4 { margin: 0 0 var(--space-2); font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--salbei-dunkel); }
   .einst-zeile { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin: var(--space-2) 0; flex-wrap: wrap; }
   .einst-label { color: var(--ink2); font-size: var(--fs-sm); }
   .einst-hint { color: var(--ink3); font-size: var(--fs-xs); margin: 0 0 var(--space-2); }
   .einst-anbieter { color: var(--ink); font-size: var(--fs-sm); margin: 0 0 var(--space-1); }
-  .einst-hash { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--fs-xs); color: var(--ink2); word-break: break-all; }
+  /* Einheitliche Werte-Rolle (Version/Stand/Hash/Lizenz gleich behandelt, keiner größer als die
+     anderen — vorher waren Version/Stand/Lizenz unstyled und liefen auf Ambient-Größe, während
+     nur Hash explizit klein war; der Lizenz-Wert wirkte dadurch wie eine Überschrift). */
+  .einst-wert { font-size: var(--fs-sm); color: var(--ink); }
+  .einst-hash { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--ink2); word-break: break-all; }
   .einst-knopfreihe { display: inline-flex; gap: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
   .einst-opt { background: var(--white); color: var(--ink2); border: none; border-left: 1px solid var(--line); padding: var(--space-2) var(--space-3); font-size: var(--fs-sm); min-height: 36px; }
   .einst-opt:first-child { border-left: none; }
@@ -1391,7 +1407,8 @@
        unconditional 1fr (siehe Basis-Regel) — hier nicht mehr nötig. */
     .feld-zeile { grid-template-columns: 1fr; gap: var(--space-1); }
     /* .feld-ref-picker ist seit Layout-Fix F2 (16.07.2026) bereits unconditional flex-wrap. */
-    .inline-neu { flex-wrap: wrap; }
+    /* .inline-neu ist seit der Namensfeld-Nachbesserung (16.07.2026) bereits unconditional
+       flex-wrap (siehe Basis-Regel) — hier nicht mehr nötig. */
 
     /* ── Kopfbereich straffen (Carola: „das oben ist viel zu groß") ─────────
        Weniger Chrome/Leerraum, damit die ersten echten Felder höher rücken.
@@ -2316,7 +2333,7 @@
   <div id="sw-update-banner" class="sw-update-banner" role="status" hidden><span class="swb-text"></span><button type="button" class="swb-neu" id="sw-update-neu">Neu laden</button><button type="button" class="swb-x" id="sw-update-x" aria-label="Hinweis schließen">×</button></div>
   <header class="topbar">
     <button type="button" class="a11y-btn tb-menue" id="tb-menue" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar"><span class="ico" data-icon="menu"></span></button>
-    <button type="button" class="marke" id="tb-marke" aria-label="Zur Startseite">
+    <button type="button" class="marke" id="tb-marke" aria-label="Depot verlassen" title="Depot verlassen">
       <span class="logo-mark"><svg class="logo-svg" aria-hidden="true" focusable="false"><use href="#vd-logo"/></svg></span>
       <span class="logo-wort"><span class="lw-vivo">VIVO</span><span class="lw-depot">DEPOT</span></span>
     </button>
@@ -2661,13 +2678,23 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v69';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v70';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
-const BUILD_DATUM = '2026-07-09';
+// ⚠ B1-Nachbesserung (16.07.2026, Fund 1): war 7 Tage veraltet (2026-07-09), obwohl
+// SCHALEN_STAND zwischenzeitlich zweimal hochgezählt wurde (v68, v69) — die beiden
+// Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
+// vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
+// sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
+const BUILD_DATUM = '2026-07-21';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
+// AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
+// 16.07.2026). Bewusst eine überschreibbare Konstante, kein Literal im Text/in der Anzeige:
+// eine White-Label-Instanz ersetzt sie durch ihren eigenen institutionsspezifischen
+// Bezugs-Link. Die Standard-App zeigt auf den öffentlichen Vivodepot-Bezugsort.
+const AKTUALISIERUNGEN_LINK = 'https://vivodepot.de';
 
 /* ╔════════════════════════════════════════════════════════════════════════╗
    ║  GEMEINSAMER JWS-BLOCK  —  VERBATIM-fähig  (KRYPTO-FUNDAMENT)            ║
@@ -2942,6 +2969,10 @@ const STRINGS = Object.freeze({
   fussSwLabel: "SW-Cache",            // was der Service Worker gerade hält (live gelesen)
   fussSwLaedt: "…",                   // Platzhalter, bis caches.keys() aufgelöst hat
   fussSwKeiner: "keiner",             // kein aktiver Service-Worker-Cache
+  // CC-Bauauftrag Versionsanzeige (16.07.2026) — host-unabhängig, auch aus file:// sichtbar,
+  // ohne jeden Klick: rein lokal aus BUILD_DATUM/AKTUALISIERUNGEN_LINK gerendert, kein Netz.
+  fussDatumLabel: "vom",
+  fussAktualisierungenLabel: "Aktualisierungen",
   anlassFrage: "Was bringt Sie heute hierher?",
   anlassFrageHerausholen: "Für welchen Anlass möchten Sie etwas parat haben?",  // in-App (Herausholen-Weg), Struktur-Spec §1/§4
   klasse1: "Lebensereignisse",
@@ -2975,6 +3006,8 @@ const STRINGS = Object.freeze({
   btnAbbrechen: "Abbrechen",
   listenEintragTitelNeu: "Neuer Eintrag",
   listenEintragTitelBearbeiten: "Eintrag bearbeiten",
+  // U2-ADR-089 Teil A Block 1 (17.07.) — Einzigartigkeits-Sperre im manuellen Listen-Pfad.
+  instrumentEinzigartigHinweis: "Dieses Instrument gibt es bei Ihnen bereits — bitte bearbeiten Sie den bestehenden Eintrag, statt einen zweiten anzulegen.",
   refNeuePersonTitel: "Neue Person anlegen",
   refNeueInstitutionTitel: "Neue Institution anlegen",
   refNeuePersonName: "Name",
@@ -3053,7 +3086,7 @@ const STRINGS = Object.freeze({
   d37NamenlosCta: "Jetzt ergänzen",
   d37NamenlosWeg: "Hinweis schließen",
   gruppeBereiche: "Bereiche",
-  navZuhause: "Zuhause",                                  // Sidebar-Eintrag = Rückweg zum Willkommensschirm (Logo-Binding/Funktion/Icon unverändert; KEIN Überblick)
+  navDepotVerlassen: "Depot verlassen",                   // CC-Auftrag Eingangsschirm 20.07.2026: benennt, was der Knopf tatsächlich tut (Rückweg zum Willkommensschirm) — "Zuhause" versprach einen Ort im Depot, der nicht existiert. Logo trägt denselben Wortlaut als aria-label/title (Teil A, "bewusst identisch").
   navNotfall: "Notfall",                                  // Sidebar-Eintrag (U2-ADR-059): Bürger-Sicht der eigenen Akut-Angaben (live) + Karte/QR. Getrennt vom Sanitäter-aus-Datei-Weg.
   btnSchliessen: "Schließen",                             // Notfall-Sicht verlassen → Zuhause
   depotPilleEigen: "Mein Depot",                          // Depot-Pille im Anker-Modus (Struktur-Spec §2.3; „Anker" nie im UI)
@@ -3179,14 +3212,24 @@ const STRINGS = Object.freeze({
   einstLizenz: "Lizenz",
   einstLizenzWert: "EUPL-1.2 (Open Source) — voller Text als LICENSE im Repo",
   einstAbschnittRecht: "Anbieter",
-  einstAnbieter: "Vivodepot GmbH · Carola Klessen · Körnerstraße 7-10, 10785 Berlin",
+  // B1-Nachbesserung Fix 1 (16.07.2026): kein Personenname, keine Postanschrift in der
+  // ausgelieferten App — landet sonst auf jedem Stick/Download, tausendfach. Vollständiges
+  // Impressum steht auf der Website (Verweis-Satz direkt darunter bleibt bestehen).
+  einstAnbieter: "Vivodepot GmbH · Berlin",
   einstAnbieterHinweis: "Die vollständige Impressum-Fassung steht auf der Website.",
 
   // ── Versions-Hinweis + „Nach neuer Version suchen" (Aufräumen Teil 3) ──
   // App und Daten sind getrennt: „Update holen" heißt eine neue App-Datei laden und die
   // eigenen Daten über „Daten einlesen" hineinholen. Die App geht NIE von selbst ins Netz.
   einstBuildDatum: "Stand der App",
-  einstVersionAktuell: "Diese App-Version ist aktuell.",
+  // Ehrlicher Stand-Satz (CC-Bauauftrag Versionsanzeige, 16.07.2026) — gilt unabhängig davon,
+  // ob die Datei online oder aus file:// läuft; sagt klar, dass sich die Datei nicht von
+  // selbst aktualisiert, und verweist auf AKTUALISIERUNGEN_LINK statt ein Literal zu nennen.
+  einstVersionStandSatz: "Dies ist Version {version} vom {datum}. Diese Datei aktualisiert sich nicht von selbst.",
+  // B1-Nachbesserung (16.07.2026, Fund 2): "ist aktuell" behauptete etwas, das die passive
+  // file://-Anzeige nie geprüft hat — sie fragt bewusst nichts ab (kein Fetch, kein Endpunkt).
+  // Ehrlicher Ersatz: sagt, WO man nachsehen kann, nicht DASS der Stand der neueste ist.
+  einstVersionAktuell: "Ob eine neuere Version vorliegt, sehen Sie über den Link unten.",
   einstVersionAltHinweis: "Diese App-Version ist von {datum}. Schauen Sie gelegentlich, ob es eine neuere gibt — Ihre Daten bleiben dabei unberührt.",
   einstVersionSuchenKnopf: "Nach Aktualisierung suchen",
   einstVersionSuchenHinweis: "Öffnet die Vivodepot-Website in einem neuen Tab. Erst dann gehen Sie online — die App selbst lädt nie etwas aus dem Internet nach.",
@@ -3210,14 +3253,17 @@ const STRINGS = Object.freeze({
   dokumentStandardTitel: "Typische Dokumente hier",
   dokumentStandardHinweis: "Aus dieser Liste übernehmen — die Vorschläge bringen einen passenden Namen und Prüf-Rhythmus mit.",
   dokumentUebernehmen: "Übernehmen",
-  dokumentEigenesTitel: "Eigenes Dokument anlegen",
+  // Muster I Fall 1 (16.07.2026): "anlegen" weckte die falsche Erwartung "Datei erzeugen" —
+  // der Knopf/die Gruppe legen nur einen Verweis-/Erinnerungs-Datensatz an (ADR-014), keine
+  // Datei. Umformuliert auf das, was tatsächlich passiert: den Ablageort festhalten.
+  dokumentEigenesTitel: "Eigenes Dokument vermerken",
   dokumentNameLabel: "Name des Dokuments",
   dokumentNamePlatzhalter: "z. B. Mietvertrag",
   dokumentDatumLabel: "Gültig ab",
   dokumentDatumHinweis: "Darf in der Vergangenheit liegen — z. B. eine Vollmacht, die schon länger existiert.",
   dokumentRhythmusSummary: "Regelmäßig prüfen (Rhythmus)",
   dokumentMehrSummary: "Mehr (optional)",
-  dokumentAnlegenKnopf: "Dokument anlegen",
+  dokumentAnlegenKnopf: "Wo liegt das Dokument?",
   dokumentNameFehlt: "Bitte zuerst einen Namen eintragen.",
   dokumentAngelegtToast: "Dokument angelegt.",
   dokumentUebernommenToast: "Dokument übernommen.",
@@ -4058,13 +4104,14 @@ const SEKTOREN = Object.freeze([
     wizards: ['erbwiz'],
     // Standard-Dokument-Liste (U2-ADR-014, Einheit 2). Heimat-Bereich der Bankvollmacht:
     // ihr Gegenstand sind die Konten (siehe konto_haupt_bank/-iban), und Angehörige brauchen
-    // sie für den laufenden Zahlungsverkehr. Die Vollmachts-ART selbst wird seit U2-ADR-064 als
-    // Eintrag (art='bank') in der Liste vorsorge/vollmachten erfasst → bereichsübergreifende
+    // sie für den laufenden Zahlungsverkehr. Die Vollmachts-ART selbst wird als Eintrag
+    // (typ='vorsorgevollmacht', art='bank') in der geteilten Liste vorsorge/vorsorge_instrumente
+    // erfasst (U2-ADR-089, vorher eigene Liste `vollmachten`) → bereichsübergreifende
     // Vorverknüpfung (Heimat finanzen, Feld in vorsorge; Konsequenz 7 erlaubt das ausdrücklich).
     standardDokumente: [
       { typ: 'bankvollmacht', name: 'Bankvollmacht', empfRhythmusMonate: 12,
         hinweis: 'Jährlich prüfen, ob die Kontovollmacht noch besteht und die richtige Person umfasst.',
-        felder: [{ sektorId: 'vorsorge', feldId: 'vollmachten' }] },
+        felder: [{ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente' }] },
     ],
     sektionen: [
       { id: 'konten-steuern-vorsorge', label: 'Konten, Steuern, Vorsorge, Vermögen', felder: [
@@ -4355,6 +4402,212 @@ const SEKTOREN = Object.freeze([
         felder: [{ sektorId: 'vorsorge', feldId: 'testament_datum' }] },
     ],
     sektionen: [
+      // U2-ADR-089 (Entwurf 17.07.) Teil A Block 1 — „Meine Vorsorge": eine geteilte liste über alle
+      // sechs Instrumente, unterschieden per `typ` (erstes Unterfeld, ohne sichtbarWenn, immer sichtbar).
+      // Alle typ-eigenen Unterfelder tragen sichtbarWenn:{feld:'typ', wert:'<instrumentTyp>'} — dasselbe
+      // Muster wie Vollmachts bestehendes `stelle`-Feld (sichtbarWenn auf `form`). Additiv: KEINE
+      // Migration der fünf Flachfeld-Instrumente in Block 1 (Carola-Entscheidung 17.07.) — nur die
+      // bestehende `vollmachten`-Liste wird per Schema-Bump umgehängt (siehe depotNormalisieren). Die
+      // Flachfeld-Formulare unten (Vorsorgevollmacht-Gate/ZVR, Patientenverfügung, Testament & Erbe,
+      // Betreuungsverfügung, Sorgerechtsverfügung) bleiben unverändert bestehen — Block 2 stellt die
+      // neun Gate-Konsumenten um, nicht dieser Auftrag.
+      { id: 'meine-vorsorge', label: 'Meine Vorsorge', felder: [
+        { id: 'vorsorge_instrumente', label: 'Vorsorge-Instrumente', typ: 'liste',
+          hint: 'Jedes Vorsorge-Instrument als eigener Eintrag — Art wählen, dann erscheinen die passenden Felder.',
+          // Nachbesserung (20.07.2026, Geräte-Befund file://): Positivliste statt Alles-Iteration —
+          // listenEintragZusammenfassung()/_verweisListenEintragZusammenfassung() zeigen NUR diese
+          // Unterfelder (Reihenfolge kommt weiter aus der unterFelder-Deklarationsposition, kein
+          // eigener Sortier-Mechanismus). Fehlt `zusammenfassungFelder` auf einer liste, bleibt das
+          // alte Verhalten (alle gefüllten Unterfelder zeigen) unverändert — reines Opt-in, damit
+          // die anderen neun liste-Felder der App unangetastet bleiben.
+          zusammenfassungFelder: [
+            'typ', 'art', 'zusatz', 'bevollmaechtigter',
+            'betreuung_person', 'betreuung_ersatz',
+            'sorgerechtsverfuegung_person', 'sorgerechtsverfuegung_ersatz',
+            'ki_berechtigte_personen', 'ki_nachlassverwalter',
+          ],
+          unterFelder: [
+            // ── Diskriminante ─────────────────────────────────────────────────────────
+            // Block-1-Nachtrag (17.07.2026, Geräte-Befund): der Typ-Sammelbegriff (z. B.
+            // „Vorsorgevollmacht") darf nie NEBEN der genaueren `art` in der Listenzeile stehen
+            // („Vorsorgevollmacht · Bankvollmacht" verwirrt) — bei gesetzter `art` führt sie
+            // allein. `unterdrueckeInZusammenfassungWennGesetzt` ist ein generisches Schema-Flag
+            // (listenEintragZusammenfassung/_verweisListenEintragZusammenfassung werten es aus),
+            // keine Sonderbehandlung für dieses Feld im Code.
+            { id: 'typ', label: 'Instrument', typ: 'auswahl', pflicht: true,
+              unterdrueckeInZusammenfassungWennGesetzt: 'art',
+              optionen: [
+              { wert: 'vorsorgevollmacht',     label: 'Vorsorgevollmacht' },
+              { wert: 'patientenverfuegung',   label: 'Patientenverfügung' },
+              { wert: 'testament',             label: 'Testament' },
+              { wert: 'betreuungsverfuegung',  label: 'Betreuungsverfügung' },
+              { wert: 'sorgerechtsverfuegung', label: 'Sorgerechtsverfügung' },
+              { wert: 'ki-verfuegung',         label: 'Verfügung zur digitalen Nachbildung' },
+            ] },
+            // ── Gemeinsame Felder aller Instrumente (ADR-089) — sichtbar, sobald `typ` gesetzt ist ──
+            { id: 'form', label: 'Form', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] },
+              optionen: [
+                { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
+                { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
+                { wert: 'beurkundet', label: 'notariell beurkundet' },
+              ] },
+            { id: 'stelle', label: 'Beurkundende / beglaubigende Stelle', typ: 'text',
+              sichtbarWenn: { feld: 'form', wert: ['beurkundet', 'beglaubigt'] },
+              beispiel: 'Notar Dr. Sommer, München · Urkundenrolle Nr. 123/2024' },
+            { id: 'ort', label: 'Ablageort', typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] },
+              beispiel: 'beim Notar · Tresor zuhause · Hinweiszettel im Geldbeutel' },
+            // keineZukunft (Nachbesserung 20.07.2026): „letzte Änderung" ist per Definition Vergangenheit.
+            { id: 'datum', label: 'Datum der letzten Änderung', typ: 'datum', keineZukunft: true,
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] } },
+            // ── Vorsorgevollmacht (typ='vorsorgevollmacht') ──────────────────────────────
+            { id: 'art', label: 'Art der Vollmacht', typ: 'auswahl', pflicht: true,
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [
+                { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
+                { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
+                { wert: 'bank',       label: 'Bankvollmacht' },
+                { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
+                { wert: 'general',    label: 'Generalvollmacht' },
+              ] },
+            // Block-1-Nachtrag (17.07.2026) — gemeinsames Feld über alle sechs Instrumente
+            // (wie form/ort/datum): nur der unterscheidende Teil, Art/Typ ergänzt automatisch.
+            // Deklariert direkt nach `art` und vor `bevollmaechtigter`, damit die Zeilen-
+            // Zusammenfassung (Deklarationsreihenfolge = Zeilen-Reihenfolge, kein eigener
+            // Sortier-Mechanismus) „Art · Zusatz · Personen" ergibt.
+            { id: 'zusatz', label: 'Genauer bezeichnen', typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] },
+              beispiel: 'z. B. Commerzbank, für meinen Sohn' },
+            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person(en)', typ: 'refMehrfach', entitaet: 'person', rolle: 'bevollmaechtigte',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              verweisZweck: 'vollmacht', verweisKontextFeld: 'stelle' },
+            { id: 'vertretungsModus', label: 'Wie vertreten die Personen?', typ: 'auswahl',
+              sichtbarWenn: { feld: 'bevollmaechtigter', minAnzahl: 2 },
+              optionen: [
+                { wert: 'gleichwertig', label: 'gleichwertig — jede darf allein handeln' },
+                { wert: 'nacheinander', label: 'nacheinander — in der genannten Reihenfolge (Ersatz)' },
+              ],
+              hint: 'Gleichwertig: jede bevollmächtigte Person darf einzeln handeln. Nacheinander: die erste ist zuständig, die nächste nur als Ersatz — die Reihenfolge oben bestimmt die Vertretung.' },
+            // ADR-089 Entscheidung 5 — statischer Hinweis, kein Mechanismus: nur die drei Arten, die
+            // sich inhaltlich mit anderen überschneiden können. Reine Anzeige, keine Prüfung.
+            { id: 'ueberlappung_hinweis', label: 'Hinweis', typ: 'hinweis',
+              sichtbarWenn: { feld: 'art', wert: ['general', 'gesundheit', 'bank'] },
+              hint: 'Diese Vollmacht kann sich mit anderen überschneiden — achten Sie darauf, dass Ihre Vollmachten zueinander passen.' },
+            // ── Patientenverfügung (typ='patientenverfuegung') ───────────────────────────
+            // „Grundhaltung" bewusst NICHT gebaut: kein lebendes Quellfeld (historische Kandidaten
+            // patientenverf_haltung/_wunsch/palliativ_wunsch sind verwaist, s. u.), und die BMJ-
+            // Wertvorstellungs-Bausteine bleiben laut ADR-089 Entscheidung 1 wizard-intern.
+            { id: 'organspende', label: 'Organspende', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' },
+              optionen: [
+                { wert: 'ja',      label: 'ja, vollumfänglich' },
+                { wert: 'teil',    label: 'ja, eingeschränkt' },
+                { wert: 'nein',    label: 'nein' },
+                { wert: 'familie', label: 'Familie entscheidet' },
+              ] },
+            { id: 'organspende_einschraenkung', label: 'Welche Einschränkung?', typ: 'textarea',
+              sichtbarWenn: { feld: 'organspende', wert: 'teil' },
+              beispiel: 'z. B. nur Herz und Nieren; keine Hornhaut; nur für Transplantation, nicht für Forschung' },
+            // ── Testament (typ='testament') — `erben` bleibt bewusst ein EIGENES Sektorfeld
+            // (4497), weil es auch bei gesetzlicher Erbfolge gilt, nicht nur bei vorhandenem Testament ──
+            { id: 'erbfolge_hinweis', label: 'Gesetzliche Erbfolge oder abweichender Wille?', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'testament' },
+              optionen: [
+                { wert: 'gesetzlich', label: 'Die gesetzliche Erbfolge soll gelten' },
+                { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
+                { wert: 'unklar',     label: 'Noch unklar — Beratung gewünscht' },
+              ] },
+            { id: 'vermaechtnisse', label: 'Besondere Wünsche & Vermächtnisse', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'testament' },
+              beispiel: 'Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein' },
+            // ── Betreuungsverfügung (typ='betreuungsverfuegung') — Feld-IDs bewusst mit Präfix
+            // beibehalten (nicht gekürzt): ein gemeinsames unterFelder-Array über alle sechs Typen
+            // verlangt global eindeutige IDs, sonst kollidieren z. B. Betreuungs- und Sorgerechts-„person" ──
+            { id: 'betreuung_person', label: 'Vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' } },
+            { id: 'betreuung_ersatz', label: 'Ersatzperson', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' } },
+            { id: 'betreuung_wuensche', label: 'Was die Betreuung regeln soll', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' },
+              beispiel: 'Wohnung halten, solange es geht; vertraute Hausärztin behalten' },
+            { id: 'betreuung_ausschluss', label: 'Was die Betreuung nicht soll / wer nicht', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' },
+              beispiel: 'kein Umzug ins Heim ohne Rücksprache mit der Familie; Person X soll nicht bestellt werden' },
+            // ── Sorgerechtsverfügung (typ='sorgerechtsverfuegung') — `schutzbefohlene` bleibt in
+            // Sektor „meine-menschen", außerhalb dieser Liste ──
+            { id: 'sorgerechtsverfuegung_person', label: 'Vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'familie',
+              sichtbarWenn: { feld: 'typ', wert: 'sorgerechtsverfuegung' } },
+            { id: 'sorgerechtsverfuegung_ersatz', label: 'Ersatzperson', typ: 'ref', entitaet: 'person', rolle: 'familie',
+              sichtbarWenn: { feld: 'typ', wert: 'sorgerechtsverfuegung' } },
+            { id: 'sorgerechtsverfuegung_wuensche', label: 'Wünsche zur Erziehung & Betreuung', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'sorgerechtsverfuegung' },
+              beispiel: 'Geschwister sollen zusammenbleiben; gewohnte Schule beibehalten' },
+            // ── KI-Verfügung (typ='ki-verfuegung') — alle 12 Felder werden Unterfelder (bestätigt
+            // 17.07.: KI hat keinen granularen Bausteine-Korpus wie PV_BMJ, die Felder SIND der
+            // Inhalt). 1:1 aus KI_KORPUS.steps (5594-5675), `ki_`-Präfix bleibt (Kollisionsschutz) ──
+            { id: 'ki_grundentscheidung', label: 'Grundentscheidung', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'untersagung', label: 'Ich untersage jede KI-gestützte Nachbildung meiner Person nach meinem Tod.' },
+                { wert: 'erlaubnis',   label: 'Ich erlaube eine KI-gestützte Nachbildung meiner Person nach meinem Tod, unter den nachfolgend festgelegten Bedingungen.' },
+              ] },
+            { id: 'ki_zweck', label: 'Zweck', typ: 'mehrfachauswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'trauer',     label: 'zur persönlichen Trauerbegleitung im engsten Kreis' },
+                { wert: 'erinnerung', label: 'zur Bewahrung von Erinnerungen und Familiengeschichte' },
+                { wert: 'bildung',    label: 'zu Bildungs- oder Dokumentationszwecken' },
+              ] },
+            { id: 'ki_berechtigte', label: 'Berechtigte', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'benannte',    label: 'ausschließlich namentlich benannte Personen' },
+                { wert: 'angehoerige', label: 'meine engsten Angehörigen' },
+              ] },
+            { id: 'ki_berechtigte_personen', label: 'Namentlich benannte Personen', typ: 'refMehrfach', entitaet: 'person',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' } },
+            { id: 'ki_raum', label: 'Raum', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'privat',      label: 'nur privater Raum' },
+                { wert: 'oeffentlich', label: 'auch öffentlich zugängliche Räume (z. B. Gedenkseiten)' },
+              ] },
+            { id: 'ki_datenarten', label: 'Zulässige Datenarten', typ: 'mehrfachauswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'schriftverkehr', label: 'Schriftverkehr und Textnachrichten' },
+                { wert: 'sprache',        label: 'Sprachaufnahmen' },
+                { wert: 'fotovideo',      label: 'Foto- und Videomaterial' },
+                { wert: 'hinterlegt',     label: 'eigens hinterlegte Materialien' },
+              ] },
+            { id: 'ki_befristung', label: 'Befristung', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'jahre',         label: 'Löschung nach einer bestimmten Anzahl Jahre' },
+                { wert: 'letzte_person',  label: 'Löschung mit dem Tod der letzten zugangsberechtigten Person' },
+                { wert: 'zeitpunkt',     label: 'Löschung zu einem bestimmten Zeitpunkt' },
+              ] },
+            { id: 'ki_befristung_jahre', label: 'Anzahl Jahre', typ: 'text',
+              sichtbarWenn: { feld: 'ki_befristung', wert: 'jahre' }, beispiel: 'zehn' },
+            { id: 'ki_befristung_zeitpunkt', label: 'Zeitpunkt', typ: 'text',
+              sichtbarWenn: { feld: 'ki_befristung', wert: 'zeitpunkt' }, beispiel: '31.12.2040' },
+            { id: 'ki_verhaltensgrenze', label: 'Verhaltensgrenze', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'belegt', label: 'nur belegtes Material, keine darüber hinausgehenden Aussagen' },
+                { wert: 'frei',   label: 'frei im Rahmen des dokumentierten Charakters, keine Politik/Religion/Finanzen/Rechtsgeschäfte' },
+              ] },
+            { id: 'ki_nachlassverwaltung', label: 'Digitale Nachlassverwaltung', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'benannt',     label: 'benannte Person, bevollmächtigt zum Pausieren/Löschen' },
+                { wert: 'angehoerige', label: 'gemeinsam meine benannten Angehörigen' },
+              ] },
+            { id: 'ki_nachlassverwalter', label: 'Digitale Nachlassverwaltung — Person', typ: 'refMehrfach', entitaet: 'person',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' } },
+          ] },
+      ] },
       // Vorsorge-Instrumente je in EINER Sektion gruppiert (10.07., reine Darstellung). Detailfelder an
       // ihr „vorhanden?"-Gate gekoppelt (sichtbarWenn → nur bei ja/in Vorbereitung sichtbar). Verwaiste
       // PV-Reste (patientenverf_haltung/_wunsch, palliativ_wunsch) aus dem Formular entfernt — der
@@ -4365,51 +4618,11 @@ const SEKTOREN = Object.freeze([
         { id: 'vollmacht_vorhanden',         label: 'Vorsorgevollmacht vorhanden?',                    typ: 'auswahl', optionen: [
           { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
         ] },
-        // U2-ADR-064: Erteilte Vollmachten sind ein WIEDERHOLBARER Datensatz {Art · Person · Form ·
-        // Ablageort} — jede Vollmacht ein eigener Eintrag (eine Bank-, eine Gesundheits-, eine
-        // Generalvollmacht können an verschiedene Menschen und in verschiedener Form gehen). Löst die
-        // früheren Flachfelder vollmacht_person / vollmachtsGrundlage(mehrfachauswahl) / vollmachtsTyp /
-        // vollmacht_ort / gesundheitsvollmacht_person/-ort ab (Migration Schema 28→29, verlustfrei;
-        // ADR-063 für vollmachtsGrundlage supersediert). Das Gate vollmacht_vorhanden bleibt bewusst
-        // getrennt (Existenz / „in Vorbereitung", auch ohne Eintrag; trägt Dokument-Erkennung + heirwiz).
-        // Optionsschlüssel = erteilte VERTRETUNGS_GRUNDLAGEN (KEINE gesetzliche Vertretung wie elterliche
-        // Sorge — die gehört zur Sub-Depot-Grundlage, nicht hierher).
-        { id: 'vollmachten', label: 'Erteilte Vollmachten', typ: 'liste',
-          hint: 'Jede von Ihnen erteilte Vollmacht als eigener Eintrag — Art, bevollmächtigte Person, Form und Ablageort. Gemeint ist nur eine von Ihnen ERTEILTE Vollmacht, nicht die gesetzliche Vertretung (z. B. elterliche Sorge, die kraft Gesetzes besteht).',
-          unterFelder: [
-            { id: 'art', label: 'Art der Vollmacht', typ: 'auswahl', optionen: [
-              { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
-              { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
-              { wert: 'bank',       label: 'Bankvollmacht' },
-              { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
-              { wert: 'general',    label: 'Generalvollmacht' },
-            ] },
-            // U2-ADR-065: eine Vollmacht kann an MEHRERE Personen gehen (gemeinsam oder als Ersatz-
-            // Reihenfolge) → refMehrfach (Register-Mehrfachpick, umsortierbar). Reihenfolge = Bürger-Wille.
-            // E2 D0: Verweis-Export-Regel (Zweck 'vollmacht') — die koppelnde Stelle (`stelle`,
-            // Sibling-Feld im selben Vollmacht-Eintrag) geht als Kontext mit.
-            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person(en)', typ: 'refMehrfach', entitaet: 'person', rolle: 'bevollmaechtigte',
-              verweisZweck: 'vollmacht', verweisKontextFeld: 'stelle' },
-            // Vertretungs-Modus erscheint NUR bei mehr als einer Person (minAnzahl 2).
-            { id: 'vertretungsModus', label: 'Wie vertreten die Personen?', typ: 'auswahl',
-              sichtbarWenn: { feld: 'bevollmaechtigter', minAnzahl: 2 },
-              optionen: [
-                { wert: 'gleichwertig', label: 'gleichwertig — jede darf allein handeln' },
-                { wert: 'nacheinander', label: 'nacheinander — in der genannten Reihenfolge (Ersatz)' },
-              ],
-              hint: 'Gleichwertig: jede bevollmächtigte Person darf einzeln handeln. Nacheinander: die erste ist zuständig, die nächste nur als Ersatz — die Reihenfolge oben bestimmt die Vertretung.' },
-            { id: 'form', label: 'Form der Vollmacht', typ: 'auswahl', optionen: [
-              { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
-              { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
-              { wert: 'beurkundet', label: 'notariell beurkundet' },
-            ] },
-            // U2-ADR-064 · conditional Unterfeld: nur bei beglaubigter/beurkundeter Form relevant
-            // (privatschriftlich hat keine amtliche Stelle) — live ein-/ausgeblendet im Eintrags-Modal.
-            { id: 'stelle', label: 'Beurkundende / beglaubigende Stelle', typ: 'text',
-              sichtbarWenn: { feld: 'form', wert: ['beurkundet', 'beglaubigt'] },
-              beispiel: 'Notar Dr. Sommer, München · Urkundenrolle Nr. 123/2024' },
-            { id: 'ort', label: 'Ablageort', typ: 'text', beispiel: 'beim Notar · Tresor zuhause · Hinweiszettel im Geldbeutel' },
-          ] },
+        // U2-ADR-064s ehemaliges `vollmachten`-Listenfeld (Art · Person · Form · Ablageort je
+        // Eintrag) ist per Schema 39 (U2-ADR-089, 17.07., Teil A Block 1) nach `vorsorge_instrumente`
+        // (Sektion „meine-vorsorge", typ='vorsorgevollmacht') umgehängt — kein zweites Feld hier,
+        // sonst zwei Schreib-Orte für dieselbe Vollmacht. depotNormalisieren erledigt die Umhängung
+        // bestehender Records verlustfrei (Verwaisungsregel), siehe Schema 38→39.
       ] },
       { id: 'patientenverfuegung', label: 'Patientenverfügung', felder: [
         { id: 'patientenverf_vorhanden',     label: 'Patientenverfügung vorhanden?',                   typ: 'auswahl', optionen: [
@@ -4913,7 +5126,7 @@ const SITUATIONEN = Object.freeze([
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmachten' },
+        { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
         { quelle: 'vorsorge', feld: 'testament_vorhanden' },
         { quelle: 'vorsorge', feld: 'testament_ort' },
         { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
@@ -5004,7 +5217,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'kv_art' },
         { quelle: 'vorsorge',   feld: 'patientenverf_vorhanden' },
         { quelle: 'vorsorge',   feld: 'patientenverf_ort' },
-        { quelle: 'vorsorge',   feld: 'vollmachten' },
+        { quelle: 'vorsorge',   feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Für den Aufenthalt', eintraege: [
         { feld: { id: 'kh_termin',          label: 'Aufnahme — Datum, Klinik, Station', typ: 'text', beispiel: 'Klinikum Großhadern, Station C2, Aufnahme 12.08.' } },
@@ -5031,7 +5244,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit',         feld: 'krankheiten' },
         { quelle: 'gesundheit',         feld: 'medikamente' },
         { quelle: 'vorsorge',           feld: 'betreuungsverfuegung' },
-        { quelle: 'vorsorge',           feld: 'vollmachten' },
+        { quelle: 'vorsorge',           feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Für den Einzug', eintraege: [
         { feld: { id: 'ph_einrichtung',     label: 'Einrichtung — Name & Adresse',          typ: 'text', beispiel: 'Caritas-Seniorenheim, München-Schwabing' } },
@@ -5139,7 +5352,7 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'vorsorge', feld: 'patientenverf_vorhanden' },
         { quelle: 'vorsorge', feld: 'patientenverf_ort' },
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmachten' },
+        { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Meine Menschen', eintraege: [
         { quelle: 'meine-menschen', feld: 'menschen' },
@@ -5171,7 +5384,7 @@ const _ANG_SITUATIONEN = Object.freeze([
       ] },
       { titel: 'Aus Vorsorge', eintraege: [
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmachten' },
+        { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
         { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
         { quelle: 'vorsorge', feld: 'patientenverf_ort' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_koerper' },
@@ -5220,7 +5433,7 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'vorsorge', feld: 'erben' },
         { quelle: 'vorsorge', feld: 'zvr_nummer' },
         { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmachten' },
+        { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Die ersten Schritte', eintraege: [
         { quelle: 'sit:erbfall', feld: 'erb_sterbeurkunde' },
@@ -6126,7 +6339,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 38,                       // Schema 38 (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.2026): gesundheit/allergien, medikamente, krankheiten (Code-Slot-Felder) → Chip-Array {text, code?} statt Skalar (Freitext oder codierter Einzelwert); Migration Skalar→[EIN Chip] verlustfrei, KEIN Komma-Splitting. Schema 37 (U2-ADR-074, Phase 5): finanzen/konto_haupt_bank + konto_haupt_iban (ein Konto, zwei Skalarfelder) → Liste `konten` {bank · art · iban · bankvollmacht (Record-id-Verweis auf art:'bank'-Vollmacht in Vorsorge) · notiz}; Migration Skalar→Liste verlustfrei (ein Eintrag, leer→entfällt, stabile id). Art = Vorschlagsliste + frei (native datalist). VC-Export/CAMT ruhen. Schema 36 (U2-ADR-073, Phase 4 Teil 2): persoenliches/abhaengige_personen Freitext → Liste „allgemeine Abhängige" {wer · hinweis}; Migration Text→[{wer}] verlustfrei (keine „;"-Trennung), id bleibt, crossSektor-Projektion typ-generisch. Schema 35 (U2-ADR-073, Phase 4 Teil 1): fünf verstreute Slot-Gruppen → je EINE Liste — Fahrzeuge (mobilitaet: auto1/2/_ausweis/_leasing), Kreditkarten (finanzen: kreditkarte1/2), Haustiere (identitaet: tier_*), Personen-Briefe (persoenliches: brief_1/2/3), Weitere Wohnungen (wohnen: zw_*, Hybrid — Hauptwohnung bleibt Singleton). Migration Skalar→Liste verlustfrei (leere Werte fallen weg, stabile id je Eintrag). Schema 34 (U2-ADR-072, Teil 2): drei Facharzt-Slots gesundheit/facharzt_1/2/3 → EINE Liste `fachaerzte` {arzt (Person-Ref) · fach (Text)}; Migration Skalar→Liste verlustfrei (leere Slots fallen weg, stabile id je Eintrag). Schema 33 (U2-ADR-072, Phase 3): Notfallkontakte gesundheit/hauptpflegeperson ref → refMehrfach (mehrere Kontakte); Migration Einzel→Array verlustfrei, QR löst die Liste typ-generisch auf. Schema 32 (U2-ADR-071-Nachtrag): jeder Listen-Record bekommt eine stabile `id` (Cross-Sektor-Verweise überleben Umsortieren); Migration vergibt id an id-lose vollmachten-Records, verlustfrei. Schema 31 (U2-ADR-065-Nachlauf): vorsorge/erben → refMehrfach (mehrere Erben, umsortierbar); Migration Einzel→Array verlustfrei. Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: 39,                       // Schema 39 (U2-ADR-089, Teil A Block 1, 17.07.2026): Vorsorge-Instrument-Liste — die bisher Vollmacht-exklusive Liste `vollmachten` wird Teil der geteilten Liste `vorsorge_instrumente` (unterschieden per `typ`); Records bekommen additiv typ:'vorsorgevollmacht', altes Feld entfällt. Migration verlustfrei (Rename+Retag). Die anderen fünf Instrumente (Testament/PV/Betreuung/Sorgerecht/KI) bleiben additiv unmigriert (Carola-Entscheidung). Schema 38 (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.2026): gesundheit/allergien, medikamente, krankheiten (Code-Slot-Felder) → Chip-Array {text, code?} statt Skalar (Freitext oder codierter Einzelwert); Migration Skalar→[EIN Chip] verlustfrei, KEIN Komma-Splitting. Schema 37 (U2-ADR-074, Phase 5): finanzen/konto_haupt_bank + konto_haupt_iban (ein Konto, zwei Skalarfelder) → Liste `konten` {bank · art · iban · bankvollmacht (Record-id-Verweis auf art:'bank'-Vollmacht in Vorsorge) · notiz}; Migration Skalar→Liste verlustfrei (ein Eintrag, leer→entfällt, stabile id). Art = Vorschlagsliste + frei (native datalist). VC-Export/CAMT ruhen. Schema 36 (U2-ADR-073, Phase 4 Teil 2): persoenliches/abhaengige_personen Freitext → Liste „allgemeine Abhängige" {wer · hinweis}; Migration Text→[{wer}] verlustfrei (keine „;"-Trennung), id bleibt, crossSektor-Projektion typ-generisch. Schema 35 (U2-ADR-073, Phase 4 Teil 1): fünf verstreute Slot-Gruppen → je EINE Liste — Fahrzeuge (mobilitaet: auto1/2/_ausweis/_leasing), Kreditkarten (finanzen: kreditkarte1/2), Haustiere (identitaet: tier_*), Personen-Briefe (persoenliches: brief_1/2/3), Weitere Wohnungen (wohnen: zw_*, Hybrid — Hauptwohnung bleibt Singleton). Migration Skalar→Liste verlustfrei (leere Werte fallen weg, stabile id je Eintrag). Schema 34 (U2-ADR-072, Teil 2): drei Facharzt-Slots gesundheit/facharzt_1/2/3 → EINE Liste `fachaerzte` {arzt (Person-Ref) · fach (Text)}; Migration Skalar→Liste verlustfrei (leere Slots fallen weg, stabile id je Eintrag). Schema 33 (U2-ADR-072, Phase 3): Notfallkontakte gesundheit/hauptpflegeperson ref → refMehrfach (mehrere Kontakte); Migration Einzel→Array verlustfrei, QR löst die Liste typ-generisch auf. Schema 32 (U2-ADR-071-Nachtrag): jeder Listen-Record bekommt eine stabile `id` (Cross-Sektor-Verweise überleben Umsortieren); Migration vergibt id an id-lose vollmachten-Records, verlustfrei. Schema 31 (U2-ADR-065-Nachlauf): vorsorge/erben → refMehrfach (mehrere Erben, umsortierbar); Migration Einzel→Array verlustfrei. Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -7517,7 +7730,7 @@ function notfallKernModell() {
     if (!feld) continue;
     const roh = ((data && data.sektoren[e.sektor]) || {})[e.feld];
     if (!feldEingetragen(feld, roh)) continue;     // leere Felder raus → kompakt
-    zeilen.push({ label: feld.label, wert: feldWertText(feld, roh) });
+    zeilen.push({ label: feld.label, wert: _wertTextMenschlich(feld, roh) });
   }
   return zeilen;
 }
@@ -9593,8 +9806,8 @@ function _importPlanZeile(sektorId, feldId, neuWert) {
   const feld = _feldDef(sektorId, feldId) || { id: feldId, typ: 'text', label: feldId };
   const altRoh = ((data && data.sektoren && data.sektoren[sektorId]) || {})[feldId];
   const altBelegt = feldEingetragen(feld, altRoh);
-  const neuText = feldWertText(feld, neuWert);
-  const altText = altBelegt ? feldWertText(feld, altRoh) : '';
+  const neuText = _wertTextMenschlich(feld, neuWert);
+  const altText = altBelegt ? _wertTextMenschlich(feld, altRoh) : '';
   let status = 'neu';
   if (altBelegt) status = (altText === neuText) ? 'gleich' : 'konflikt';
   return { sektorId, feldId, label: feld.label || feldId, neuWert, neuText, altText, status };
@@ -11499,11 +11712,21 @@ function _verweisListenEintragZusammenfassung(feld, eintrag) {
   const kontextFeldIds = new Set(
     (feld.unterFelder || []).map(u => u.verweisKontextFeld).filter(Boolean)
   );
+  // Nachbesserung (20.07.2026): s. Kommentar in listenEintragZusammenfassung — dieselbe
+  // Positivliste (feld.zusammenfassungFelder) gilt auch für den Docx-Export.
+  const erlaubt = Array.isArray(feld.zusammenfassungFelder) ? new Set(feld.zusammenfassungFelder) : null;
   const teile = [];
   for (const uf of (feld.unterFelder || [])) {
+    if (erlaubt && !erlaubt.has(uf.id)) continue;
     const w = eintrag[uf.id];
     if (kontextFeldIds.has(uf.id)) continue;
     if (!feldEingetragen(uf, w)) continue;
+    // Block-1-Nachtrag (17.07.2026): s. Kommentar in listenEintragZusammenfassung — dieselbe
+    // Sammelbegriff+genauere-Art-Unterdrückung gilt auch für den Docx-Export.
+    if (uf.unterdrueckeInZusammenfassungWennGesetzt) {
+      const sib = eintrag[uf.unterdrueckeInZusammenfassungWennGesetzt];
+      if (sib != null && sib !== '') continue;
+    }
     if (uf.verweisZweck && uf.typ === 'ref') {
       const kontext = uf.verweisKontextFeld ? eintrag[uf.verweisKontextFeld] : null;
       const t = _verweisExportZeile(uf.entitaet || 'person', uf.verweisZweck, w, kontext);
@@ -11534,21 +11757,53 @@ function _verweisListenEintragZusammenfassung(feld, eintrag) {
 // id gegen eine Daten-Sammlung auflöst). Die bevollmächtigte Person ist SINGLE SOURCE OF TRUTH aus dem
 // Vorsorge-Record — kein Freitext, kein Doppel. Der Vollmacht-Record trägt kein Bank-Feld; das Label
 // unterscheidet über Person(en) + Ablageort. Toleriert gelöschte/umbenannte Records (liefert '').
+// U2-ADR-089 Teil A Block 1 (17.07.): Pfad umgestellt von der alten, Vollmacht-exklusiven
+// `vollmachten`-Liste auf die geteilte `vorsorge_instrumente`-Liste, gefiltert auf
+// typ:'vorsorgevollmacht' (Schema-Bump hängt die alten Records um, s. depotNormalisieren).
 function _bankvollmachtRecords() {
   const v = data && data.sektoren && data.sektoren.vorsorge;
-  const liste = (v && Array.isArray(v.vollmachten)) ? v.vollmachten : [];
-  return liste.filter(r => r && r.art === 'bank' && r.id);
+  const liste = (v && Array.isArray(v.vorsorge_instrumente)) ? v.vorsorge_instrumente : [];
+  return liste.filter(r => r && r.typ === 'vorsorgevollmacht' && r.art === 'bank' && r.id);
 }
 // K2 (Phase 6): existiert überhaupt eine Vorsorgevollmacht? Entweder das Gate vollmacht_vorhanden==='ja'
-// oder ein erteilter vollmachten-Record art:'vorsorge'. Trägt den Hinweis am leeren/ungewählten
-// Bankvollmacht-Picker — die Vorsorgevollmacht deckt das Konto global, aber manche Banken wollen zusätzlich
-// eine eigene Bankvollmacht. Kein Notfall-/Schema-Pfad, reine Anzeige.
+// oder ein erteilter Vorsorgevollmacht-Record (typ:'vorsorgevollmacht', art:'vorsorge'). Trägt den
+// Hinweis am leeren/ungewählten Bankvollmacht-Picker — die Vorsorgevollmacht deckt das Konto global,
+// aber manche Banken wollen zusätzlich eine eigene Bankvollmacht. Kein Notfall-/Schema-Pfad, reine Anzeige.
 function _vorsorgevollmachtVorhanden() {
   const v = data && data.sektoren && data.sektoren.vorsorge;
   if (!v) return false;
   if (v.vollmacht_vorhanden === 'ja') return true;
-  const liste = Array.isArray(v.vollmachten) ? v.vollmachten : [];
-  return liste.some(r => r && r.art === 'vorsorge' && r.id);
+  return _instrumentVorhanden('vorsorgevollmacht', 'vorsorge');
+}
+
+// U2-ADR-089 Entscheidung 4/5 (17.07.) — Einzigartigkeits-Policy je Instrument-Typ, bei Vollmacht
+// zusätzlich je Art. Fehlender Schlüssel = nicht einzigartig (defensiv: unbekannte Typen/Arten
+// blockieren nichts). Vollmacht selbst hat keine pauschale Einzigartigkeit auf Typ-Ebene — sie
+// läuft komplett über die verschachtelte `vorsorgevollmacht`-Art-Zuordnung.
+const VORSORGE_EINZIGARTIG = Object.freeze({
+  testament: true,
+  patientenverfuegung: true,
+  betreuungsverfuegung: true,
+  sorgerechtsverfuegung: true,
+  'ki-verfuegung': true,
+  vorsorgevollmacht: {
+    vorsorge: true, gesundheit: true, betreuung: true, general: true, bank: false,
+  },
+});
+function _instrumentEinzigartig(typ, art) {
+  const regel = VORSORGE_EINZIGARTIG[typ];
+  if (regel == null) return false;
+  if (typeof regel === 'object') return art != null ? !!regel[art] : false;
+  return !!regel;
+}
+// Verallgemeinerung von _vorsorgevollmachtVorhanden(): existiert bereits ein Eintrag dieses
+// typ (+ art, falls angegeben) in der geteilten Instrument-Liste? Reine Anzeige-/Prüf-Funktion,
+// kein Notfall-/Schema-Pfad.
+function _instrumentVorhanden(typ, art) {
+  const v = data && data.sektoren && data.sektoren.vorsorge;
+  if (!v) return false;
+  const liste = Array.isArray(v.vorsorge_instrumente) ? v.vorsorge_instrumente : [];
+  return liste.some(r => r && r.typ === typ && (art == null || r.art === art) && r.id);
 }
 function _bankvollmachtLabel(rec) {
   if (!rec) return '';
@@ -12197,7 +12452,34 @@ function _installEreignisseBinden() {
     });
   } catch (_) { /* Installation ist Komfort, nie kritisch */ }
 }
+// Weg 1 (CC-Auftrag Eingangsschirm, 20.07.2026 — Grundsatz: „Wer den Eingangsschirm zeigt,
+// räumt vorher auf"): schließt die Lücke, die _depotSpeicherZuruecksetzen() bewusst offenlässt
+// (deren eigener Kommentar: „KEIN DOM/Render"). Leert #content und ein offenes Modal, damit
+// beim Verlassen keine Klartext-Reste (Namen, Werte, Attribute) im Markup stehenbleiben. Wird
+// AUSSCHLIESSLICH von renderWelcome() gerufen — zentral, damit kein künftiger Weg zum
+// Eingangsschirm sie vergessen kann.
+function _eingangsschirmDomAufraeumen() {
+  const content = document.getElementById('content');
+  if (content) content.innerHTML = '';
+  const modalHost = document.getElementById('modal-rueck');
+  if (modalHost && modalHost.classList) modalHost.classList.remove('an');
+  const modalBox = document.getElementById('modal-inhalt');
+  if (modalBox) modalBox.innerHTML = '';
+}
 function renderWelcome() {
+  // Weg 1 (CC-Auftrag Eingangsschirm, 20.07.2026): zentrale Aufräumung, statt sie den Aufrufern
+  // zu überlassen (dieselbe Lehre wie die refMehrfach-Attribut-Allowlist — eine Regel, die an
+  // jeder Aufrufstelle einzeln eingehalten werden muss, fällt still durch). Die bestehende
+  // imVorschau()-Unterscheidung bleibt tragend, nicht neu erfunden: eine ECHTE, passwortgeschützte
+  // Sitzung wird vollständig abgeräumt (data/Session + DOM); eine passwortlose VORSCHAU-Sitzung
+  // bleibt bewusst erhalten — sonst ginge beim bloßen „zurück" aus der Anlass-Auswahl echte,
+  // noch ungesicherte Vorschau-Eingabe verloren, die es vorher nicht gab. Kaltstart/Crypto-
+  // Overlay: `data` ist ohnehin leer (oder schon zuvor genullt), kein Eingriff nötig — beides
+  // idempotent, ein wiederholter Aufruf schadet nicht.
+  if (data && !imVorschau()) {
+    _depotSpeicherZuruecksetzen();
+    _eingangsschirmDomAufraeumen();
+  }
   const el = document.getElementById('overlay-inhalt');
   // Fuß-Block Startbildschirm: aktiver Knopf (Android/Desktop) oder passiver iOS-Hinweis, in
   // stabilem Container, damit beforeinstallprompt/appinstalled ihn live aktualisieren können.
@@ -12990,7 +13272,11 @@ function flowSubDepotNachAnker() {
 }
 // Vorschau verwerfen und zur Startseite — reiner Sicht-Wechsel (kein echtes Depot, keine Krypto).
 // Gemeinsamer harter In-Memory-Reset: data + Session-Schlüssel/Salts + Sicht-Zustand auf Default.
-// KEIN DOM/Render — die Aufrufer entscheiden, was danach gezeigt wird (Welcome bzw. Schluss-Sicht).
+// KEIN DOM/Render hier — das übernimmt seit 20.07.2026 zentral _eingangsschirmDomAufraeumen(),
+// von renderWelcome() gerufen (Weg 1, CC-Auftrag Eingangsschirm). Vorher stand nur dieser
+// Kommentar für den Anspruch „kein wiederherstellbarer Rest" — nie geprüft, nie eingelöst
+// (Teardown-Befund 20.07.2026). Diese Funktion bleibt bewusst DOM-frei; die Aufräumung sitzt
+// jetzt zentral, nicht bei den Aufrufern.
 // Nach diesem Reset bleibt NICHTS Wiederherstellbares im Speicher (Carolas D2-Vorgabe „kein Halb-Zustand").
 function _depotSpeicherZuruecksetzen() {
   data = null;
@@ -13227,11 +13513,6 @@ function geheZuZuhause() {
   };
   if (schliessenWarnungNoetig()) { flowSchliessenWarnungEchteSitzung(weiter); return; }
   weiter();
-  return;
-  // DOM: App aus, Welcome ein (kein Reload).
-  document.getElementById('app').classList.remove('an');
-  document.getElementById('overlay').classList.remove('weg');
-  renderWelcome();
 }
 
 // U2-ADR-059: Bürger-Einstieg in die Notfall-Sicht (Sidebar) — die EIGENEN Akut-Angaben LIVE aus dem
@@ -13410,7 +13691,7 @@ function vorleseTextSektor(sektorOrId, sektorDaten) {
     const zeilen = [];
     for (const f of sichtbare) {
       if (!feldEingetragen(f, daten[f.id])) continue;      // leere Felder überspringen
-      const wert = feldWertText(f, daten[f.id]);
+      const wert = _wertTextMenschlich(f, daten[f.id]);
       if (!wert || wert === STRINGS.leerZustand) continue;
       zeilen.push((f.label || f.id) + ': ' + wert + '.');
       felderGenannt++;
@@ -14151,6 +14432,26 @@ function depotNormalisieren(d) {
     }
   }
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 38) ziel.schemaVersion = 38;
+  // Schema 38 -> 39 (U2-ADR-089, Teil A Block 1, 17.07.2026): Vorsorge-Instrument-Liste. Die bisher
+  // Vollmacht-exklusive Liste `vollmachten` wird Teil der geteilten Liste `vorsorge_instrumente`
+  // (unterschieden per `typ`) — jeder Record bekommt additiv `typ:'vorsorgevollmacht'`, danach
+  // entfällt das alte Feld. Verlustfrei (reiner Rename+Retag, kein Skalar zu falten, stabile id
+  // bleibt). Idempotent: `vollmachten` existiert nach dem ersten Durchlauf nicht mehr. Records ohne
+  // `art` (heute optional, ab sofort Pflicht für NEUE/bearbeitete Einträge) werden NICHT rückwirkend
+  // verändert — die Verwaisungsregel verbietet, Bestandsdaten wegen einer neuen Regel zu blockieren.
+  // Additiv (Carola-Entscheidung 17.07.): die anderen fünf Instrumente (Testament/PV/Betreuung/
+  // Sorgerecht/KI) werden NICHT migriert — ihre Flachfelder bleiben unverändert bestehen.
+  const _v39 = ziel.sektoren && ziel.sektoren.vorsorge;
+  if (_v39 && typeof _v39 === 'object' && Array.isArray(_v39.vollmachten)) {
+    const _liste39 = Array.isArray(_v39.vorsorge_instrumente) ? _v39.vorsorge_instrumente : [];
+    for (const _r of _v39.vollmachten) {
+      if (!_r || typeof _r !== 'object') continue;
+      _liste39.push(Object.assign({}, _r, { typ: 'vorsorgevollmacht' }));
+    }
+    if (_liste39.length) _v39.vorsorge_instrumente = _liste39;
+    delete _v39.vollmachten;
+  }
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 39) ziel.schemaVersion = 39;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -14754,7 +15055,10 @@ function renderTopbar() {
   const backdrop = document.getElementById('menue-backdrop');
   if (backdrop) backdrop.onclick = schliesseMenue;          // Tippen daneben schließt den Drawer
   const marke = document.getElementById('tb-marke');
-  marke.onclick = geheZuZuhause;                           // Logo → Zuhause (Struktur-Spec §3/§9)
+  // Logo verlässt das Depot — bewusst identisch zum Sidebar-Knopf, keine zweite Verhaltensweise
+  // (CC-Auftrag Eingangsschirm 20.07.2026). aria-label/title am Element selbst kündigen das an,
+  // weil ein Logo sonst als beiläufigste Geste überhaupt eine Sitzung ohne Ansage beenden würde.
+  marke.onclick = geheZuZuhause;                           // Struktur-Spec §3/§9
   // Depot-Pille: „Mein Depot" am Anker, „Depot unter Vollmacht: [Name]" im Sub-Kontext.
   // Klick → Sorge-Übersicht (verwaltete Depots, jetzt erreichbar).
   document.getElementById('tb-depot-name').textContent = imSubKontext()
@@ -14905,12 +15209,20 @@ function renderFooter() {
     '<span class="ff-haftung">' + escapeHTML(STRINGS.fussHaftung) + '</span>' + t +
     '<span class="ff-firma">' + escapeHTML(STRINGS.fussFirma) + '</span>' + t +
     '<span class="ff-lizenz">' + escapeHTML(STRINGS.fussLizenz) + '</span>' + t +
+    // CC-Bauauftrag Versionsanzeige (16.07.2026): Version + Stand-Datum, rein lokal aus
+    // BUILD_VERSION/BUILD_DATUM gerendert — bei jedem Öffnen sichtbar, auch offline/file://,
+    // kein Fetch. Kein aktiver Versions-CHECK (das bliebe ein späteres PWA-Feature) — nur
+    // ehrliche Selbstauskunft, was diese Datei ist und woher Aktualisierungen kommen.
     '<span class="ff-version">' + escapeHTML(BUILD_VERSION) +
+      ' <span class="ff-datum">' + escapeHTML(STRINGS.fussDatumLabel) + ' ' + escapeHTML(datumKurz(BUILD_DATUM)) + '</span>' +
       ' <span class="ff-schale">' + escapeHTML(STRINGS.fussSchaleLabel) + ' ' + escapeHTML(SCHALEN_STAND) + '</span>' +
       ' <span class="ff-sw" id="ff-sw">' + escapeHTML(STRINGS.fussSwLabel) + ' ' + escapeHTML(STRINGS.fussSwLaedt) + '</span>' +
       ' <span class="ff-hash">' + escapeHTML(STRINGS.fussHashLabel) + ' ' + escapeHTML(hashWert) + '</span></span>' + t +
     '<a href="mailto:' + escapeHTML(STRINGS.fussKontakt) + '">' + escapeHTML(STRINGS.fussKontakt) + '</a>' + t +
-    '<a href="https://' + escapeHTML(STRINGS.fussQuellcode) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(STRINGS.fussQuellcode) + '</a>';
+    '<a href="https://' + escapeHTML(STRINGS.fussQuellcode) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(STRINGS.fussQuellcode) + '</a>' + t +
+    // AKTUALISIERUNGEN_LINK — überschreibbare Konstante (White-Label ersetzt sie durch den
+    // eigenen Bezugs-Link), kein Literal in der Anzeige.
+    '<a href="' + escapeHTML(AKTUALISIERUNGEN_LINK) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(STRINGS.fussAktualisierungenLabel) + '</a>';
   _swCacheStandFuellen();   // den SW-Cache-Stand live nachtragen (async, CSP-erlaubt: Cache-API ≠ connect-src)
 }
 
@@ -15043,10 +15355,13 @@ function einstellungenHTML() {
         ? '<button type="button" class="btn btn-sek" id="einst-vp-entfernen">' + escapeHTML(STRINGS.vpEntfernenKnopf) + '</button>' : '') +
     '</section>' +
     '<section class="einst-abschnitt"><h4>' + STRINGS.einstAbschnittUeber + '</h4>' +
-      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.einstVersion + '</span><span>' + escapeHTML(BUILD_VERSION) + '</span></div>' +
-      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.einstBuildDatum + '</span><span>' + escapeHTML(datumKurz(BUILD_DATUM)) + '</span></div>' +
-      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.fussHashLabel + '</span><span class="einst-hash">' + escapeHTML(hashWert) + '</span></div>' +
-      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.einstLizenz + '</span><span>' + escapeHTML(STRINGS.einstLizenzWert) + '</span></div>' +
+      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.einstVersion + '</span><span class="einst-wert">' + escapeHTML(BUILD_VERSION) + '</span></div>' +
+      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.einstBuildDatum + '</span><span class="einst-wert">' + escapeHTML(datumKurz(BUILD_DATUM)) + '</span></div>' +
+      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.fussHashLabel + '</span><span class="einst-wert einst-hash">' + escapeHTML(hashWert) + '</span></div>' +
+      '<div class="einst-zeile"><span class="einst-label">' + STRINGS.einstLizenz + '</span><span class="einst-wert">' + escapeHTML(STRINGS.einstLizenzWert) + '</span></div>' +
+      // Ehrlicher Stand-Satz (CC-Bauauftrag Versionsanzeige, 16.07.2026) — host-unabhängig,
+      // rein lokal aus BUILD_VERSION/BUILD_DATUM gerendert, funktioniert auch aus file://.
+      '<p class="einst-hint">' + escapeHTML(STRINGS.einstVersionStandSatz.replace('{version}', BUILD_VERSION).replace('{datum}', datumKurz(BUILD_DATUM))) + '</p>' +
       // Versions-Hinweis (Aufräumen Teil 3) — rein lokal aus BUILD_DATUM gerechnet. Ist die App
       // älter als ~6 Monate, ein ruhiger Hinweis; sonst nur die Aktuell-Zeile. „Nach neuer Version
       // suchen" ist der EINZIGE bewusste Netz-Schritt (öffnet die Website in neuem Tab).
@@ -15109,7 +15424,7 @@ function verdrahteEinstellungen() {
   if (evs) evs.onclick = () => {
     if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.einstVersionOnlineHinweis, 'info');
     if (typeof window !== 'undefined' && typeof window.open === 'function') {
-      window.open('https://vivodepot.de', '_blank', 'noopener,noreferrer');
+      window.open(AKTUALISIERUNGEN_LINK, '_blank', 'noopener,noreferrer');
     }
   };
 }
@@ -15127,9 +15442,11 @@ function flowEinstellungen() {
 
 function renderSidebar() {
   const sb = document.getElementById('sidebar');
-  // Struktur-Spec §4 / Stresstest Anlass-Navigation 30.05. — „Zuhause" ganz oben (Rückweg).
-  let html = '<button class="nav-item" data-home="1"><span class="ico">' + icon('home') + '</span><span>' + STRINGS.navZuhause + '</span></button>';
-  // „Für einen Anlass" — GLEICHWERTIGER Einstieg direkt unter Zuhause, OHNE Gruppen-Überschrift
+  // Struktur-Spec §4 / Stresstest Anlass-Navigation 30.05. — Rückweg ganz oben. Umbenannt
+  // 20.07.2026 (CC-Auftrag Eingangsschirm): hieß „Zuhause", führte aber zum Willkommensschirm
+  // außerhalb des Depots — keine Übersicht innerhalb der Sitzung. Beschriftung jetzt ehrlich.
+  let html = '<button class="nav-item" data-verlassen="1"><span class="ico">' + icon('home') + '</span><span>' + STRINGS.navDepotVerlassen + '</span></button>';
+  // „Für einen Anlass" — GLEICHWERTIGER Einstieg direkt darunter, OHNE Gruppen-Überschrift
   // (HERAUSHOLEN aufgelöst): ein Anlass ist ein Kontext, kein Ausgang. Jede Kachel führt ins
   // Situationsblatt (waehleAnlass → oeffneSituation), nicht in die Eingabemasken. Welcome-Page nutzt
   // dieselbe Quelle. Aktiv markiert, solange ein Situationsblatt offen ist.
@@ -15172,7 +15489,7 @@ function renderSidebar() {
   // Paket 5). Bis dahin ist die renderVerwalteteDepots-Sicht aus der Sidebar nicht erreichbar — die
   // Funktion bleibt im Code, kein Datenverlust.
   sb.innerHTML = html;
-  sb.querySelectorAll('[data-home]').forEach(b => {
+  sb.querySelectorAll('[data-verlassen]').forEach(b => {
     b.onclick = geheZuZuhause;
   });
   sb.querySelectorAll('[data-notfall]').forEach(b => {
@@ -15198,6 +15515,19 @@ function renderSidebar() {
   });
 }
 
+// Datums-Plausibilität für den generischen Sektor-/Situations-Speicherpfad (Nachbesserung
+// 20.07.2026, Geräte-Befund file://): prüft gegen die min/max-Attribute, die feldInputHTML bereits
+// am <input> gesetzt hat (Format + Jahresbereich + evtl. keineZukunft). Bewusst NICHT über
+// _datumPlausibel(feld.keineZukunft, feld.datumJahrMin) — im Situations-Zweig sind manche Felder
+// inline definiert und nicht über _feldDef(sektorId, fid) auflösbar; die DOM-min/max-Attribute
+// sind hier die verlässliche, aufrufer-unabhängige Quelle (identisch mit dem, was gerendert wurde).
+function _datumEingabePlausibel(inp, v) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  if (isNaN(new Date(v + 'T00:00:00Z').getTime())) return false;
+  if (inp.min && v < inp.min) return false;
+  if (inp.max && v > inp.max) return false;
+  return true;
+}
 // Auto-Save (UX-Spec VII „Sie können jederzeit pausieren") — vor jeder Navigations-Aktion
 // werden offene Edit-Eingaben wie ein „Fertig"-Klick übernommen: gestempelt, persistent in `data`.
 // Sektor-agnostisch, liest die data-edit/data-edit-ref-Inputs des aktiven Sektors. Liefert true,
@@ -15227,8 +15557,21 @@ function bearbeitungSpeichern() {
   // a) Skalare Inputs (text/textarea/datum/zahl/auswahl).
   c.querySelectorAll('[data-edit]').forEach(inp => {
     const fid = inp.getAttribute('data-edit');
-    const v = (inp.value != null ? String(inp.value) : '').trim();
+    let v = (inp.value != null ? String(inp.value) : '').trim();
     const vorher = (vorherDaten[fid] != null && typeof vorherDaten[fid] !== 'object') ? String(vorherDaten[fid]) : '';
+    // Nachbesserung (20.07.2026, Carola-Befund): „alten Wert stillschweigend behalten" reicht NICHT
+    // — das Feld zeigt dann weiter die Falscheingabe, während der Datensatz den alten Wert hält
+    // (dieselbe Anzeige/Datensatz-Divergenz nur umgekehrt). Bei Ablehnung springt das Feld daher
+    // SICHTBAR auf den gespeicherten Stand zurück (inp.value), nicht nur die Variable — Anzeige und
+    // Datensatz bleiben identisch. `bearbeitungSpeichern` läuft ohne Re-Render (Auto-Save auf
+    // blur/change, s. u.), darum reicht ein bloßes „nicht übernehmen" hier nicht aus. Nur bei
+    // TATSÄCHLICHER Änderung geprüft (v !== vorher) — unverändert übernommene Alt-Daten (auch falls
+    // historisch unplausibel) werden nicht neu beanstandet.
+    if (inp.getAttribute('data-typ') === 'datum' && v && v !== vorher && !_datumEingabePlausibel(inp, v)) {
+      inp.value = vorher;
+      v = vorher;
+      if (ui && ui.toast) ui.toast(STRINGS.feldFehlerDatum, 'info');
+    }
     if (v) neu[fid] = v; else delete neu[fid];
     if (v !== vorher) geaendert.push(fid);
   });
@@ -16190,17 +16533,24 @@ function kiDokumentOeffnen() {
    Reihenfolge = Regal-/Abschnitt-Reihenfolge. Schema = Modul-Vertrag Teil 1 (VD-lokal, abgenommen). */
 const VORSORGE_MODULE = Object.freeze([
   // Volle Generator-Instanzen (Korpus vorhanden):
+  // U2-ADR-089 Teil A Block 1 (17.07.): ALLE sechs Module tragen jetzt `listeId:'vorsorge_instrumente'`
+  // (geteilte Liste, ADR-070-Schema-Erweiterung) + `instrumentTyp` (Diskriminante — entspricht dem
+  // `typ`-Optionswert in vorsorge_instrumente, NICHT immer identisch mit der Modul-`id`, z. B.
+  // 'testament-erbe' vs. 'testament'). Additiv: die alten Flachfeld-Gates/`_MODUL_KARTE` bleiben
+  // unverändert aktiv — modulKarteStatus() nimmt weiterhin deren Zweig für `mehrfach:false`-Module.
   { id: 'patientenverfuegung', titel: 'Patientenverfügung', mehrfach: false, herkunft: 'amtlich',
     form: { paragraf: '§ 1827 BGB' }, sektor: 'vorsorge', wizardId: 'pvwiz',
-    dokumentTyp: 'patientenverfuegung', istAnlage: false, generator: PV_MODUL },
+    dokumentTyp: 'patientenverfuegung', istAnlage: false, generator: PV_MODUL,
+    listeId: 'vorsorge_instrumente', instrumentTyp: 'patientenverfuegung' },
   // ── Vier LEERE Module (strukturell eingehängt, Generator/Korpus folgt je Instrument) ──
   // Vollmacht = das einzige MEHRFACHE Modul (Option A, Modul-Vertrag §4, abgenommen): EIN Modul,
-  // dessen Inhalt die Unterliste der `vollmachten`-Records ist (= heutige ADR-064-Struktur, keine
-  // Daten-Migration). referenzZiele hier STRUKTURELL deklariert; das per-`art`-/Cross-Sektor-Rendern
+  // dessen Inhalt seit Schema 39 (U2-ADR-089) die Unterliste der `vorsorge_instrumente`-Records mit
+  // typ='vorsorgevollmacht' ist (vorher: eigene `vollmachten`-Liste, Schema-Bump hängt sie um).
+  // referenzZiele hier STRUKTURELL deklariert; das per-`art`-/Cross-Sektor-Rendern
   // (Bankvollmacht → Karte in Finanzen) ist die Bild-C-Arbeit (P1/P2-Grenzen, U2-ADR-068).
   { id: 'vorsorgevollmacht', titel: 'Vorsorgevollmacht', mehrfach: true, herkunft: 'amtlich',
     form: null, sektor: 'vorsorge', wizardId: 'vvwiz', dokumentTyp: 'vorsorgevollmacht',
-    listeId: 'vollmachten', istAnlage: false, generator: null,
+    listeId: 'vorsorge_instrumente', instrumentTyp: 'vorsorgevollmacht', istAnlage: false, generator: null,
     // referenzZiele = STRUKTUR, kein geparster String: die Sichtbarkeits-Bedingung ist ein Schema
     // { feld, wert } (dieselbe Form wie sichtbarWenn) — ein fremdes Modul füllt es, statt eine String-
     // Konvention „art=bank" zu erraten. Generisch für jedes künftige Modul (Carola, 11.07.).
@@ -16208,18 +16558,19 @@ const VORSORGE_MODULE = Object.freeze([
                      daten: [{ feld: 'bevollmaechtigter', entitaet: 'person' }] } },
   { id: 'betreuungsverfuegung', titel: 'Betreuungsverfügung', mehrfach: false, herkunft: 'amtlich',
     form: null, sektor: 'vorsorge', wizardId: 'bwwiz', dokumentTyp: 'betreuungsverfuegung',
-    istAnlage: false, generator: null },
+    listeId: 'vorsorge_instrumente', instrumentTyp: 'betreuungsverfuegung', istAnlage: false, generator: null },
   { id: 'testament-erbe', titel: 'Testament', mehrfach: false, herkunft: 'amtlich',
     form: null, sektor: 'vorsorge', wizardId: 'erbwiz', dokumentTyp: 'testament',
-    istAnlage: false, generator: null },
+    listeId: 'vorsorge_instrumente', instrumentTyp: 'testament', istAnlage: false, generator: null },
   { id: 'sorgerechtsverfuegung', titel: 'Sorgerechtsverfügung', mehrfach: false, herkunft: 'amtlich',
     form: null, sektor: 'vorsorge', wizardId: 'srwiz', dokumentTyp: null,
-    istAnlage: false, generator: null },
+    listeId: 'vorsorge_instrumente', instrumentTyp: 'sorgerechtsverfuegung', istAnlage: false, generator: null },
   // KI-Verfügung: volle Instanz, aber Forschungssynthese + Testament-Anlage; Heimat heute Verwaltung
   // (zieht mit der Gesamt-Migration an ihren Zielort). Erscheint im Bild-C-Regal (CC-Auftrag).
   { id: 'ki-verfuegung', titel: 'Verfügung zur digitalen Nachbildung', mehrfach: false,
     herkunft: { art: 'forschung', beleg: 'Edilife/Cambridge/Zürich', hinweis: 'kein amtlicher Standard' },
     form: { paragraf: '§ 2247 BGB' }, sektor: 'verwaltung', wizardId: 'kiwiz', dokumentTyp: null,
+    listeId: 'vorsorge_instrumente', instrumentTyp: 'ki-verfuegung',
     istAnlage: true, anlageZu: 'testament', generator: KI_MODUL,
     referenzZiele: { daten: [{ feld: 'ki_nachlassverwalter', entitaet: 'person' }] } },
 ]);
@@ -16252,7 +16603,11 @@ function modulKarteHerkunft(m) { const km = _MODUL_KARTE[m.id]; return km ? km.h
 function modulKarteStatus(m) {
   const d = (data && data.sektoren && data.sektoren[m.sektor]) || {};
   if (m.mehrfach && m.listeId) {
-    const n = Array.isArray(d[m.listeId]) ? d[m.listeId].length : 0;
+    // U2-ADR-089 Teil A Block 1 (17.07.): seit die Liste von allen sechs Modulen geteilt wird, zählt
+    // nicht mehr die Array-Länge (das wären alle Instrumente zusammen), sondern nur die Einträge mit
+    // passendem instrumentTyp. Vorher unkritisch, weil `vollmachten` exklusiv Vollmacht gehörte.
+    const liste = Array.isArray(d[m.listeId]) ? d[m.listeId] : [];
+    const n = m.instrumentTyp ? liste.filter(r => r && r.typ === m.instrumentTyp).length : liste.length;
     return n > 0 ? (n + ' erteilt') : 'keine';
   }
   const km = _MODUL_KARTE[m.id];
@@ -16262,11 +16617,13 @@ function modulKarteStatus(m) {
   if (w === 'plant') return 'in Vorbereitung';
   return 'keine';
 }
-// art-Label eines vollmachten-Records aus der Feld-Definition (kein hartkodiertes Duplikat).
+// art-Label eines vorsorge_instrumente-Records aus der Feld-Definition (kein hartkodiertes Duplikat).
+// U2-ADR-089 Teil A Block 1 (17.07.): Pfad umgestellt von der alten `vollmachten`-Liste (Sektion
+// 'vorsorgevollmacht') auf die geteilte `vorsorge_instrumente`-Liste (Sektion 'meine-vorsorge').
 function _vollmachtArtLabel(wert) {
   try {
-    const sek = (SEKTOR_BY_ID.vorsorge.sektionen || []).find(s => s.id === 'vorsorgevollmacht');
-    const feld = sek && (sek.felder || []).find(f => f.id === 'vollmachten');
+    const sek = (SEKTOR_BY_ID.vorsorge.sektionen || []).find(s => s.id === 'meine-vorsorge');
+    const feld = sek && (sek.felder || []).find(f => f.id === 'vorsorge_instrumente');
     const uf = feld && (feld.unterFelder || []).find(u => u.id === 'art');
     const o = uf && (uf.optionen || []).find(x => x.wert === wert);
     return o ? o.label : '';
@@ -16338,6 +16695,10 @@ function modulSichtbarkeitsKarten(zielSektor) {
       const records = Array.isArray(heim[m.listeId]) ? heim[m.listeId] : [];
       records.forEach((rec, index) => {
         if (!rec) return;
+        // U2-ADR-089 Teil A Block 1 (17.07.): Besitz-Filter ZUERST — die Liste ist jetzt zwischen
+        // sechs Modulen geteilt, `bedingung` allein (z. B. art==='bank') reicht nicht mehr, um
+        // Fremd-Typ-Einträge auszuschließen.
+        if (m.instrumentTyp && rec.typ !== m.instrumentTyp) return;
         if (b.feld != null && rec[b.feld] !== b.wert) return;
         // Verweis über die STABILE id (überlebt Umsortieren); index bleibt als Fallback für Alt-Records ohne id.
         karten.push({ modul: m, record: rec, verweisAuf: { sektor: m.sektor, listeId: m.listeId, id: rec.id || null, index: index } });
@@ -16353,8 +16714,11 @@ function sichtbarkeitsKartenHTML(zielSektor) {
   let h = '<div class="regal regal-verweise" aria-label="' + escapeHTML(STRINGS.regalVerweiseTitel) + '">' +
     '<div class="regal-titel">' + escapeHTML(STRINGS.regalVerweiseTitel) + '</div><div class="regal-karten">';
   for (const k of karten) {
+    // Block-1-Nachtrag (17.07.2026, Geräte-Befund): dieselbe Sammelbegriff+genauere-Art-Dopplung
+    // wie in listenEintragZusammenfassung — bei gesetzter `art` führt sie ALLEIN, der Modul-Titel
+    // (Typ-Oberbegriff, z. B. „Vorsorgevollmacht") entfällt, statt vorangestellt zu werden.
     const art = k.record && k.record.art ? (_vollmachtArtLabel(k.record.art) || k.record.art) : '';
-    const titel = art ? (k.modul.titel + ' · ' + art) : k.modul.titel;
+    const titel = art || k.modul.titel;
     // Feinsprung-Anker: rec-<id> wenn die stabile id vorliegt, sonst der Instrument-Abschnitt (Alt-Records).
     const anker = k.verweisAuf.id ? ('rec-' + k.verweisAuf.id) : ('sek-' + k.modul.id);
     h += '<button type="button" class="regal-karte regal-karte-verweis" ' +
@@ -16746,7 +17110,10 @@ function flowFhirGeburtsdatumErgaenzen() {
   oeffneSektor('identitaet');
 }
 
-function renderContent() {
+// Muster B (16.07.2026): optionaler zweiter Parameter — wenn true, überspringt renderContent()
+// den Scroll-Reset (inhaltNachObenScrollen). Für Listen-CRUD-Aufrufer, die Scroll/Fokus selbst
+// erhalten (s. _renderContentNachListenCrud unten); alle anderen Aufrufer bleiben unverändert.
+function renderContent(erhalteScrollUndFokus) {
   schliesseMenue();        // jede Navigation schließt den Mobil-Drawer (auf Desktop wirkungslos)
   vorleseStoppen();        // beim Navigieren/Re-Render stoppt eine laufende Sprachausgabe
   renderContentInner();
@@ -16788,9 +17155,105 @@ function renderContent() {
   // Sicht am Schritt — renderWizard fokussiert das Eingabefeld.
   if (aktiveAnsicht === 'wizard') {
     if (wizardSchrittIndex === 0) inhaltNachObenScrollen();
-  } else {
+  } else if (!erhalteScrollUndFokus) {
     inhaltNachObenScrollen();   // Sicht beginnt oben am Titel
   }
+}
+// Muster B (16.07.2026): Ersatz für einen bloßen renderContent()-Aufruf nach Listen-CRUD
+// (Hinzufügen/Ändern/Entfernen/Verschieben eines Listen-Eintrags). Ein voller innerHTML-Rebuild
+// würde sonst IMMER Scrollposition, Fokus UND eine offene ref-Widget-/Chip-Vorschlagsliste an
+// einer GANZ ANDEREN Stelle der Seite mitreißen — auch wenn die Anlage selbst mit dieser Stelle
+// nichts zu tun hat (Carola-Befund, „nichts vertagen": Scroll, Fokus UND Vorschlagslisten).
+// Merkt vor dem Rebuild Scroll-Position + ein ggf. fokussiertes ref-Override-/Chip-Eingabefeld
+// samt unbestätigtem Tippwert; nach dem Rebuild wird beides wiederhergestellt und ein
+// synthetisches 'input'-Event gefeuert — das reaktiviert die vorhandene Live-Filter-Verdrahtung
+// des Widgets von selbst, ohne eigene Vorschlagslisten-Logik.
+// Muster B: das zuletzt fokussierte ref-Override-/Chip-Eingabefeld global mitverfolgen — NÖTIG,
+// weil ein Klick auf einen ANDEREN Knopf (Entfernen/Verschieben/Modal-Öffnen) den Fokus per
+// mousedown SCHON verschiebt, BEVOR dessen onclick-Handler läuft. document.activeElement wäre zum
+// Zeitpunkt des Merkens also bereits der geklickte Knopf, nicht mehr das zuvor offene Eingabefeld
+// — dessen eigener onblur-Handler löscht unbestätigten Text zudem erst nach 150ms (setTimeout),
+// greift zum Merk-Zeitpunkt also noch nicht. Nur das Tracken hält die Steckstelle fest.
+//
+// Weg 1 (20.07.2026, Nachbesserung): Die ursprüngliche Fassung nullte die Spur bei JEDEM
+// `focusin` auf einem nicht markierten Element — also auch dann, wenn der Fokus nur deshalb
+// verschwand, WEIL die Nutzerin genau jetzt auf „Hinzufügen"/„Bearbeiten"/„Entfernen"/↑/↓ klickte
+// (diese Knöpfe erhalten beim Klick selbst den Fokus). Der Klick, den der Fix behandeln soll,
+// löschte damit zuerst die Spur, die er braucht. Ersetzt durch `focusout` auf dem getrackten
+// Feld SELBST mit Prüfung des `relatedTarget`: Verlässt der Fokus in Richtung eines Buttons
+// (jede Listen-Aktion — bewusst am Element-Typ geprüft, nicht an einzelnen Knopf-Attributen,
+// damit kein zweites Allowlist-Muster entsteht), bleibt die Spur erhalten; jedes andere Ziel
+// (ein anderes Feld, Verlassen des Fensters) räumt sie ab. iOS Safari fokussiert Buttons per
+// Tap historisch nicht immer wie Desktop-Browser — Geräte-Abnahme prüft das gezielt.
+let _zuletztFokussiertesEingabefeld = null;
+if (typeof document !== 'undefined' && document.addEventListener) {
+  const _istGetracktesFeld = (a) => !!(a && a.hasAttribute &&
+    (a.hasAttribute('data-edit-refm-override') || a.hasAttribute('data-chip-eingabe')));
+  document.addEventListener('focusin', (e) => {
+    const a = e.target;
+    if (!_istGetracktesFeld(a)) return;   // NICHT mehr nullen — nur bei Treffer setzen
+    const attr = a.hasAttribute('data-edit-refm-override') ? 'data-edit-refm-override' : 'data-chip-eingabe';
+    _zuletztFokussiertesEingabefeld = { el: a, attr };
+  }, true);
+  document.addEventListener('focusout', (e) => {
+    const a = e.target;
+    if (!_istGetracktesFeld(a)) return;   // nur reagieren, wenn das VERLASSENE Feld selbst getrackt war
+    const ziel = e.relatedTarget;
+    if (ziel && ziel.tagName === 'BUTTON') return;   // Richtung Listen-Aktion — Spur bleibt
+    _zuletztFokussiertesEingabefeld = null;
+  }, true);
+}
+function _renderContentNachListenCrud() {
+  const zustand = _scrollUndFokusMerken();
+  renderContent(true);
+  _scrollUndFokusWiederherstellen(zustand);
+}
+function _scrollUndFokusMerken() {
+  const zustand = { scroll: [], feld: null };
+  try {
+    ['content', 'app'].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && typeof el.scrollTop === 'number') zustand.scroll.push({ id, top: el.scrollTop });
+    });
+    const se = document.scrollingElement;
+    if (se) zustand.scroll.push({ se: true, top: se.scrollTop });
+    zustand.fensterY = (typeof window !== 'undefined' && window.scrollY) || 0;
+
+    const spur = _zuletztFokussiertesEingabefeld;
+    const a = spur && spur.el && spur.el.isConnected ? spur.el : null;
+    if (a) {
+      const attr = spur.attr;
+      const attrWert = a.getAttribute(attr);
+      // Mehrere Zeilen desselben Feldes tragen denselben Attributwert — Unterscheidung nur über
+      // die DOM-Reihenfolge, darum zusätzlich den Positions-Index unter Gleichwertigen merken.
+      const alle = Array.from(document.querySelectorAll('[' + attr + '="' + String(attrWert).replace(/"/g, '\\"') + '"]'));
+      zustand.feld = { attr, attrWert, idx: alle.indexOf(a), wert: a.value, selStart: a.selectionStart, selEnd: a.selectionEnd };
+    }
+  } catch (_) {}
+  return zustand;
+}
+function _scrollUndFokusWiederherstellen(zustand) {
+  try {
+    (zustand.scroll || []).forEach((s) => {
+      if (s.se) { const se = document.scrollingElement; if (se) se.scrollTop = s.top; }
+      else { const el = document.getElementById(s.id); if (el) el.scrollTop = s.top; }
+    });
+    if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, zustand.fensterY || 0);
+
+    if (zustand.feld) {
+      const { attr, attrWert, idx, wert, selStart, selEnd } = zustand.feld;
+      const alle = Array.from(document.querySelectorAll('[' + attr + '="' + String(attrWert).replace(/"/g, '\\"') + '"]'));
+      const ziel = alle[idx];
+      if (ziel) {
+        ziel.value = wert;
+        ziel.focus({ preventScroll: true });
+        if (typeof selStart === 'number' && typeof ziel.setSelectionRange === 'function') {
+          try { ziel.setSelectionRange(selStart, selEnd); } catch (_) {}
+        }
+        ziel.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  } catch (_) {}
 }
 function renderContentInner() {
   if (Modus.aktuell() === 'notfall') { renderNotfall(); return; }
@@ -17594,7 +18057,7 @@ function renderSektor(sektorOrId) {
         const wrap = btn.closest ? btn.closest('[data-feld-liste]') : null;
         const fid = wrap && wrap.getAttribute('data-feld-liste');
         const idx = parseInt(btn.getAttribute('data-eintrag-hoch'), 10);
-        if (fid && listenEintragVerschieben(sektorId, fid, idx, -1)) renderContent();
+        if (fid && listenEintragVerschieben(sektorId, fid, idx, -1)) _renderContentNachListenCrud();
       };
     });
     c.querySelectorAll('[data-eintrag-runter]').forEach(btn => {
@@ -17602,7 +18065,7 @@ function renderSektor(sektorOrId) {
         const wrap = btn.closest ? btn.closest('[data-feld-liste]') : null;
         const fid = wrap && wrap.getAttribute('data-feld-liste');
         const idx = parseInt(btn.getAttribute('data-eintrag-runter'), 10);
-        if (fid && listenEintragVerschieben(sektorId, fid, idx, +1)) renderContent();
+        if (fid && listenEintragVerschieben(sektorId, fid, idx, +1)) _renderContentNachListenCrud();
       };
     });
     // U2-ADR-065: refMehrfach-Widgets im Sektor-Edit-Modus verdrahten (Add/Entfernen/↑↓/„+ Neu").
@@ -17774,6 +18237,20 @@ function renderSituation(sitOrId, optionen) {
    wird im Browser verifiziert (jsPDF läuft nicht im Node-Harness).
    ════════════════════════════════════════════════════════════════════════ */
 
+// Datum vierstellig deutsch (Nachbesserung 20.07.2026, Geräte-Befund file://): feldWertText/
+// feldWertHTML hatten KEINEN Fall für typ:'datum' und fielen auf String(roh) zurück — rohes ISO
+// (z. B. „1999-07-20") in Situationsblatt/Notfall-/Angehörigen-Sicht, nicht nur in der Listenzeile.
+// Anders als datumKurz() (zweistelliges Jahr, für kompakte Meta-Zeilen wie Build-Datum/Fußzeile)
+// trägt diese Funktion das volle Jahr — bei Testament/Vollmacht rechtlich relevant.
+// Nicht parsbar (z. B. historisch fehlerhaft gespeicherter Wert) → roher String, nie stumm leer.
+// NICHT in feldWertText() selbst eingebaut (Versuch verworfen, s. u.) — die Funktion ist geteilt
+// mit den maschinenlesbaren Export-Mappern (SD-JWT-VC/vCard/Sozialversicherung, ab Zeile 7869),
+// die zwingend ISO brauchen (Round-Trip-Tests schlugen fehl). Der Aufruf sitzt gezielt hinter
+// _wertTextMenschlich() (unten) — dem Wrapper für alle menschlich lesenden/vorlesenden Stellen.
+function _datumDeutsch(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  return m ? (m[3] + '.' + m[2] + '.' + m[1]) : String(iso || '');
+}
 // Klartext-Wert eines Feldes — Spiegel von feldWertHTML ohne HTML. Für PDF/Export.
 function feldWertText(feld, roh) {
   if (!feldEingetragen(feld, roh)) return STRINGS.leerZustand;
@@ -17819,6 +18296,15 @@ function feldWertText(feld, roh) {
 // Reines Daten-Modell eines Situationsblatts: Titel + Blöcke mit Zeilen {label, wert, quelle}.
 // sensibel-Felder fallen weg; leere Blöcke (alle Zeilen sensibel) werden ausgelassen. Spiegelt
 // den renderSituation-Datenpfad (sektor-gezogen + eigene Felder + Brief-Anbindung).
+// Menschlich lesbarer Klartext-Wert (Nachbesserung 20.07.2026): feldWertText bleibt UNVERÄNDERT
+// für die maschinenlesbaren Export-Mapper (s. Kommentar bei _datumDeutsch) — hier zusätzlich
+// Datum → deutsch, für jede Stelle, die für Menschen liest/vorliest, statt weiterverarbeitet
+// (Situationsblätter, Notfall-Kern-QR/-Karte, Bereichs-/Gesamt-PDF, Import-Vorschau, Vorlese-Text).
+// Leer-Fall bleibt bei feldWertText (STRINGS.leerZustand).
+function _wertTextMenschlich(feld, roh) {
+  if (feld && feld.typ === 'datum' && feldEingetragen(feld, roh)) return _datumDeutsch(roh);
+  return feldWertText(feld, roh);
+}
 function situationModell(sitOrId) {
   const si = (typeof sitOrId === 'string') ? SITUATION_BY_ID[sitOrId] : sitOrId;
   if (!si) return null;
@@ -17836,11 +18322,11 @@ function situationModell(sitOrId) {
       if (eintrag && eintrag.quelle) {
         const qS = SEKTOR_BY_ID[eintrag.quelle];
         const { feld: qF, roh } = crossRefFeldUndRoh(eintrag.quelle, eintrag.feld);
-        zeilen.push({ label: (qF && qF.label) || eintrag.feld, wert: feldWertText(qF || { typ: 'text' }, roh), quelle: (qS && qS.label) || eintrag.quelle });
+        zeilen.push({ label: (qF && qF.label) || eintrag.feld, wert: _wertTextMenschlich(qF || { typ: 'text' }, roh), quelle: (qS && qS.label) || eintrag.quelle });
       } else if (eintrag && eintrag.feld && typeof eintrag.feld === 'object') {
         const f = eintrag.feld;
         if (f.sensibel) continue;                                  // sensibel: nicht ins PDF
-        zeilen.push({ label: f.label || f.id, wert: feldWertText(f, eigeneDaten[f.id]), quelle: '' });
+        zeilen.push({ label: f.label || f.id, wert: _wertTextMenschlich(f, eigeneDaten[f.id]), quelle: '' });
       }
     }
     if (zeilen.length) bloecke.push({ titel: block.titel || '', zeilen });
@@ -17987,7 +18473,7 @@ function _bereichSektionenModell(s, inklSensibel) {
       if (!feldSichtbar(f, sektorDaten)) continue;               // bedingte Felder wie am Bildschirm
       const roh = sektorDaten[f.id];
       if (!feldEingetragen(f, roh)) continue;                    // leere Felder weglassen → kompakt
-      zeilen.push({ label: f.label, wert: feldWertText(f, roh) });
+      zeilen.push({ label: f.label, wert: _wertTextMenschlich(f, roh) });
     }
     if (zeilen.length) sektionen.push({ titel: sek.label || '', zeilen });
   }
@@ -18632,6 +19118,7 @@ function feldWertHTML(feld, roh) {
     return escapeHTML(werte.map(w => { const o = opts.find(x => x.wert === w); return (o && o.label) || String(w); })
       .filter(Boolean).join(', '));
   }
+  if (feld.typ === 'datum') return escapeHTML(_datumDeutsch(roh));
   if (feld.typ === 'textarea') {
     // Zeilenumbrüche erhalten — escapeHTML wandelt sie nicht, CSS white-space:pre-wrap zeigt sie.
     return '<span class="feld-mehrzeilig">' + escapeHTML(String(roh)) + '</span>';
@@ -18660,12 +19147,27 @@ function feldWertHTML(feld, roh) {
 // Pure Zusammenfassung der eingetragenen Sub-Werte eines Listen-Eintrags. Trennzeichen ' · '.
 // Skalare Sub-Werte als String; ref-Sub-Werte über entitaetAnzeige aufgelöst. Auswahl-Sub-Werte
 // als Optionen-Label (nicht der maschinelle Schlüssel). Leere Sub-Werte werden übersprungen.
+// Block-1-Nachtrag (17.07.2026): `uf.unterdrueckeInZusammenfassungWennGesetzt` (Geschwister-Feld-
+// id) lässt ein Unterfeld hier aus, wenn dieses Geschwisterfeld im selben Eintrag gesetzt ist —
+// generisches Schema-Flag gegen Sammelbegriff+genauere-Art-Dopplung (z. B. Instrument-Typ neben
+// Vollmacht-Art), keine Feld-id-Sonderbehandlung im Code.
+// Nachbesserung (20.07.2026): `feld.zusammenfassungFelder` (Array von Unterfeld-ids, deklariert
+// auf der liste selbst) ist eine Positivliste — ist sie gesetzt, erscheinen NUR ihre Felder, egal
+// wie viele weitere Unterfelder gefüllt sind (Geräte-Befund: eine lange Zeile aus allen gefüllten
+// Feldern wurde unlesbar). Fehlt das Array, bleibt das alte „alles zeigen"-Verhalten unverändert —
+// die anderen liste-Felder der App brauchen dafür keine Änderung.
 function listenEintragZusammenfassung(feld, eintrag) {
   if (!eintrag || typeof eintrag !== 'object') return '';
+  const erlaubt = Array.isArray(feld.zusammenfassungFelder) ? new Set(feld.zusammenfassungFelder) : null;
   const teile = [];
   for (const uf of (feld.unterFelder || [])) {
+    if (erlaubt && !erlaubt.has(uf.id)) continue;
     const w = eintrag[uf.id];
     if (!feldEingetragen(uf, w)) continue;
+    if (uf.unterdrueckeInZusammenfassungWennGesetzt) {
+      const sib = eintrag[uf.unterdrueckeInZusammenfassungWennGesetzt];
+      if (sib != null && sib !== '') continue;
+    }
     if (uf.typ === 'ref') {
       const n = entitaetAnzeige(w, uf.entitaet || 'person');
       if (n) teile.push(n);
@@ -18846,7 +19348,17 @@ function _refmZeileHTML(feld, eintrag) {
   z += '<input type="text" class="refm-name' + (gesetzt ? ' refm-name--gesetzt' : '') + '" role="combobox" aria-autocomplete="list" aria-expanded="false" autocomplete="off"'
      + ' data-edit-refm-override="' + fid + '"' + al
      + ' placeholder="' + escapeHTML(STRINGS.refmNamePlatzhalter) + '" value="' + anzeige.replace(/"/g, '&quot;') + '">';
-  z += '<input type="hidden" class="refm-ref" data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '" value="' + String(ref).replace(/"/g, '&quot;') + '">';
+  // Overwrite-Fix (20.07.2026): der Bestätigt-Zustand (sonst nur die lokale `schmutzig`-Variable
+  // in comboVerdrahten(), die _refmSammeln() nie sah) wird hier zusätzlich maschinenlesbar auf die
+  // Ref-Box geschrieben — `data-refm-bestaetigt` plus der zuletzt bestätigte {ref,override} als
+  // Fallback. _refmSammeln() liest bei unbestätigtem Zwischenstand (Tippen ohne Bestätigung) diesen
+  // Fallback statt des rohen, gerade veränderten Feldinhalts. Jede Stelle, die künftig an dieser Box
+  // liest oder schreibt, muss diese Kopplung kennen.
+  z += '<input type="hidden" class="refm-ref" data-edit-refm="' + fid + '" data-entitaet="' + entitaet + '"'
+     + ' data-refm-bestaetigt="' + (gesetzt ? '1' : '') + '"'
+     + ' data-refm-bestand-ref="' + String(ref).replace(/"/g, '&quot;') + '"'
+     + ' data-refm-bestand-override="' + String(override).replace(/"/g, '&quot;') + '"'
+     + ' value="' + String(ref).replace(/"/g, '&quot;') + '">';
   z += '<ul class="refm-vorschlaege" role="listbox" hidden></ul>';
   z += '</div>';
   // Knöpfe als eine Gruppe. Der „Übernehmen"-Haken bestätigt den getippten Namen (Enter-Alternative für die
@@ -18902,6 +19414,12 @@ function feldInputHTML(feld, roh) {
     return h + '</div>';
   }
   switch (feld.typ) {
+    // ADR-089 Entscheidung 5 (17.07.) — reines Anzeige-Feld ohne Eingabe: der eigentliche Text
+    // kommt aus feld.hint (listenEintragInputsHTML rendert den Hint ohnehin für jedes Unterfeld);
+    // hier gibt es nur nichts einzugeben. Kleinste Erweiterung des bestehenden Hint-Mechanismus,
+    // kein neuer Renderpfad.
+    case 'hinweis':
+      return '';
     case 'textarea':
       return '<textarea data-edit="' + fid + '" data-typ="textarea"' + ph + al +
         (feld.maxLength != null ? ' maxlength="' + feld.maxLength + '"' : '') +
@@ -19151,6 +19669,46 @@ function feldZeileHTML(feld, roh, sektorId, darf) {
   return h;
 }
 
+// U2-ADR-089 Teil A Block 1 (17.07.) — Speicher-Sperren für einen Listen-Eintrag, VOR der
+// eigentlichen Mutation geprüft. Drei unabhängige Gründe:
+// (1) Pflicht: `uf.pflicht` war bisher nur ein visueller Marker (listenEintragInputsHTML) ohne
+//     echte Durchsetzung — kein bestehendes Unterfeld trug bisher pflicht:true, diese Prüfung
+//     aktiviert die Markierung erstmals als echte Sperre, ohne Bestandsverhalten zu ändern.
+// (2) Einzigartigkeit (nur `vorsorge_instrumente`): bei einzigartigem typ(+art) darf kein
+//     zweiter Eintrag entstehen — ausgenommenIndex schließt den gerade bearbeiteten Eintrag
+//     selbst von der Kollisionsprüfung aus (Bearbeiten bleibt uneingeschränkt möglich).
+// (3) Datum-Plausibilität (Nachbesserung 20.07.2026, Geräte-Befund file://): `_datumPlausibel`
+//     existierte schon, griff aber nirgends im Speicherpfad — ein natives <input type="date">
+//     kann beim Freitext-Tippen ins Jahres-Teilfeld einen unplausiblen Wert liefern (z. B. eine
+//     fünfstellige Jahreszahl), min/max am Input verhindert das nicht zuverlässig. Hier blockt
+//     die Prüfung VOR jeder Mutation — das Modal bleibt offen, der Eintrag wird nie mit dem
+//     Fehlwert gespeichert, daher kann Anzeige/Datensatz hier nie auseinanderlaufen (anders als
+//     im Sektorfeld-Pfad, s. bearbeitungSpeichern).
+function _listenEintragPruefen(sektorId, feldId, feld, eintrag, ausgenommenIndex) {
+  for (const uf of (feld.unterFelder || [])) {
+    if (uf.pflicht && feldSichtbar(uf, eintrag) && (eintrag[uf.id] == null || eintrag[uf.id] === '')) {
+      return { ok: false, grund: 'pflicht' };
+    }
+    if (uf.typ === 'datum' && eintrag[uf.id] && !_datumPlausibel(eintrag[uf.id], !!uf.keineZukunft, uf.datumJahrMin)) {
+      return { ok: false, grund: 'datum' };
+    }
+  }
+  if (feldId === 'vorsorge_instrumente' && eintrag.typ && _instrumentEinzigartig(eintrag.typ, eintrag.art)) {
+    const liste = (data && data.sektoren && data.sektoren[sektorId] && data.sektoren[sektorId][feldId]) || [];
+    const kollision = liste.some((r, i) => r && i !== ausgenommenIndex && r.typ === eintrag.typ &&
+      (eintrag.art == null || r.art === eintrag.art));
+    if (kollision) return { ok: false, grund: 'einzigartig' };
+  }
+  return { ok: true };
+}
+function _listenEintragFehlerToast(grund) {
+  if (!ui || !ui.toast) return;
+  const text = grund === 'einzigartig' ? STRINGS.instrumentEinzigartigHinweis
+    : grund === 'datum' ? STRINGS.feldFehlerDatum
+    : STRINGS.feldFehlerPflicht;
+  ui.toast(text, 'info');
+}
+
 /* ── Listen-Eintrag Modal-Flows (UI-Brücken) ────────────────────────────────
    Die Browser-UI öffnet ein Modal mit listenEintragInputsHTML als Body, liest die
    Sub-Werte zurück (liesEintragAusDOM) und ruft die Mutations-Funktionen aus
@@ -19158,6 +19716,9 @@ function feldZeileHTML(feld, roh, sektorId, darf) {
    flowRefNeueEntitaet — bei „__neu__"-Auswahl im Dropdown. */
 function flowListenEintragHinzufuegen(sektorId, feld) {
   if (imVorschau()) { flowDepotAnlegen(); return; }   // Setup-first: kein Listen-Eintrag vor dem Akteur — erst einrichten
+  // Muster B: VOR dem Modal-Öffnen merken — sonst überschreibt das Tippen IM Modal die Spur des
+  // zuvor auf der Sicht offenen Eingabefelds, bevor onPrimaer das Rendern auslöst.
+  const _zustandVorModal = _scrollUndFokusMerken();
   const koerperHTML = listenEintragInputsHTML(feld, {});
   ui.modal({
     titel: STRINGS.listenEintragTitelNeu,
@@ -19166,9 +19727,12 @@ function flowListenEintragHinzufuegen(sektorId, feld) {
     onPrimaer: (schliessen) => {
       const modalEl = document.getElementById('modal-inhalt');
       const eintrag = liesEintragAusDOM(modalEl, feld);
+      const pruef = _listenEintragPruefen(sektorId, feld.id, feld, eintrag, -1);
+      if (!pruef.ok) { _listenEintragFehlerToast(pruef.grund); return; }   // Modal bleibt offen
       listenEintragHinzufuegen(sektorId, feld.id, eintrag);
       if (typeof schliessen === 'function') schliessen();
-      renderContent();
+      renderContent(true);
+      _scrollUndFokusWiederherstellen(_zustandVorModal);
     },
   });
   _refSubPickerVerdrahten(feld);
@@ -19179,6 +19743,8 @@ function flowListenEintragHinzufuegen(sektorId, feld) {
 function flowListenEintragBearbeiten(sektorId, feld, index) {
   const liste = (data && data.sektoren && data.sektoren[sektorId] && data.sektoren[sektorId][feld.id]) || [];
   const eintrag = liste[index] || {};
+  // Muster B: VOR dem Modal-Öffnen merken — s. Kommentar in flowListenEintragHinzufuegen.
+  const _zustandVorModal = _scrollUndFokusMerken();
   const koerperHTML = listenEintragInputsHTML(feld, eintrag);
   ui.modal({
     titel: STRINGS.listenEintragTitelBearbeiten,
@@ -19187,9 +19753,12 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
     onPrimaer: (schliessen) => {
       const modalEl = document.getElementById('modal-inhalt');
       const neu = liesEintragAusDOM(modalEl, feld);
+      const pruef = _listenEintragPruefen(sektorId, feld.id, feld, neu, index);
+      if (!pruef.ok) { _listenEintragFehlerToast(pruef.grund); return; }   // Modal bleibt offen
       listenEintragAktualisieren(sektorId, feld.id, index, neu);
       if (typeof schliessen === 'function') schliessen();
-      renderContent();
+      renderContent(true);
+      _scrollUndFokusWiederherstellen(_zustandVorModal);
     },
   });
   _refSubPickerVerdrahten(feld);
@@ -19364,8 +19933,19 @@ function _refMehrfachVerdrahten(container, feldeFinden) {
         const bestaetigt = !!refFeld.value || (hatText && !schmutzig);
         if (uebernehmenBtn) uebernehmenBtn.hidden = !(hatText && !bestaetigt);
         eingabe.classList.toggle('refm-name--gesetzt', bestaetigt && hatText);
+        // Overwrite-Fix (20.07.2026): derselbe Bestätigt-Zustand, maschinenlesbar für _refmSammeln()
+        // (die Sammel-Funktion liest sonst blind den rohen, gerade getippten Feldinhalt).
+        refFeld.dataset.refmBestaetigt = bestaetigt ? '1' : '';
       };
-      const waehle = (id, name) => { refFeld.value = id || ''; eingabe.value = name || ''; schmutzig = false; verbergen(); zustand(); melden(); };
+      // Bestätigung (Auswahl aus der Liste ODER bewusste Neuanlage, s. bestaetige()): setzt die Live-Werte
+      // UND den Bestätigt-Fallback (data-refm-bestand-ref/-override), den _refmSammeln() bei unbestätigtem
+      // Zwischenstand einer ANDEREN Zeile nie braucht, hier aber synchron hält, falls zwischen Bestätigung
+      // und Speichern erneut getippt wird, ohne erneut zu bestätigen.
+      const waehle = (id, name) => {
+        refFeld.value = id || ''; eingabe.value = name || ''; schmutzig = false;
+        refFeld.dataset.refmBestandRef = id || ''; refFeld.dataset.refmBestandOverride = name || '';
+        verbergen(); zustand(); melden();
+      };
       // Auswahl per Tap/Enter: bekannte Person aus der Vorschlagsliste → ref setzen (keine Neuanlage).
       const waehleZeile = (li) => {
         if (!li) return;
@@ -19527,7 +20107,7 @@ function _chipFelderVerdrahten(container) {
 }
 function flowListenEintragEntfernen(sektorId, feld, index) {
   listenEintragEntfernen(sektorId, feld.id, index);
-  renderContent();
+  _renderContentNachListenCrud();
 }
 
 // Reines Mapping: aus einem Sub-Werte-Objekt das geprüfte Eintrag-Objekt bauen. Sektor-frei
@@ -19553,6 +20133,15 @@ function liesEintragAusWerten(feld, werte) {
 // Mapping liesEintragAusWerten. Im headless Test wird die reine Funktion direkt geprüft.
 // U2-ADR-065: die Personen-Zeilen eines refMehrfach-Felds aus dem DOM sammeln (Container beliebig —
 // Sektor-Content ODER Eintrags-Modal). Reihenfolge = DOM-Reihenfolge; leere Zeilen fallen raus.
+//
+// Overwrite-Fix (20.07.2026): Ein einziger Tastendruck in eine bereits bestätigte Zeile löschte
+// bislang die Referenz im In-Memory-Modell, weil hier blind der rohe, gerade veränderte Feldinhalt
+// gelesen wurde — ohne jede fremde Aktion, ohne Re-Render an anderer Stelle. `data-refm-bestaetigt`
+// (geschrieben von zustand()/waehle() in _refMehrfachVerdrahten, initialisiert von _refmZeileHTML)
+// ist jetzt der Wahrheits-Schalter: bestätigt → wie bisher der Live-Feldinhalt; unbestätigt (mitten
+// im Tippen, noch nicht per Enter/Übernehmen/Auswahl bestätigt) → der zuletzt bestätigte Fallback
+// (`data-refm-bestand-ref`/`-override`). Wer diese Box künftig liest oder schreibt, muss diese
+// Kopplung kennen — sonst kehrt derselbe Fehler unter anderem Namen zurück.
 function _refmSammeln(container, fid) {
   const box = container && container.querySelector && container.querySelector('[data-refm="' + fid + '"]');
   if (!box) return [];
@@ -19560,8 +20149,13 @@ function _refmSammeln(container, fid) {
   box.querySelectorAll('[data-refm-zeile]').forEach(z => {
     const sel = z.querySelector('[data-edit-refm]');
     const ov  = z.querySelector('[data-edit-refm-override]');
-    const ref = (sel && sel.value && sel.value !== '__neu__') ? sel.value : '';
-    const override = (ov && ov.value) || '';
+    const bestaetigt = !!(sel && sel.dataset.refmBestaetigt === '1');
+    const ref = bestaetigt
+      ? ((sel && sel.value && sel.value !== '__neu__') ? sel.value : '')
+      : ((sel && sel.dataset.refmBestandRef) || '');
+    const override = bestaetigt
+      ? ((ov && ov.value) || '')
+      : ((sel && sel.dataset.refmBestandOverride) || '');
     if (ref || (override && override.trim())) out.push({ ref, override });
   });
   return out;
@@ -20329,12 +20923,20 @@ function _erstEintragToastVielleicht(zielEl) {
 {
   const _contentHost = document.getElementById('content');
   if (_contentHost && _contentHost.addEventListener) {
+    // Autosave-Fix (20.07.2026, Persistenz-Lücke): diese Prüfung ist eine ALLOWLIST — jeder
+    // Widget-Typ mit eigener Melde-Mechanik (eigenes dispatchtes `change`/`blur`-Event auf einem
+    // eigenen Attribut) muss hier eingetragen werden, sonst bleiben seine Änderungen bis zu einem
+    // zufälligen fremden bearbeitungSpeichern()-Aufruf ungesichert. Genau das fehlte bei `data-refm`
+    // (refMehrfach-Widgets, `melden()` dispatcht auf der `[data-refm]`-Box, nicht auf den fünf
+    // ursprünglich geprüften Attributen) — bearbeitungSpeichern() selbst liest `[data-refm]` bereits
+    // korrekt (s. dort, Abschnitt „e) refMehrfach"), nur der Auslöser fehlte. Der nächste Fall dieser
+    // Art soll nicht wieder über einen Zufallsfund entdeckt werden, sondern hier als Checkliste stehen.
     const _autoSaveWennFeld = (ev) => {
       const t = ev && ev.target;
       if (!t || !t.getAttribute) return;
       if (t.hasAttribute('data-edit') || t.hasAttribute('data-edit-ref') ||
           t.hasAttribute('data-edit-override') || t.hasAttribute('data-chip-eingabe') ||
-          t.hasAttribute('data-chip-liste')) {
+          t.hasAttribute('data-chip-liste') || t.hasAttribute('data-refm')) {
         bearbeitungSpeichern();   // nur falten, NICHT neu rendern
         _erstEintragToastVielleicht(t);   // D3: Erst-Eintrag-Toast (einmal pro Sitzung, passwortlos)
       }

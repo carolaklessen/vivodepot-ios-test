@@ -2095,7 +2095,14 @@ function subBannerHTML() {
 }
 
 /* ── F-1 Begrüßung + zwei Eingangswege (U2-ADR-085 §5: Kamera-Tür entfernt) ─── */
+// Weg 1 (CC-Auftrag Eingangsschirm, 20.07.2026 — Grundsatz „Wer den Eingangsschirm zeigt,
+// räumt vorher auf", analog zur Bürger-App): zentral hier statt bei den Aufrufern — der
+// QR-Zurück-Knopf und der generische Hinweis-Helfer (renderHinweisMitZurueck) taten das
+// bislang NICHT. Die Lese-App hat kein Vorschau-Konzept zu schützen (anders als die
+// Bürger-App): jede vorhandene `data` ist ein bereits entschlüsselter, echter Depot-Auszug,
+// daher genügt eine einfache Prüfung ohne Ausnahme.
 function renderWelcome() {
+  if (data) entladen();
   const wrap = el('app');
   setModusFarbe('anker');
   const absaetze = STRINGS.welcomeEinfuehrung.map(p => '<p>' + escapeHTML(p) + '</p>').join('');
@@ -2244,7 +2251,7 @@ function renderPasswort(art, umschlag, blackboxDatei) {
         '</div>' +
       '</form>' +
     '</div>';
-  el('btn-zurueck').addEventListener('click', () => { entladen(false); renderWelcome(); });
+  el('btn-zurueck').addEventListener('click', renderWelcome);   // Aufräumung sitzt jetzt zentral in renderWelcome()
   const form = el('pw-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2529,7 +2536,11 @@ function renderHinweisMitZurueck(text) {
 function renderFehler(text) { renderHinweisMitZurueck(text); }
 
 function onSchliessen() {
-  entladen(true);
+  // entladen() nimmt keine Parameter — frühere Aufrufe hier und beim Zurück-Knopf übergaben
+  // entladen(true)/entladen(false), die die Funktion nie las (CC-Auftrag Eingangsschirm,
+  // 20.07.2026). Sofortiges Abräumen bleibt hier bewusst zusätzlich zur zentralen Prüfung in
+  // renderWelcome() stehen — früher als das erst beim Klick auf „Neu".
+  entladen();
   const wrap = el('app');
   setModusFarbe('anker');
   wrap.className = 'sheet-screen';
