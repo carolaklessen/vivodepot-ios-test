@@ -2691,7 +2691,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v72';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v73';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -2700,7 +2700,7 @@ const SCHALEN_STAND = 'v72';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-07-21';
+const BUILD_DATUM = '2026-07-22';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -2956,6 +2956,9 @@ const STRINGS = Object.freeze({
   angPasswortFalsch: "Das Vertrauens-Passwort stimmt nicht.",                       // GCM-Fehler beim Cache
   angEintrittAufforderung: "Öffnen Sie die read-only Sicht als Vertrauensperson. Wählen Sie die Vivodepot-Datei und geben Sie das Vertrauens-Passwort ein, das die Eigentümerin Ihnen gegeben oder hinterlegt hat.",  // U2-ADR-062 Startseiten-Eintritt
   angPwLabel: "Vertrauens-Passwort",
+  // U2-ADR-062-Nachtrag: Ort-Hinweis vor der Passwort-Eingabe. {ort} wird ersetzt.
+  angOrtHinweis: "Das Vertrauens-Passwort ist hinterlegt: {ort}",   // [PLATZHALTER-WORTLAUT]
+  angOrtSichtbarkeit: "Diese Angabe sehen Angehörige beim Anmelden. Schreiben Sie sie so, dass Ihre Vertrauensperson sie versteht.",   // [PLATZHALTER-WORTLAUT]
   angEintrittKnopf: "Als Angehörige öffnen",
   angOeffnetLaeuft: "Zugang wird geöffnet …",                                       // Ladezustand: PBKDF2-Entschlüsselung läuft
   angLadeHinweis: "Der Zugang wird entschlüsselt — auf älteren Geräten kann das einen Moment dauern.",  // Ladehinweis (fest 600k, U2-ADR-062)
@@ -3112,7 +3115,7 @@ const STRINGS = Object.freeze({
   nfbAngehoerigeTitel: "Hinweis für meine Angehörigen",
   // Nennt vivodepot.de als Bezugsquelle — bewusste, dauerhafte Zusage auf einem Blatt,
   // das jahrzehntelang in einer Mappe liegen kann (Abnahme-Punkt 1, so entschieden).
-  nfbAngehoerigeText: "Für meine Angehörigen: In meinem Vivodepot habe ich Unterlagen und Verfügungen abgelegt, die im Ernstfall wichtig sind. Sie brauchen dafür die oben genannte Depot-Datei und das Passwort von diesem Blatt. Öffnen lässt sich beides mit dem Vivodepot-Leseprogramm, das auf vivodepot.de kostenlos erhältlich ist. Es wird kein Konto und keine Anmeldung benötigt.",
+  nfbAngehoerigeText: "Für meine Angehörigen: In meinem Vivodepot habe ich Unterlagen und Verfügungen abgelegt, die im Ernstfall wichtig sind. Sie brauchen dafür die oben genannte Depot-Datei und das Passwort von diesem Blatt. Öffnen lässt sich beides mit der Vivodepot-App, die auf vivodepot.de kostenlos erhältlich ist. Es wird kein Konto und keine Anmeldung benötigt.",
   nfbAufbewahrungTitel: "Wo dieses Blatt hingehört",
   nfbAufbewahrungText: "Bewahren Sie dieses Blatt dort auf, wo Ihre wichtigen Dokumente liegen — nicht beim Gerät und nicht beim USB-Stick. Wenn Sie Ihr Passwort ändern, schreiben Sie ein neues Blatt und vernichten Sie das alte.",
   // Strang 2 / Commit B — D1 persistenter Topbar-Hinweis (sichtbar solange passwortlos).
@@ -3270,7 +3273,9 @@ const STRINGS = Object.freeze({
   vpOrtLabel: "Wo ist das Passwort physisch hinterlegt?",
   vpOrtPlaceholder: "z. B. Versiegelter Umschlag im Tresor",
   vpFehlerKurz: "Das Vertrauens-Passwort braucht mindestens 8 Zeichen.",
-  vpFehlerSchwach: "Das Vertrauens-Passwort ist zu schwach — bitte länger oder mit mehr Zeichenarten (Groß-/Kleinschreibung, Zahlen, Zeichen).",
+  // vpFehlerSchwach entfernt (U2-ADR-062-Nachtrag, 21.07.2026): Mit dem Wegfall des harten
+  // Stärke-Blockers hatte die Meldung keinen Aufrufer mehr. Ein Text ohne Weg zu ihm ist kein
+  // Reservetext, sondern eine Behauptung über Verhalten, das es nicht mehr gibt.
   vpFehlerUngleich: "Die beiden Eingaben stimmen nicht überein.",
   vpGesetztToast: "Vertrauens-Zugang gesetzt.",
   vpEntfernenTitel: "Vertrauens-Zugang entfernen",
@@ -6524,7 +6529,26 @@ async function depotSerialisieren() {
     // (mit dem zweiten Vertrauens-Passwort verschlüsselt). Kopiert den in `data` gehaltenen Snapshot;
     // aufgefrischt wird er beim „Vertrauensperson einrichten/aktualisieren". null, wenn nicht eingerichtet.
     angehoerigenCache: (data && data.angehoerigenCache) || null,
+    /* U2-ADR-062-Nachtrag (21.07.2026): Der Ort-Hinweis zum Vertrauens-Passwort („wo liegt es
+       physisch?") liegt bewusst als KLARTEXT-Geschwister neben `ct`. Das ist eine getroffene
+       Offenlegung, keine Nachlässigkeit: Die Vertrauensperson soll ihn VOR der Passwort-Eingabe
+       lesen können — dafür muss er ohne jedes Passwort aus der Datei lesbar sein. Er ist NIE das
+       Passwort selbst, nur der Verweis darauf.
+       Nur gesetzt, wenn ein Vertrauens-Zugang überhaupt eingerichtet ist: ohne Cache gäbe es
+       niemanden, der den Hinweis lesen dürfte — dann wird auch nichts offengelegt.
+       Reine Projektion aus `data` beim Serialisieren, EINE Richtung. Damit tragen Bestandsdepots
+       den Wert automatisch in den Umschlag, sobald sie das nächste Mal gespeichert werden —
+       ohne Migrationsschritt und ohne Zutun der Nutzerin. */
+    angehoerigenOrt: (data && data.angehoerigenCache && typeof data.angehoerigen_passwort_ort === 'string'
+                      && data.angehoerigen_passwort_ort) || null,
   };
+}
+
+// Liest den Ort-Hinweis aus einem Umschlag — OHNE jedes Passwort, das ist der Zweck (U2-ADR-062-Nachtrag).
+// Defensiv: fremde/alte Dateien tragen das Feld nicht, das ist kein Fehler, sondern der Normalfall.
+function angehoerigenOrtAusUmschlag(umschlag) {
+  const o = umschlag && umschlag.angehoerigenOrt;
+  return (typeof o === 'string' && o.trim()) ? o.trim().slice(0, 200) : null;
 }
 
 // D34 — Struktur-/Format-Prüfung VOR dem Entschlüsseln (reine Hülle, außerhalb des VdCrypto-Blocks).
@@ -12762,6 +12786,11 @@ function renderCryptoOverlay(vorbelegteDatei, internModus, angModus) {
     '</div>' +
     '<p class="crypto-auff">' + escapeHTML(internModus ? STRINGS.cryptoInternAufforderung : (angModus ? STRINGS.angEintrittAufforderung : STRINGS.cryptoPwAufforderung)) + '</p>' +
     dateiZeile +
+    // U2-ADR-062-Nachtrag: Ort-Hinweis ÜBER dem Passwort-Feld — er soll gelesen werden, bevor
+    // getippt wird. Leer gerendert und versteckt; gefüllt wird er erst, wenn ein Umschlag
+    // vorliegt (vorbelegte Datei, Datei-Auswahl oder interner Stand). Ohne Ortstext bleibt er
+    // versteckt: kein leerer Rahmen, kein Ersatztext.
+    (angModus ? '<p class="einst-hint ang-ort-hinweis" id="co-ang-ort" hidden></p>' : '') +
     '<label for="co-pw">' + escapeHTML(angModus ? STRINGS.angPwLabel : STRINGS.modalOeffnenPwLabel) + '</label>' +
     '<input id="co-pw" type="password" autocomplete="current-password">' +
     '<div id="crypto-fehler" class="modal-fehler" role="alert" hidden></div>' +
@@ -12781,9 +12810,41 @@ function renderCryptoOverlay(vorbelegteDatei, internModus, angModus) {
   w('w-oeffnen', () => cryptoOverlayOeffnen());
   w('co-angehoerige', () => angehoerigenEintritt());
   w('co-ang-primaer', () => angehoerigenEintritt());   // U2-ADR-062: Primär-Aktion im Angehörigen-Overlay
+  // U2-ADR-062-Nachtrag: Ort-Hinweis füllen, sobald ein Umschlag greifbar ist. Drei Quellen,
+  // dieselbe wie beim Eintritt selbst: vorbelegte Datei, interner Stand, oder die gerade
+  // gewählte Datei. Best-effort — ein fehlender Hinweis darf den Eintritt nie stören.
+  if (angModus) {
+    _angOrtHinweisAuffrischen();
+    const dateiEl = document.getElementById('co-datei');
+    if (dateiEl) dateiEl.onchange = () => { _angOrtHinweisAuffrischen(); };
+  }
   // U2-ADR-078: kein 'co-notfall' mehr (passwortlose Sanitäter-Tür entfernt).
   w('co-neu', () => renderWelcome());      // Lage B → Lage A
   overlayNachObenScrollen();
+}
+
+/* U2-ADR-062-Nachtrag — Ort-Hinweis im Angehörigen-Anmeldeschirm.
+   Liest AUSSCHLIESSLICH das Klartext-Geschwister `angehoerigenOrt`; es wird nichts entschlüsselt
+   und kein Schlüssel abgeleitet (der Sinn ist ja, dass er VOR dem Passwort lesbar ist).
+   Ohne Umschlag, ohne Ortstext oder bei einer fremden Datei bleibt die Zeile versteckt. */
+async function _angOrtHinweisAuffrischen() {
+  const ziel = document.getElementById('co-ang-ort');
+  if (!ziel) return;
+  const verstecken = () => { ziel.textContent = ''; ziel.hidden = true; };
+  try {
+    const inp = document.getElementById('co-datei');
+    const datei = _cryptoDatei || (inp && inp.files && inp.files[0]);
+    let umschlag = null;
+    if (datei) {
+      try { umschlag = JSON.parse(magicStrippen(await datei.text()).json); } catch (_) { verstecken(); return; }
+    } else if (_internEintritt) {
+      umschlag = await _internerUmschlagRoh();
+    }
+    const ort = umschlag ? angehoerigenOrtAusUmschlag(umschlag) : null;
+    if (!ort) { verstecken(); return; }
+    ziel.textContent = STRINGS.angOrtHinweis.replace('{ort}', ort);
+    ziel.hidden = false;
+  } catch (_) { verstecken(); }   // ein Hinweis darf den Anmeldeweg nie blockieren
 }
 
 // Öffnen aus dem crypto-overlay (Eigentümerin): vorbelegte ODER ausgewählte Datei + Depot-Passwort
@@ -15641,6 +15702,11 @@ function flowVertrauenspersonEinrichten() {
       '<input id="vp-pw2" type="password" autocomplete="new-password">' +
       '<label for="vp-ort">' + escapeHTML(STRINGS.vpOrtLabel) + '</label>' +
       '<input id="vp-ort" type="text" autocomplete="off" value="' + escapeHTML(ortVal) + '" placeholder="' + escapeHTML(STRINGS.vpOrtPlaceholder) + '">' +
+      // U2-ADR-062-Nachtrag: Der Ortstext ist ab jetzt für die Vertrauensperson sichtbar (und
+      // steht unverschlüsselt in der Datei). Das gehört an die Stelle, an der er eingegeben wird
+      // — sonst wählt die Bürgerin den Wortlaut in falscher Annahme. Gilt für Einrichten wie
+      // Aktualisieren; beides ist derselbe Pfad.
+      '<p class="einst-hint">' + escapeHTML(STRINGS.angOrtSichtbarkeit) + '</p>' +
       '<div id="vp-fehler" class="modal-fehler" role="alert" hidden></div>',
     primaerLabel: aktiv ? STRINGS.vpAktualisierenKnopf : STRINGS.vpEinrichtenKnopf,
     onPrimaer: async (schliessen) => {
@@ -15650,7 +15716,13 @@ function flowVertrauenspersonEinrichten() {
       const fe = document.getElementById('vp-fehler');
       const zeig = (t) => { if (fe) { fe.textContent = t; fe.hidden = false; } };
       if (pw.length < 8) { zeig(STRINGS.vpFehlerKurz); return; }
-      if (passwortStaerke(pw).stufe === 'schwach') { zeig(STRINGS.vpFehlerSchwach); return; }   // U2-ADR-062: schwach blockieren (Angreifer-Review)
+      /* U2-ADR-062-Nachtrag (21.07.2026): Der harte Blocker `passwortStaerke(pw).stufe === 'schwach'`
+         ist ENTFERNT. U2-ADR-062 hatte ihn mit „analog zum Depot-Passwort" begründet — diese Annahme
+         war falsch: der Anker kennt nur pwGrundFehler (leer / < 8), seine Stärke-Anzeige blockiert
+         nichts. Die Asymmetrie war damit kein Beschluss, sondern ein Irrtum über den Bestand; sie
+         traf ausgerechnet das schwächere Geheimnis härter (das Anker-Passwort schützt alles, das
+         Vertrauens-Passwort nur die fünf Blätter). Mindestlänge 8 bleibt, die Live-Stärke-Anzeige
+         bleibt als Hinweis — für beide Passwörter jetzt dieselbe Regel. */
       if (pw !== pw2) { zeig(STRINGS.vpFehlerUngleich); return; }
       await vertrauenspersonEinrichten(pw, ort);
       schliessen();
