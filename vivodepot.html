@@ -2691,7 +2691,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v71';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v72';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -6753,6 +6753,15 @@ function _dateiNameErfragen() {
         resolve(name + '.vivodepot');
       },
       zweitAktion: { label: STRINGS.btnAbbrechen, handler: (schliessen) => { if (typeof schliessen === 'function') schliessen(); resolve(null); } },
+      /* PFLICHT hier, nicht Kosmetik (Geräte-Befund 21.07.2026, v71): ui.modal setzt seinen
+         eingebauten „Abbrechen" ZUSÄTZLICH zur zweitAktion. Der Dialog zeigte dadurch zweimal
+         „Abbrechen" — und der eingebaute schließt nur, ohne dieses Promise aufzulösen. Wer ihn
+         traf, ließ `_dateiNameSicherstellen()` für immer warten: der Speichervorgang lief nie
+         weiter, ohne Fehler, ohne Spur. Betroffen war ausschließlich der Nicht-FSA-Weg
+         (iOS/Safari/Firefox) — also genau die Plattformen, auf denen dieser Dialog überhaupt
+         erscheint. Ein Dialog, der eine Zusage schuldet, darf keinen Ausgang haben, der sie
+         nicht einlöst. */
+      ohneAbbrechen: true,
     });
   });
 }
@@ -11186,7 +11195,10 @@ function wiedereinstiegHinweisZeigen() {
     if (typeof ui === 'undefined' || !ui.modal) return;
     ui.modal({
       titel: STRINGS.wiedereinstiegHinweisTitel,
-      koerperHTML: '<p class="modal-text">' + escapeHTML(STRINGS.wiedereinstiegHinweisText) + '</p>',
+      // Stabiler Griff wie beim Notfall-Blatt-Angebot (#nfb-angebot): die Einmal-Dialoge
+      // treten nacheinander auf, und „welcher steht gerade?" muss ohne Textvergleich
+      // beantwortbar sein — sonst raten Tests und klicken den falschen Knopf.
+      koerperHTML: '<p class="modal-text" id="wiedereinstieg-hinweis">' + escapeHTML(STRINGS.wiedereinstiegHinweisText) + '</p>',
       primaerLabel: STRINGS.wiedereinstiegHinweisOk, onPrimaer: (schliessen) => schliessen(), ohneAbbrechen: true,
     });
   } catch (_) { /* defensiv: ein Hinweis darf den Save nie stören */ }
@@ -13480,12 +13492,27 @@ function passwortWechselAbschlussZeigen() {
    nirgends ein Passwort ein. Damit sind Drucker-Spool, „Als PDF drucken", Zwischen-
    ablage und Clipboard-Manager als Leckpfade konstruktionsbedingt ausgeschlossen
    (präzisiert die CC-01/CC-08-Linie: kein app-erzeugtes Klartext-Geheimnis). */
-function notfallblattAnbieten() {
+function notfallblattAnbieten(versuch) {
   try {
     if (typeof ui === 'undefined' || !ui.modal) return;
+    /* ui.modal hat EINEN Host (#modal-inhalt) und STAPELT NICHT — ein zweiter Aufruf
+       überschreibt den offenen Dialog lautlos. Genau das passierte hier: beim Anlegen im
+       Datei-Modus fällt unmittelbar davor der Wiedereinstiegs-Hinweis an („So kommen Sie
+       später wieder hinein"), und das Angebot löschte ihn vom Schirm, bevor die Bürgerin
+       ihn lesen konnte (gemessen 21.07.2026, drei Dialoge in Folge). Darum warten statt
+       drängeln. Nach ~10 s wird aufgegeben — lieber kein Angebot als ein zerstörter Dialog. */
+    const host = document.getElementById('modal-rueck');
+    const belegt = !!(host && host.classList && host.classList.contains('an'));
+    const n = (typeof versuch === 'number') ? versuch : 0;
+    if (belegt) {
+      if (n < 40 && typeof setTimeout === 'function') setTimeout(() => notfallblattAnbieten(n + 1), 250);
+      return;
+    }
     ui.modal({
       titel: escapeHTML(STRINGS.nfbAnbietenTitel),
-      koerperHTML: '<p class="modal-text">' + escapeHTML(STRINGS.nfbAnbietenText) + '</p>',
+      // #nfb-angebot ist der stabile Griff für Tests und Fehlersuche: „welcher der
+      // Einmal-Dialoge steht gerade?" muss ohne Textvergleich beantwortbar sein.
+      koerperHTML: '<p class="modal-text" id="nfb-angebot">' + escapeHTML(STRINGS.nfbAnbietenText) + '</p>',
       primaerLabel: STRINGS.nfbDruckenKnopf,
       onPrimaer: (schliessen) => { schliessen(); notfallblattOeffnen(); },
       zweitAktion: { label: STRINGS.nfbSpaeter, handler: (schliessen) => schliessen() },
@@ -13598,6 +13625,9 @@ function flowSubDepotNachAnker() {
       label: STRINGS.subRueckfrageSpaeter,
       handler: (schliessen) => { if (typeof schliessen === 'function') schliessen(); },
     },
+    // „Später" IST der Nein-Weg. Der eingebaute „Abbrechen" stand daneben und tat exakt
+    // dasselbe — zwei Knöpfe für eine Handlung, die die Bürgerin vor eine Scheinwahl stellten.
+    ohneAbbrechen: true,
   });
 }
 // Vorschau verwerfen und zur Startseite — reiner Sicht-Wechsel (kein echtes Depot, keine Krypto).
@@ -13733,6 +13763,9 @@ function flowDepotListe() {
       '<span class="dp-aktiv-tag">' + STRINGS.depotAktiv + '</span></div>',
     primaerLabel: STRINGS.btnSchliessen,
     onPrimaer: (schliessen) => { if (typeof schliessen === 'function') schliessen(); },
+    // Reine Anzeige ohne Entscheidung: „Schließen" neben „Abbrechen" fragte, was denn
+    // abzubrechen sei. Gleiche Behandlung wie der Einstellungen-Dialog, der das schon richtig hat.
+    ohneAbbrechen: true,
   });
 }
 
