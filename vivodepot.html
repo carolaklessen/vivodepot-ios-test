@@ -1250,9 +1250,22 @@
   .pv-dok-arzt { color: #333; }
   .pv-dok-fuss { margin-top: 2rem; padding-top: 0.6rem; border-top: 1px solid #ccc;
     font-size: 0.8rem; color: #555; text-align: center; }
+  /* Notfall-Blatt (U2-ADR-095, Beschluss B) — teilt Overlay-, Blatt- und Druck-Mechanik
+     mit dem PV-Dokument. Eigene Regeln nur für die handschriftlichen Leerzeilen. Es gibt
+     bewusst KEIN Eingabefeld: das Blatt wird auf Papier ausgefüllt, nie in der App. */
+  #notfallblatt-overlay { position: fixed; inset: 0; z-index: 400; background: var(--bg, #f4f6f4);
+    overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .nfb-hand { margin: 0 0 1.6rem; font-style: italic; color: #444; text-align: center; }
+  .nfb-feld { margin-bottom: 1.1rem; }
+  /* Die Überschrift eines Leerfelds trägt KEINE Trennlinie: sonst stehen zwei Linien
+     untereinander und die zum Schreiben ist nicht mehr die offensichtliche. */
+  .nfb-feld h2 { border-bottom: none; padding-bottom: 0; }
+  .nfb-beispiel { margin: 0 0 0.3rem; font-size: 0.85rem; color: #555; }
+  .nfb-linie { margin: 0; border-bottom: 1px solid #111; height: 1.9rem; }
+
   @media print {
-    body > *:not(#pv-dok-overlay) { display: none !important; }
-    #pv-dok-overlay { position: static; overflow: visible; background: #fff; }
+    body > *:not(#pv-dok-overlay):not(#notfallblatt-overlay) { display: none !important; }
+    #pv-dok-overlay, #notfallblatt-overlay { position: static; overflow: visible; background: #fff; }
     .pv-dok-toolbar { display: none !important; }
     .pv-dok-blatt { max-width: none; margin: 0; padding: 0; box-shadow: none; border-radius: 0; }
     .pv-dok-abschnitt { break-inside: avoid; }
@@ -2678,7 +2691,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v70';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v71';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -3046,6 +3059,62 @@ const STRINGS = Object.freeze({
   pwSetzenLeer: "Bitte ein Passwort eingeben.",
   pwSetzenUngleich: "Die beiden Passwörter stimmen nicht überein.",
   pwSetzenFertig: "Passwort gesetzt — Ihr Depot ist jetzt verschlüsselt gespeichert.",
+  /* ── U2-ADR-095 — Passwort-Wechsel (Beschluss A) ─────────────────────────────
+     Wortlaute abgenommen 21.07.2026 (Vivodepot_Wortlaute_Passwort_Lebenszyklus).
+     Sprachlinie: kein Technik-Jargon, kurze Sätze, Sie-Anrede, keine Drohsprache
+     und keine Verharmlosung. Änderungen hier sind Bürgertext, keine Bau-Details. */
+  pwWechselAbschnitt: "Passwort",
+  pwWechselKnopf: "Passwort ändern",
+  // Steht IM Dialog bei den Eingabefeldern (nicht im Einstellungen-Abschnitt): der Satz
+  // sagt die Konsequenz VOR der Handlung, das trägt nur dort, wo gehandelt wird.
+  pwWechselHint: "Ihr neues Passwort können wir Ihnen später nicht mehr sagen. Notieren Sie es, bevor Sie fortfahren.",
+  pwWechselTitel: "Passwort ändern",
+  pwWechselErklaerung: "Zum Ändern brauchen wir zuerst Ihr bisheriges Passwort. Danach wird Ihr Depot mit dem neuen Passwort gesichert und neu abgespeichert.",
+  pwWechselAltLabel: "Bisheriges Passwort",
+  pwWechselNeuLabel: "Neues Passwort",
+  pwWechselNeu2Label: "Neues Passwort bestätigen",
+  pwWechselPrimaer: "Passwort ändern und speichern →",
+  pwWechselLaeuft: "… wird geändert",
+  pwWechselAltLeer: "Bitte geben Sie Ihr bisheriges Passwort ein.",
+  pwWechselAltFalsch: "Das bisherige Passwort stimmt nicht. Es wurde nichts geändert.",
+  pwWechselGleich: "Das neue Passwort ist dasselbe wie das bisherige. Bitte wählen Sie ein anderes.",
+  pwWechselFehler: "Das Passwort konnte nicht geändert werden. Ihr Depot ist unverändert.",
+  pwWechselAbgebrochen: "Abgebrochen — Ihr Passwort ist unverändert.",
+  pwWechselNurAnker: "Das Passwort lässt sich nur in Ihrem eigenen Depot ändern. Gehen Sie dazu zuerst zurück in Ihr Depot.",
+  pwWechselNurEcht: "Richten Sie Ihr Depot zuerst mit einem Passwort ein.",
+  // Abschluss-Bildschirm (ADR A.3) — ohne ihn wird der Flow nicht ausgeliefert.
+  pwWechselFertigTitel: "Ihr Passwort ist geändert",
+  pwWechselFertigText: "Ihr Passwort ist geändert. Ab jetzt öffnen Sie Ihr Depot mit dem neuen Passwort.",
+  /* Der abgenommene Kopien-Text ist EIN Wortlaut; er steht hier nur deshalb in zwei
+     Schlüsseln, weil der erste Satz laut Abnahme gefettet wird (Empfehlung statt Kürzung).
+     TITEL + " " + TEXT ergibt buchstabengetreu den abgenommenen Satz — beim Ändern
+     zusammen ändern. Der frühere separate Titel entfiel, er hätte „Wichtig" gedoppelt. */
+  pwWechselKopienTitel: "Wichtig: Ältere Fassungen Ihres Depots lassen sich weiterhin mit dem alten Passwort öffnen — auch die Fassung, die eben ersetzt werden sollte.",
+  pwWechselKopienText: "Je nachdem, wie Ihr Gerät Dateien ablegt, liegt die neue Datei neben der alten, statt sie zu ersetzen. Sehen Sie bitte nach, wo Ihr Depot liegt, und löschen Sie ältere Fassungen: auf diesem Gerät, auf USB-Sticks und überall dort, wo Sie eine Kopie abgelegt oder verschickt haben. Solange eine alte Fassung existiert, schützt das neue Passwort sie nicht.",
+  pwWechselFertigOk: "Verstanden",
+  /* ── U2-ADR-095 — Notfall-Blatt (Beschluss B) ────────────────────────────────
+     Das Blatt trägt AUSSCHLIESSLICH Leerfelder und vorgedruckte Hinweise. Die App
+     setzt an keiner Stelle ein Passwort ein — weder in den Druck-Stream noch in ein
+     PDF noch in die Zwischenablage (Test `notfallblatt` sichert das ab).
+     Wortlaute abgenommen 21.07.2026. */
+  nfbAnbietenTitel: "Notfall-Blatt zum Ausfüllen",
+  nfbAnbietenText: "Möchten Sie ein Notfall-Blatt ausdrucken? Darauf tragen Sie Ihr Passwort von Hand ein und legen es zu Ihren wichtigen Unterlagen. Wenn Sie Ihr Passwort vergessen, ist Ihr Depot sonst nicht mehr zu öffnen — auch nicht von uns.",
+  nfbDruckenKnopf: "Notfall-Blatt drucken",
+  nfbSpaeter: "Später",
+  nfbSchliessen: "Schließen",
+  nfbBlattTitel: "Mein Vivodepot — Notfall-Blatt",
+  nfbToolbarHinweis: "Das Blatt wird leer gedruckt. Ihr Passwort steht nicht darauf — tragen Sie es mit der Hand ein.",
+  nfbHandschriftHinweis: "Bitte von Hand ausfüllen.",
+  nfbFeldPasswort: "Mein Vivodepot-Passwort",
+  nfbFeldDatum: "Erstellt / geändert am",
+  nfbFeldOrt: "Wo liegt meine Depot-Datei",
+  nfbFeldOrtBeispiel: "zum Beispiel: USB-Stick in der oberen Schreibtisch-Schublade",
+  nfbAngehoerigeTitel: "Hinweis für meine Angehörigen",
+  // Nennt vivodepot.de als Bezugsquelle — bewusste, dauerhafte Zusage auf einem Blatt,
+  // das jahrzehntelang in einer Mappe liegen kann (Abnahme-Punkt 1, so entschieden).
+  nfbAngehoerigeText: "Für meine Angehörigen: In meinem Vivodepot habe ich Unterlagen und Verfügungen abgelegt, die im Ernstfall wichtig sind. Sie brauchen dafür die oben genannte Depot-Datei und das Passwort von diesem Blatt. Öffnen lässt sich beides mit dem Vivodepot-Leseprogramm, das auf vivodepot.de kostenlos erhältlich ist. Es wird kein Konto und keine Anmeldung benötigt.",
+  nfbAufbewahrungTitel: "Wo dieses Blatt hingehört",
+  nfbAufbewahrungText: "Bewahren Sie dieses Blatt dort auf, wo Ihre wichtigen Dokumente liegen — nicht beim Gerät und nicht beim USB-Stick. Wenn Sie Ihr Passwort ändern, schreiben Sie ein neues Blatt und vernichten Sie das alte.",
   // Strang 2 / Commit B — D1 persistenter Topbar-Hinweis (sichtbar solange passwortlos).
   d1TopbarHinweis: "Zum Eintragen richten Sie zuerst Ihr Vivodepot ein.",   // Setup-first (Erstnutzer): Name + Passwort vor dem Eintragen
   d1TopbarCta: "Einrichten →",
@@ -6340,7 +6409,7 @@ function leeresDepot() {
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
     schemaVersion: 39,                       // Schema 39 (U2-ADR-089, Teil A Block 1, 17.07.2026): Vorsorge-Instrument-Liste — die bisher Vollmacht-exklusive Liste `vollmachten` wird Teil der geteilten Liste `vorsorge_instrumente` (unterschieden per `typ`); Records bekommen additiv typ:'vorsorgevollmacht', altes Feld entfällt. Migration verlustfrei (Rename+Retag). Die anderen fünf Instrumente (Testament/PV/Betreuung/Sorgerecht/KI) bleiben additiv unmigriert (Carola-Entscheidung). Schema 38 (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.2026): gesundheit/allergien, medikamente, krankheiten (Code-Slot-Felder) → Chip-Array {text, code?} statt Skalar (Freitext oder codierter Einzelwert); Migration Skalar→[EIN Chip] verlustfrei, KEIN Komma-Splitting. Schema 37 (U2-ADR-074, Phase 5): finanzen/konto_haupt_bank + konto_haupt_iban (ein Konto, zwei Skalarfelder) → Liste `konten` {bank · art · iban · bankvollmacht (Record-id-Verweis auf art:'bank'-Vollmacht in Vorsorge) · notiz}; Migration Skalar→Liste verlustfrei (ein Eintrag, leer→entfällt, stabile id). Art = Vorschlagsliste + frei (native datalist). VC-Export/CAMT ruhen. Schema 36 (U2-ADR-073, Phase 4 Teil 2): persoenliches/abhaengige_personen Freitext → Liste „allgemeine Abhängige" {wer · hinweis}; Migration Text→[{wer}] verlustfrei (keine „;"-Trennung), id bleibt, crossSektor-Projektion typ-generisch. Schema 35 (U2-ADR-073, Phase 4 Teil 1): fünf verstreute Slot-Gruppen → je EINE Liste — Fahrzeuge (mobilitaet: auto1/2/_ausweis/_leasing), Kreditkarten (finanzen: kreditkarte1/2), Haustiere (identitaet: tier_*), Personen-Briefe (persoenliches: brief_1/2/3), Weitere Wohnungen (wohnen: zw_*, Hybrid — Hauptwohnung bleibt Singleton). Migration Skalar→Liste verlustfrei (leere Werte fallen weg, stabile id je Eintrag). Schema 34 (U2-ADR-072, Teil 2): drei Facharzt-Slots gesundheit/facharzt_1/2/3 → EINE Liste `fachaerzte` {arzt (Person-Ref) · fach (Text)}; Migration Skalar→Liste verlustfrei (leere Slots fallen weg, stabile id je Eintrag). Schema 33 (U2-ADR-072, Phase 3): Notfallkontakte gesundheit/hauptpflegeperson ref → refMehrfach (mehrere Kontakte); Migration Einzel→Array verlustfrei, QR löst die Liste typ-generisch auf. Schema 32 (U2-ADR-071-Nachtrag): jeder Listen-Record bekommt eine stabile `id` (Cross-Sektor-Verweise überleben Umsortieren); Migration vergibt id an id-lose vollmachten-Records, verlustfrei. Schema 31 (U2-ADR-065-Nachlauf): vorsorge/erben → refMehrfach (mehrere Erben, umsortierbar); Migration Einzel→Array verlustfrei. Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
-    kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 2
+    kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 3
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
     mappe: [],                               // data.mappe[] — Dokumenten-Mappe (U2-ADR-013): Dateien inline (Data-URL) im Depot, krypto-agnostisch (fährt mit encryptDepot/decryptDepot). ref:mappe ist der dritte Entitätstyp.
@@ -6441,7 +6510,7 @@ async function depotSerialisieren() {
   const subKey = await deriveDepotKeyV2(sessionHkdfKey, aktuelleDepotSalt, aktuelleDepotUUID);
   const { iv, ct } = await VdCrypto.encryptDepot(data, subKey, _AAD_DEPOT_V2);
   return {
-    kryptoVersion: CRYPTO_VERSION_AKTUELL,                         // = 2
+    kryptoVersion: CRYPTO_VERSION_AKTUELL,                         // = 3
     depotUUID: aktuelleDepotUUID,
     pbkdf2: { salt: bytesToBase64(aktuelleSalt) },                 // 16 Byte
     depotSalt: bytesToBase64(aktuelleDepotSalt),                   // 32 Byte
@@ -6490,8 +6559,8 @@ async function depotLaden(umschlag, password) {
   // B2/v3 — Harte Versions-Allowlist VOR jeder Ableitung (SOLL #2): v3-only Release,
   // keine Lese-Pfade für v1/v2. Wirft, BEVOR ~600k PBKDF2 laufen → ein v1/v2-Container
   // erreicht den B1-NFD-Retry nie (kein Konflikt mit den Trennungs-Negativtests).
-  if (!umschlag || umschlag.kryptoVersion !== CRYPTO_VERSION_AKTUELL) {
-    throw new Error('Laden: nur kryptoVersion ' + CRYPTO_VERSION_AKTUELL + ' (v3-only, keine Legacy-Lesepfade).');
+  if (!umschlag || !KRYPTO_VERSION_ALLOWLIST.includes(umschlag.kryptoVersion)) {
+    throw new Error('Laden: nur kryptoVersion ' + KRYPTO_VERSION_ALLOWLIST.join('/') + ' (v3-only, keine Legacy-Lesepfade).');
   }
   const pbkdf2Salt = base64ToBytes(umschlag.pbkdf2.salt);         // 16 Byte → masterBits
   const depotSalt = base64ToBytes(umschlag.depotSalt);           // 32 Byte → HKDF-Salt
@@ -6709,6 +6778,90 @@ async function depotHerunterladen() {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   U2-ADR-095 — Passwort-Wechsel (Beschluss A). Datenschicht.
+   ────────────────────────────────────────────────────────────────────────────
+   Der Wechsel ist KEINE Krypto-Versions-Migration: kryptoVersion bleibt 3, die
+   AAD-Konstanten und die Iterationszahl bleiben unverändert, der Verbatim-Block
+   bleibt unberührt. Gewechselt werden ausschließlich die beiden Salts — daraus
+   ergibt sich ein anderer Master- und ein anderer Depot-Schlüssel.
+
+   Die `depotUUID` bleibt bewusst STEHEN. Sie ist die Identität des Depots (Info-
+   String der HKDF-Ableitung, Bezugspunkt der Verwaltungs-Einträge), nicht ein
+   Geheimnis; ein neuer depotSalt trennt die Schlüssel bereits vollständig.
+
+   Drei Auflagen aus der Stufe-1-Klärung vom 21.07.2026 sind hier eingebaut:
+   1. Der neue Container entsteht über depotSerialisieren() (via depotHerunterladen),
+      NIE von Hand — bei eingerichtetem Vertrauens-Zugang trägt der Umschlag ein
+      siebtes Feld neben `ct` (U2-ADR-062), das ein handgebauter Umschlag still
+      verlöre. Es hängt am Vertrauens-Passwort und wird hier nicht angefasst.
+   2. Nur im Anker-Kontext. Im Sub-Kontext zeigt `data` auf den Sub-Inhalt, während
+      die Krypto-Globals dem Anker gehören — der Wechsel wird dort gar nicht erst
+      angeboten (die konservative der beiden im Auftrag genannten Varianten).
+   3. NFC wird hier selbst angewandt (normalizePassword), für die Prüfung des alten
+      wie für die Ableitung des neuen Passworts — flowPasswortSetzen tut das nicht,
+      dort geschieht es erst in depotAnlegen.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+// Prüft das aktuelle Passwort durch einen VOLLSTÄNDIGEN Entschlüsselungs-Roundtrip —
+// kein Hash-Vergleich, keine Abkürzung. Serialisiert den laufenden Stand unter der
+// offenen Session und öffnet ihn mit einem Schlüssel, der allein aus dem EINGEGEBENEN
+// Passwort abgeleitet wird. Stimmt es nicht, scheitert GCM und die Funktion wirft.
+// Läuft über depotMasterHkdfKey (wie die Sub-Depots) und rührt die Anker-Session-
+// Globals daher NICHT an — ein Fehlversuch verändert nichts.
+async function _passwortProbeRoundtrip(pwNfc) {
+  const umschlag = await depotSerialisieren();
+  const master = await depotMasterHkdfKey(pwNfc, aktuelleSalt);                       // 600k, Bits werden dort genullt
+  const subKey = await deriveDepotKeyV2(master, aktuelleDepotSalt, aktuelleDepotUUID);
+  await VdCrypto.decryptDepot({ iv: umschlag.iv, ct: umschlag.ct }, subKey, _AAD_DEPOT_V2);
+}
+
+// Session + Salts auf den alten Stand zurückdrehen (Abbruch-/Fehlerweg). Kostet eine
+// dritte Ableitung — bewusst, damit ein abgebrochener Speicherdialog die Sitzung nicht
+// unter einem Passwort zurücklässt, das auf keiner Datei steht.
+async function _passwortSessionZurueckdrehen(pwAltNfc, altSalt, altDepotSalt) {
+  aktuelleSalt = altSalt;
+  aktuelleDepotSalt = altDepotSalt;
+  await VdCrypto.setupSession(pwAltNfc, altSalt);
+}
+
+// Der Wechsel selbst. Liefert 'gewechselt' oder 'abgebrochen'; wirft bei falschem
+// altem Passwort und in jedem Fehlerfall — dann ist NICHTS geändert.
+async function passwortWechselDurchfuehren(pwAlt, pwNeu) {
+  if (imVorschau()) throw new Error('Passwort-Wechsel: kein Passwort gesetzt (Vorschau).');
+  if (imSubKontext()) throw new Error('Passwort-Wechsel: nur im Anker-Kontext.');
+  if (!sessionHkdfKey || !aktuelleSalt || !aktuelleDepotSalt || !aktuelleDepotUUID) {
+    throw new Error('Keine offene Session.');
+  }
+  const altNfc = normalizePassword(pwAlt);
+  const neuNfc = normalizePassword(pwNeu);
+  await _passwortProbeRoundtrip(altNfc);                 // Schritt 1 — wirft bei falschem Passwort
+
+  const altSalt = aktuelleSalt, altDepotSalt = aktuelleDepotSalt;
+  aktuelleSalt = crypto.getRandomValues(new Uint8Array(16));       // frischer PBKDF2-Salt (16 Byte)
+  aktuelleDepotSalt = crypto.getRandomValues(new Uint8Array(32));  // frischer HKDF-Salt (32 Byte)
+  await VdCrypto.setupSession(neuNfc, aktuelleSalt);               // Schritt 2 — 600k, Bits werden genullt
+
+  // Schritt 3 — erst den VOLLSTÄNDIGEN neuen Container serialisieren, dann schreiben
+  // (depotHerunterladen tut genau das in dieser Reihenfolge). Es gibt keinen Zustand, in
+  // dem Teile alt und Teile neu verschlüsselt wären. Datei VOR internem Speicher: bricht
+  // der Speicherdialog ab, bleibt auch der interne Stand auf dem alten Passwort.
+  let weg;
+  try {
+    weg = await depotHerunterladen();
+  } catch (e) {
+    await _passwortSessionZurueckdrehen(altNfc, altSalt, altDepotSalt);
+    throw e;
+  }
+  if (weg === 'abgebrochen' || weg === 'vorschau') {
+    await _passwortSessionZurueckdrehen(altNfc, altSalt, altDepotSalt);
+    return 'abgebrochen';
+  }
+  if (internerSpeicherModus()) { try { await depotInIdbSichern(); } catch (_) { /* Datei ist geschrieben */ } }
+  try { markiereGespeichert(); } catch (_) {}
+  return 'gewechselt';
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    D43 / U2-ADR-015 — Etappe 0: Capability-Gerüst + Speicher-Abstraktion (VdStore)
    ────────────────────────────────────────────────────────────────────────────
    Zwei-Ebenen-Persistenz (U2-ADR-015): der laufende Arbeitsstand lebt intern,
@@ -6920,8 +7073,8 @@ async function depotAusIdbLaden(password) {
   let umschlag;
   try { umschlag = JSON.parse(record.cipherBlob); }
   catch (e) { throw new Error('Interner Stand beschädigt (kein gültiger Umschlag).'); }
-  if (!umschlag || umschlag.kryptoVersion !== CRYPTO_VERSION_AKTUELL) {
-    throw new Error('Interner Stand: nur kryptoVersion ' + CRYPTO_VERSION_AKTUELL + ' (v3-only, kein Bestand-Fallback).');
+  if (!umschlag || !KRYPTO_VERSION_ALLOWLIST.includes(umschlag.kryptoVersion)) {
+    throw new Error('Interner Stand: nur kryptoVersion ' + KRYPTO_VERSION_ALLOWLIST.join('/') + ' (v3-only, kein Bestand-Fallback).');
   }
   await depotLaden(umschlag, password);                     // setzt data + Session-Globals
   _aktuellerStandGespeichertAm = record.gespeichert_am || null;   // Etappe 5: interne Marke aus dem Record
@@ -10716,7 +10869,7 @@ async function subDepotVersiegeln(inhalt, subPasswort) {
   const subKey     = await deriveDepotKeyV2(masterKey, depotSalt, depotUUID);
   const { iv, ct } = await VdCrypto.encryptDepot(inhalt, subKey, _AAD_DEPOT_V2);
   return {
-    kryptoVersion: CRYPTO_VERSION_AKTUELL,                         // = 2
+    kryptoVersion: CRYPTO_VERSION_AKTUELL,                         // = 3
     depotUUID,
     pbkdf2: { salt: bytesToBase64(pbkdf2Salt) },                   // 16 Byte
     depotSalt: bytesToBase64(depotSalt),                           // 32 Byte
@@ -11084,7 +11237,7 @@ async function flowSubKontextVerlassen() {
 // Baut die Export-Datei aus einem bestehenden Umschlag — reine Datenkopie, KEINE Krypto.
 // Übernimmt genau die sechs Umschlag-Felder verbatim; fügt nichts Geheimes hinzu.
 function blackboxDateiAusUmschlag(umschlag) {
-  if (!umschlag || umschlag.kryptoVersion !== CRYPTO_VERSION_AKTUELL) {
+  if (!umschlag || !KRYPTO_VERSION_ALLOWLIST.includes(umschlag.kryptoVersion)) {
     throw new Error('Unerwarteter Umschlag — Blackbox-Export nur für kryptoVersion 3.');
   }
   return {
@@ -11239,7 +11392,7 @@ function pruefeBlackboxUmschlag(umschlag) {
   if (Object.keys(umschlag).sort().join(',') !== 'ct,depotSalt,depotUUID,iv,kryptoVersion,pbkdf2') {
     throw new Error('Einhängen: der Umschlag braucht genau die sechs Felder.');
   }
-  if (umschlag.kryptoVersion !== CRYPTO_VERSION_AKTUELL) {
+  if (!KRYPTO_VERSION_ALLOWLIST.includes(umschlag.kryptoVersion)) {
     throw new Error('Einhängen: nur kryptoVersion 3.');
   }
   if (typeof umschlag.depotUUID !== 'string' || !_UUID_V4.test(umschlag.depotUUID)) {
@@ -13115,7 +13268,10 @@ function flowDepotAnlegen(nach) {
       const vorschauUebernommen = await _ankerAusIdentitaetFinalisieren(vorname, nachname, passwort);
       if (vorschauUebernommen) ui.toast(STRINGS.vorschauUebernahmeHinweis, 'ok');
     },
-    nachher: () => { if (typeof nach === 'function') nach(); else betreteApp(); },
+    nachher: () => {
+      if (typeof nach === 'function') nach(); else betreteApp();
+      notfallblattAnbieten();   // U2-ADR-095 B: Angebot im Erstellungs-Flow (Blatt bleibt leer)
+    },
   });
 }
 
@@ -13196,6 +13352,7 @@ function flowPasswortSetzen(nachErfolg) {
       try { await kernAPI.speichern(); } catch (_) {}
       try { renderContent(); } catch (_) {}
       try { ui.toast(STRINGS.pwSetzenFertig, 'ok'); } catch (_) {}
+      notfallblattAnbieten();   // U2-ADR-095 B: zweiter Erstellungs-Eintritt (Vorschau → echtes Depot)
       // D35 Commit 2: Continuation nur, wenn der Eintritt sie mitgegeben hat (Sub-Wunsch-Pfad).
       if (typeof nachErfolg === 'function') { try { nachErfolg(); } catch (_) {} }
     },
@@ -13203,6 +13360,179 @@ function flowPasswortSetzen(nachErfolg) {
   // D48-Verdrahtung über den geteilten Helfer (DOM steht nach ui.modal): Live-Prüfung nach blur.
   modalPwFelderVerdrahten('pw-neu', 'pw-neu2', 'pw-neu2-fehler');
   pwStaerkeAnzeigeVerdrahten('pw-neu', 'pw-neu-staerke');   // Befund 1.7: hinweisende Stärke-Rückmeldung
+}
+
+/* ── U2-ADR-095 — Passwort-Wechsel-Dialog (Beschluss A, Einstellungen) ─────────
+   Nutzt dieselben geteilten Validierungen wie die Erst-Vergabe (pwGrundFehler,
+   modalPwMismatch, pwStaerkeAnzeigeVerdrahten) — kein zweiter Regelsatz. Der
+   Wartezustand ist hier wichtiger als bei der Erst-Vergabe: es laufen ZWEI
+   600k-Ableitungen (Prüfung des alten, Ableitung des neuen Passworts). */
+function flowPasswortWechseln() {
+  if (imVorschau()) { try { ui.toast(STRINGS.pwWechselNurEcht, 'info'); } catch (_) {} return; }
+  if (imSubKontext()) { try { ui.toast(STRINGS.pwWechselNurAnker, 'info'); } catch (_) {} return; }
+  ui.modal({
+    titel: escapeHTML(STRINGS.pwWechselTitel),
+    koerperHTML:
+      '<p style="color:var(--ink2)">' + escapeHTML(STRINGS.pwWechselErklaerung) + '</p>' +
+      '<label for="pw-wechsel-alt">' + escapeHTML(STRINGS.pwWechselAltLabel) + '</label>' +
+      '<input id="pw-wechsel-alt" type="password" autocomplete="current-password">' +
+      '<div class="einst-daten-trenner"></div>' +
+      // Der Merken-Hinweis steht direkt ÜBER dem neuen Passwort — er betrifft genau dieses
+      // Feld und sagt die Konsequenz vor der Handlung (Abnahme 21.07.), nicht danach.
+      '<div class="modal-warnung" role="note">' + svgIcon(ICONS.alertTriangle, 18) +
+        '<div>' + escapeHTML(STRINGS.pwWechselHint) + '</div></div>' +
+      '<label for="pw-wechsel-neu">' + escapeHTML(STRINGS.pwWechselNeuLabel) + '</label>' +
+      '<input id="pw-wechsel-neu" type="password" autocomplete="new-password">' +
+      '<div id="pw-wechsel-neu-staerke" class="pw-staerke" aria-live="polite" hidden></div>' +
+      // Der Längen-Hinweis steht AM Feld, nicht am Modal-Fuß: dieser Dialog ist höher als die
+      // Erst-Vergabe (drei Felder + Warnung), unten geriet er hinter die Knopfleiste.
+      '<p style="font-size:var(--fs-sm); color:var(--ink2)">' + escapeHTML(STRINGS.pwMin8Hinweis) + '</p>' +
+      '<label for="pw-wechsel-neu2">' + escapeHTML(STRINGS.pwWechselNeu2Label) + '</label>' +
+      '<input id="pw-wechsel-neu2" type="password" autocomplete="new-password">' +
+      '<div id="pw-wechsel-neu2-fehler" class="feld-inline-fehler" role="alert" hidden></div>' +   // D48: inline unter Feld 2
+      '<div id="pw-wechsel-fehler" class="modal-fehler" role="alert" hidden></div>',
+    primaerLabel: STRINGS.pwWechselPrimaer,
+    onPrimaer: async (schliessen) => {
+      const alt = document.getElementById('pw-wechsel-alt').value;
+      const neu = document.getElementById('pw-wechsel-neu').value;
+      const fehlerEl = document.getElementById('pw-wechsel-fehler');
+      const zeigeFehler = (txt) => {
+        if (fehlerEl) { fehlerEl.textContent = txt; fehlerEl.hidden = false; if (fehlerEl.scrollIntoView) { try { fehlerEl.scrollIntoView({ block: 'center' }); } catch (_) {} } }
+        else { try { ui.toast(txt, 'fehler'); } catch (_) {} }
+      };
+      if (fehlerEl) { fehlerEl.textContent = ''; fehlerEl.hidden = true; }
+      if (!alt) { zeigeFehler(STRINGS.pwWechselAltLeer); return; }
+      const pwGk = pwGrundFehler(neu);                                   // dieselbe harte Schranke wie bei der Erst-Vergabe
+      if (pwGk) { zeigeFehler(STRINGS[pwGk]); return; }
+      if (modalPwMismatch('pw-wechsel-neu', 'pw-wechsel-neu2', 'pw-wechsel-neu2-fehler', true)) return;
+      // NFC-Vergleich: „gleich" heißt gleich nach Normalisierung, sonst wäre der Hinweis unehrlich.
+      if (normalizePassword(alt) === normalizePassword(neu)) { zeigeFehler(STRINGS.pwWechselGleich); return; }
+      // Nicht-FSA-Plattformen: den Dateinamen aus der echten Nutzer-Geste heraus klären, BEVOR
+      // der Save-Pfad läuft (die Transportschicht selbst blockiert nie auf ein Modal).
+      let namenOk = true;
+      try { namenOk = await _dateiNameSicherstellen(); } catch (_) {}
+      if (!namenOk) { zeigeFehler(STRINGS.pwWechselAbgebrochen); return; }
+
+      const okBtn = document.getElementById('m-ok');
+      const abbrBtn = document.getElementById('m-abbr');
+      const okText = okBtn ? okBtn.textContent : '';
+      const knopfFrei = () => {
+        if (okBtn) {
+          okBtn.disabled = false;
+          if (okBtn.removeAttribute) okBtn.removeAttribute('aria-busy');
+          if (okBtn.classList) okBtn.classList.remove('btn-laeuft');
+          okBtn.textContent = okText || STRINGS.pwWechselPrimaer;
+        }
+        if (abbrBtn) abbrBtn.disabled = false;
+      };
+      if (okBtn) {
+        okBtn.disabled = true;
+        if (okBtn.setAttribute) okBtn.setAttribute('aria-busy', 'true');
+        if (okBtn.classList) okBtn.classList.add('btn-laeuft');
+        okBtn.textContent = STRINGS.pwWechselLaeuft;
+      }
+      if (abbrBtn) abbrBtn.disabled = true;
+      let ergebnis;
+      try {
+        ergebnis = await passwortWechselDurchfuehren(alt, neu);
+      } catch (e) {
+        knopfFrei();
+        // Der einzige erwartbare Fehler ist das falsche alte Passwort (GCM schlägt fehl).
+        // In JEDEM Fehlerfall ist das Depot unverändert — das sagen beide Meldungen.
+        zeigeFehler(STRINGS.pwWechselAltFalsch);
+        return;
+      }
+      if (ergebnis === 'abgebrochen') { knopfFrei(); zeigeFehler(STRINGS.pwWechselAbgebrochen); return; }
+      schliessen();
+      try { renderTopbar(); } catch (_) {}
+      passwortWechselAbschlussZeigen();                                  // ADR A.3 — verpflichtend
+    },
+  });
+  modalPwFelderVerdrahten('pw-wechsel-neu', 'pw-wechsel-neu2', 'pw-wechsel-neu2-fehler');
+  pwStaerkeAnzeigeVerdrahten('pw-wechsel-neu', 'pw-wechsel-neu-staerke');
+}
+
+/* Abschluss-Bildschirm (ADR A.3, verpflichtend). Sagt die unbequeme Wahrheit: der
+   Wechsel wirkt nur auf die eben geschriebene Datei. Die Stufe-1-Klärung hat gezeigt,
+   dass das nicht nur Zweitkopien betrifft — auf iOS/Safari/Firefox entsteht eine NEUE
+   Datei statt eines In-place-Überschreibens, dort kann die alte Fassung am selben Ort
+   liegen bleiben. Der Text deckt beides ab, ohne plattformspezifisch zu werden. */
+function passwortWechselAbschlussZeigen() {
+  ui.modal({
+    titel: escapeHTML(STRINGS.pwWechselFertigTitel),
+    koerperHTML:
+      '<p>' + escapeHTML(STRINGS.pwWechselFertigText) + '</p>' +
+      '<div class="modal-warnung" role="note">' + svgIcon(ICONS.alertTriangle, 18) +
+        '<div><strong>' + escapeHTML(STRINGS.pwWechselKopienTitel) + '</strong> ' +
+        escapeHTML(STRINGS.pwWechselKopienText) + '</div></div>',
+    primaerLabel: STRINGS.nfbDruckenKnopf,
+    onPrimaer: (schliessen) => { schliessen(); notfallblattOeffnen(); },
+    zweitAktion: { label: STRINGS.pwWechselFertigOk, handler: (schliessen) => schliessen() },
+    // KEIN „Abbrechen": der Wechsel ist an dieser Stelle vollzogen und die Datei geschrieben.
+    // Ein Abbruch-Knopf würde eine Rücknahme suggerieren, die es nicht gibt (Browser-Befund 21.07.).
+    ohneAbbrechen: true,
+  });
+}
+
+/* ── U2-ADR-095 — Notfall-Blatt (Beschluss B) ─────────────────────────────────
+   Angeboten an zwei Stellen: nach dem Anlegen eines Depots und am Ende des Wechsel-
+   Flows. Das Blatt enthält NUR Leerfelder und vorgedruckte Hinweise — die App setzt
+   nirgends ein Passwort ein. Damit sind Drucker-Spool, „Als PDF drucken", Zwischen-
+   ablage und Clipboard-Manager als Leckpfade konstruktionsbedingt ausgeschlossen
+   (präzisiert die CC-01/CC-08-Linie: kein app-erzeugtes Klartext-Geheimnis). */
+function notfallblattAnbieten() {
+  try {
+    if (typeof ui === 'undefined' || !ui.modal) return;
+    ui.modal({
+      titel: escapeHTML(STRINGS.nfbAnbietenTitel),
+      koerperHTML: '<p class="modal-text">' + escapeHTML(STRINGS.nfbAnbietenText) + '</p>',
+      primaerLabel: STRINGS.nfbDruckenKnopf,
+      onPrimaer: (schliessen) => { schliessen(); notfallblattOeffnen(); },
+      zweitAktion: { label: STRINGS.nfbSpaeter, handler: (schliessen) => schliessen() },
+      ohneAbbrechen: true,   // „Später" IST der Ausweg — ein zweiter Abbruch-Knopf wäre Rauschen
+    });
+  } catch (_) { /* ein Angebot darf den Anlege-Weg nie stören */ }
+}
+
+// Eine Leerzeile zum Handschreiben — bewusst eine gedruckte Linie, kein <input>.
+function _nfbLinie(label, beispiel) {
+  return '<section class="pv-dok-abschnitt nfb-feld">'
+    + '<h2>' + escapeHTML(label) + '</h2>'
+    + (beispiel ? '<p class="nfb-beispiel">' + escapeHTML(beispiel) + '</p>' : '')
+    + '<p class="nfb-linie">&nbsp;</p></section>';
+}
+
+function notfallblattHTML() {
+  let h = '<article class="pv-dok nfb"><h1>' + escapeHTML(STRINGS.nfbBlattTitel) + '</h1>';
+  h += '<p class="nfb-hand">' + escapeHTML(STRINGS.nfbHandschriftHinweis) + '</p>';
+  h += _nfbLinie(STRINGS.nfbFeldPasswort, '');
+  h += _nfbLinie(STRINGS.nfbFeldDatum, '');
+  h += _nfbLinie(STRINGS.nfbFeldOrt, STRINGS.nfbFeldOrtBeispiel);
+  h += '<section class="pv-dok-abschnitt"><h2>' + escapeHTML(STRINGS.nfbAngehoerigeTitel) + '</h2>'
+     + '<p>' + escapeHTML(STRINGS.nfbAngehoerigeText) + '</p></section>';
+  h += '<section class="pv-dok-abschnitt"><h2>' + escapeHTML(STRINGS.nfbAufbewahrungTitel) + '</h2>'
+     + '<p>' + escapeHTML(STRINGS.nfbAufbewahrungText) + '</p></section>';
+  h += '<footer class="pv-dok-fuss">' + escapeHTML(STRINGS.fussFirma) + '</footer>';
+  return h + '</article>';
+}
+
+// Vollbild-Overlay + Druck — dieselbe Mechanik wie das PV-Dokument (Print-CSS blendet
+// beim window.print() alles außer dem Overlay aus).
+function notfallblattOeffnen() {
+  let ov = document.getElementById('notfallblatt-overlay');
+  if (ov && ov.remove) ov.remove();
+  ov = document.createElement('div');
+  ov.id = 'notfallblatt-overlay';
+  ov.innerHTML =
+    '<div class="pv-dok-toolbar">'
+    + '<p class="pv-dok-hinweis">' + escapeHTML(STRINGS.nfbToolbarHinweis) + '</p>'
+    + '<div class="pv-dok-knoepfe"><button class="btn" id="nfb-drucken">' + escapeHTML(STRINGS.nfbDruckenKnopf) + '</button> '
+    + '<button class="btn btn-sek" id="nfb-schliessen">' + escapeHTML(STRINGS.nfbSchliessen) + '</button></div>'
+    + '</div>'
+    + '<div class="pv-dok-blatt">' + notfallblattHTML() + '</div>';
+  document.body.appendChild(ov);
+  const dr = document.getElementById('nfb-drucken'); if (dr) dr.onclick = () => { try { window.print(); } catch (_) {} };
+  const sc = document.getElementById('nfb-schliessen'); if (sc) sc.onclick = () => { if (ov.remove) ov.remove(); };
 }
 
 /* ── Vorschau-/Umsehen-Flows ──────────────────────────────────────────────── */
@@ -15344,6 +15674,16 @@ function einstellungenHTML() {
       // Wegweiser: der Gesamt-Export (PDF/Notfallkarte/QR) lebt jetzt in „Daten herausgeben".
       '<p class="einst-hint" style="margin-top:var(--space-3)">' + escapeHTML(STRINGS.einstGesamtExportWegweiser) + '</p>' +
     '</section>' +
+    // Passwort ändern (U2-ADR-095, Beschluss A). Bewusst hier und nicht in einem eigenen
+    // Menü: der Wechsel ist eine ruhige Einstellung, kein Notfall-Weg. Im Sub-Kontext und in
+    // der Vorschau nicht angeboten — dort trägt der Knopf keine Bedeutung (Auflage 2).
+    ((imVorschau() || imSubKontext()) ? '' :
+      // Kein Erklärtext im Abschnitt: der Merken-Hinweis gehört an die Handlung (in den Dialog),
+      // nicht an den Knopf, der ihn nur ankündigt (Abnahme 21.07.). Überschrift + Knopf genügen.
+      '<section class="einst-abschnitt"><h4>' + escapeHTML(STRINGS.pwWechselAbschnitt) + '</h4>' +
+        '<button type="button" class="btn btn-sek" id="einst-pw-wechseln">' + svgIcon(ICONS.shield) + ' ' +
+          escapeHTML(STRINGS.pwWechselKnopf) + '</button>' +
+      '</section>') +
     // Vertrauensperson einrichten (U2-ADR-062) — Stufe-2-Angehörigen-Cache. Status = Cache-Präsenz.
     '<section class="einst-abschnitt"><h4>' + STRINGS.vpAbschnitt + '</h4>' +
       '<p class="einst-hint">' + escapeHTML(vertrauenspersonAktiv() ? STRINGS.vpStatusAktiv : STRINGS.vpStatusInaktiv) + '</p>' +
@@ -15412,6 +15752,9 @@ function verdrahteEinstellungen() {
   if (ej) ej.onclick = () => flowFormatExport('json');
   const eimp = document.getElementById('einst-import');
   if (eimp) eimp.onclick = () => flowEinlesen();
+  // Passwort ändern (U2-ADR-095) — der Knopf existiert nur im Anker-Kontext (s. einstellungenHTML).
+  const pwW = document.getElementById('einst-pw-wechseln');
+  if (pwW) pwW.onclick = () => flowPasswortWechseln();
   // Vertrauensperson einrichten (U2-ADR-062) — Stufe-2-Angehörigen-Cache anlegen/aktualisieren/entfernen.
   const vpEin = document.getElementById('einst-vp-einrichten');
   if (vpEin) vpEin.onclick = () => flowVertrauenspersonEinrichten();
@@ -16333,8 +16676,17 @@ const PV_MODUL = Object.freeze({
         einleitung: PV_BMJ.widerrufEinleitung, bulletPrefix: '– ' },
     ] },
     { titel: 'Weitere Verfügungen', bloecke: [
+      // U2-ADR-089 Teil A Block 1 (Nachzug 21.07.2026): las bis dahin `d.vollmachten` — eine Liste,
+      // die die Migration 38→39 loescht (delete _v39.vollmachten). Die Bedingung war seit Block 1
+      // dauerhaft falsch, der Satz fiel damit still aus dem GEDRUCKTEN amtlichen Dokument, sobald
+      // die Vollmacht ueber die Instrument-Liste angelegt und das Gate nicht zusaetzlich gesetzt war.
+      // Direkte Entsprechung, keine Bedeutungsaenderung: die Migration hat jede alte vollmachten-Zeile
+      // 1:1 als Record mit typ:'vorsorgevollmacht' uebernommen (ohne art-Filter, wie vorher auch).
+      // Das Gate bleibt als zweiter Zweig unangetastet — dessen Abloesung ist Block 2.
       { typ: 'crossRef', text: 'Ich habe eine Vorsorgevollmacht errichtet.',
-        pruef: (d) => (Array.isArray(d.vollmachten) && d.vollmachten.length) || d.vollmacht_vorhanden === 'ja' },
+        pruef: (d) => (Array.isArray(d.vorsorge_instrumente)
+                        && d.vorsorge_instrumente.some(r => r && r.typ === 'vorsorgevollmacht'))
+                      || d.vollmacht_vorhanden === 'ja' },
       { typ: 'crossRef', text: 'Ich habe eine Betreuungsverfügung errichtet.',
         pruef: (d) => d.betreuungsverfuegung === 'ja' },
     ] },

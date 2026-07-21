@@ -594,6 +594,10 @@ const STRINGS = Object.freeze({
   pwPlaceholder: 'Passwort',
   pwOeffnen: 'Öffnen',
   pwFalsch: 'Das Passwort passt nicht — bitte erneut versuchen.',
+  // B3 (21.07.2026): eigener Wortlaut für einen abgelehnten Versions-Umschlag. Vorher lief dieser
+  // Fall in denselben catch wie ein Tippfehler und meldete „Das Passwort passt nicht" — die Nutzerin
+  // hätte endlos ein korrektes Passwort erneut eingegeben. Kein Technik-Jargon (keine Versionsnummer).
+  versionNichtLesbar: 'Diese Datei wurde mit einer anderen Vivodepot-Fassung erstellt und kann hier nicht geöffnet werden.',
   // Klartext-Hinweis
   klartextHinweis: 'Diese Datei ist unverschlüsselt. Jede Person, die sie öffnet, kann alles lesen.',
   // Sichten
@@ -1065,30 +1069,207 @@ const SEKTOREN = Object.freeze([
         // U2-ADR-064 (Spiegel der Schreib-App): erteilte Vollmachten als liste-Record. Read-only zeigt
         // die Einträge über feldWertHTML/listenEintragZusammenfassung; die Migration 28→29 unten foldet
         // Alt-Depots (Flachfelder) verlustfrei ein, damit auch ungespeicherte Alt-Dateien korrekt lesen.
-        { id: 'vollmachten', label: 'Erteilte Vollmachten', typ: 'liste',
+        // U2-ADR-089 Teil A Block 1 (17.07.2026) — geteilte Instrument-Liste. Der Spiegel trug bis
+        // zum 21.07. noch die alte, Vollmacht-exklusive Liste `vollmachten`; die Migration 38→39 der
+        // Bürger-App löscht dieses Feld aber (delete _v39.vollmachten). Folge: Schema-39-Dateien
+        // entschlüsselten sauber, zeigten aber KEIN einziges Vorsorge-Instrument — lautlos, in genau
+        // der Ansicht, die Ärztin, Behörde und Angehörige benutzen. Die Definition unten ist die
+        // wörtliche Übernahme aus vivodepot.html (Sektion 'meine-vorsorge'); sie muss dort mitgezogen
+        // werden, wenn die Instrument-Felder sich ändern.
+        { id: 'vorsorge_instrumente', label: 'Vorsorge-Instrumente', typ: 'liste',
+          hint: 'Jedes Vorsorge-Instrument als eigener Eintrag — Art wählen, dann erscheinen die passenden Felder.',
+          // Nachbesserung (20.07.2026, Geräte-Befund file://): Positivliste statt Alles-Iteration —
+          // listenEintragZusammenfassung()/_verweisListenEintragZusammenfassung() zeigen NUR diese
+          // Unterfelder (Reihenfolge kommt weiter aus der unterFelder-Deklarationsposition, kein
+          // eigener Sortier-Mechanismus). Fehlt `zusammenfassungFelder` auf einer liste, bleibt das
+          // alte Verhalten (alle gefüllten Unterfelder zeigen) unverändert — reines Opt-in, damit
+          // die anderen neun liste-Felder der App unangetastet bleiben.
+          zusammenfassungFelder: [
+            'typ', 'art', 'zusatz', 'bevollmaechtigter',
+            'betreuung_person', 'betreuung_ersatz',
+            'sorgerechtsverfuegung_person', 'sorgerechtsverfuegung_ersatz',
+            'ki_berechtigte_personen', 'ki_nachlassverwalter',
+          ],
           unterFelder: [
-            { id: 'art', label: 'Art der Vollmacht', typ: 'auswahl', optionen: [
-              { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
-              { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
-              { wert: 'bank',       label: 'Bankvollmacht' },
-              { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
-              { wert: 'general',    label: 'Generalvollmacht' },
+            // ── Diskriminante ─────────────────────────────────────────────────────────
+            // Block-1-Nachtrag (17.07.2026, Geräte-Befund): der Typ-Sammelbegriff (z. B.
+            // „Vorsorgevollmacht") darf nie NEBEN der genaueren `art` in der Listenzeile stehen
+            // („Vorsorgevollmacht · Bankvollmacht" verwirrt) — bei gesetzter `art` führt sie
+            // allein. `unterdrueckeInZusammenfassungWennGesetzt` ist ein generisches Schema-Flag
+            // (listenEintragZusammenfassung/_verweisListenEintragZusammenfassung werten es aus),
+            // keine Sonderbehandlung für dieses Feld im Code.
+            { id: 'typ', label: 'Instrument', typ: 'auswahl', pflicht: true,
+              unterdrueckeInZusammenfassungWennGesetzt: 'art',
+              optionen: [
+              { wert: 'vorsorgevollmacht',     label: 'Vorsorgevollmacht' },
+              { wert: 'patientenverfuegung',   label: 'Patientenverfügung' },
+              { wert: 'testament',             label: 'Testament' },
+              { wert: 'betreuungsverfuegung',  label: 'Betreuungsverfügung' },
+              { wert: 'sorgerechtsverfuegung', label: 'Sorgerechtsverfügung' },
+              { wert: 'ki-verfuegung',         label: 'Verfügung zur digitalen Nachbildung' },
             ] },
-            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person(en)', typ: 'refMehrfach', entitaet: 'person', rolle: 'bevollmaechtigte' },
+            // ── Gemeinsame Felder aller Instrumente (ADR-089) — sichtbar, sobald `typ` gesetzt ist ──
+            { id: 'form', label: 'Form', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] },
+              optionen: [
+                { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
+                { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
+                { wert: 'beurkundet', label: 'notariell beurkundet' },
+              ] },
+            { id: 'stelle', label: 'Beurkundende / beglaubigende Stelle', typ: 'text',
+              sichtbarWenn: { feld: 'form', wert: ['beurkundet', 'beglaubigt'] },
+              beispiel: 'Notar Dr. Sommer, München · Urkundenrolle Nr. 123/2024' },
+            { id: 'ort', label: 'Ablageort', typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] },
+              beispiel: 'beim Notar · Tresor zuhause · Hinweiszettel im Geldbeutel' },
+            // keineZukunft (Nachbesserung 20.07.2026): „letzte Änderung" ist per Definition Vergangenheit.
+            { id: 'datum', label: 'Datum der letzten Änderung', typ: 'datum', keineZukunft: true,
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] } },
+            // ── Vorsorgevollmacht (typ='vorsorgevollmacht') ──────────────────────────────
+            { id: 'art', label: 'Art der Vollmacht', typ: 'auswahl', pflicht: true,
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [
+                { wert: 'vorsorge',   label: 'Vorsorgevollmacht' },
+                { wert: 'gesundheit', label: 'Gesundheitsvollmacht' },
+                { wert: 'bank',       label: 'Bankvollmacht' },
+                { wert: 'betreuung',  label: 'Betreuungsvollmacht' },
+                { wert: 'general',    label: 'Generalvollmacht' },
+              ] },
+            // Block-1-Nachtrag (17.07.2026) — gemeinsames Feld über alle sechs Instrumente
+            // (wie form/ort/datum): nur der unterscheidende Teil, Art/Typ ergänzt automatisch.
+            // Deklariert direkt nach `art` und vor `bevollmaechtigter`, damit die Zeilen-
+            // Zusammenfassung (Deklarationsreihenfolge = Zeilen-Reihenfolge, kein eigener
+            // Sortier-Mechanismus) „Art · Zusatz · Personen" ergibt.
+            { id: 'zusatz', label: 'Genauer bezeichnen', typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: ['vorsorgevollmacht','patientenverfuegung','testament','betreuungsverfuegung','sorgerechtsverfuegung','ki-verfuegung'] },
+              beispiel: 'z. B. Commerzbank, für meinen Sohn' },
+            { id: 'bevollmaechtigter', label: 'Bevollmächtigte Person(en)', typ: 'refMehrfach', entitaet: 'person', rolle: 'bevollmaechtigte',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              verweisZweck: 'vollmacht', verweisKontextFeld: 'stelle' },
             { id: 'vertretungsModus', label: 'Wie vertreten die Personen?', typ: 'auswahl',
               sichtbarWenn: { feld: 'bevollmaechtigter', minAnzahl: 2 },
               optionen: [
                 { wert: 'gleichwertig', label: 'gleichwertig — jede darf allein handeln' },
                 { wert: 'nacheinander', label: 'nacheinander — in der genannten Reihenfolge (Ersatz)' },
+              ],
+              hint: 'Gleichwertig: jede bevollmächtigte Person darf einzeln handeln. Nacheinander: die erste ist zuständig, die nächste nur als Ersatz — die Reihenfolge oben bestimmt die Vertretung.' },
+            // ADR-089 Entscheidung 5 — statischer Hinweis, kein Mechanismus: nur die drei Arten, die
+            // sich inhaltlich mit anderen überschneiden können. Reine Anzeige, keine Prüfung.
+            { id: 'ueberlappung_hinweis', label: 'Hinweis', typ: 'hinweis',
+              sichtbarWenn: { feld: 'art', wert: ['general', 'gesundheit', 'bank'] },
+              hint: 'Diese Vollmacht kann sich mit anderen überschneiden — achten Sie darauf, dass Ihre Vollmachten zueinander passen.' },
+            // ── Patientenverfügung (typ='patientenverfuegung') ───────────────────────────
+            // „Grundhaltung" bewusst NICHT gebaut: kein lebendes Quellfeld (historische Kandidaten
+            // patientenverf_haltung/_wunsch/palliativ_wunsch sind verwaist, s. u.), und die BMJ-
+            // Wertvorstellungs-Bausteine bleiben laut ADR-089 Entscheidung 1 wizard-intern.
+            { id: 'organspende', label: 'Organspende', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' },
+              optionen: [
+                { wert: 'ja',      label: 'ja, vollumfänglich' },
+                { wert: 'teil',    label: 'ja, eingeschränkt' },
+                { wert: 'nein',    label: 'nein' },
+                { wert: 'familie', label: 'Familie entscheidet' },
               ] },
-            { id: 'form', label: 'Form der Vollmacht', typ: 'auswahl', optionen: [
-              { wert: 'privat',     label: 'privatschriftlich (selbst verfasst)' },
-              { wert: 'beglaubigt', label: 'amtlich / notariell beglaubigt' },
-              { wert: 'beurkundet', label: 'notariell beurkundet' },
-            ] },
-            { id: 'stelle', label: 'Beurkundende / beglaubigende Stelle', typ: 'text',
-              sichtbarWenn: { feld: 'form', wert: ['beurkundet', 'beglaubigt'] } },
-            { id: 'ort', label: 'Ablageort', typ: 'text' },
+            { id: 'organspende_einschraenkung', label: 'Welche Einschränkung?', typ: 'textarea',
+              sichtbarWenn: { feld: 'organspende', wert: 'teil' },
+              beispiel: 'z. B. nur Herz und Nieren; keine Hornhaut; nur für Transplantation, nicht für Forschung' },
+            // ── Testament (typ='testament') — `erben` bleibt bewusst ein EIGENES Sektorfeld
+            // (4497), weil es auch bei gesetzlicher Erbfolge gilt, nicht nur bei vorhandenem Testament ──
+            { id: 'erbfolge_hinweis', label: 'Gesetzliche Erbfolge oder abweichender Wille?', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'testament' },
+              optionen: [
+                { wert: 'gesetzlich', label: 'Die gesetzliche Erbfolge soll gelten' },
+                { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
+                { wert: 'unklar',     label: 'Noch unklar — Beratung gewünscht' },
+              ] },
+            { id: 'vermaechtnisse', label: 'Besondere Wünsche & Vermächtnisse', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'testament' },
+              beispiel: 'Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein' },
+            // ── Betreuungsverfügung (typ='betreuungsverfuegung') — Feld-IDs bewusst mit Präfix
+            // beibehalten (nicht gekürzt): ein gemeinsames unterFelder-Array über alle sechs Typen
+            // verlangt global eindeutige IDs, sonst kollidieren z. B. Betreuungs- und Sorgerechts-„person" ──
+            { id: 'betreuung_person', label: 'Vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' } },
+            { id: 'betreuung_ersatz', label: 'Ersatzperson', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' } },
+            { id: 'betreuung_wuensche', label: 'Was die Betreuung regeln soll', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' },
+              beispiel: 'Wohnung halten, solange es geht; vertraute Hausärztin behalten' },
+            { id: 'betreuung_ausschluss', label: 'Was die Betreuung nicht soll / wer nicht', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'betreuungsverfuegung' },
+              beispiel: 'kein Umzug ins Heim ohne Rücksprache mit der Familie; Person X soll nicht bestellt werden' },
+            // ── Sorgerechtsverfügung (typ='sorgerechtsverfuegung') — `schutzbefohlene` bleibt in
+            // Sektor „meine-menschen", außerhalb dieser Liste ──
+            { id: 'sorgerechtsverfuegung_person', label: 'Vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'familie',
+              sichtbarWenn: { feld: 'typ', wert: 'sorgerechtsverfuegung' } },
+            { id: 'sorgerechtsverfuegung_ersatz', label: 'Ersatzperson', typ: 'ref', entitaet: 'person', rolle: 'familie',
+              sichtbarWenn: { feld: 'typ', wert: 'sorgerechtsverfuegung' } },
+            { id: 'sorgerechtsverfuegung_wuensche', label: 'Wünsche zur Erziehung & Betreuung', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'sorgerechtsverfuegung' },
+              beispiel: 'Geschwister sollen zusammenbleiben; gewohnte Schule beibehalten' },
+            // ── KI-Verfügung (typ='ki-verfuegung') — alle 12 Felder werden Unterfelder (bestätigt
+            // 17.07.: KI hat keinen granularen Bausteine-Korpus wie PV_BMJ, die Felder SIND der
+            // Inhalt). 1:1 aus KI_KORPUS.steps (5594-5675), `ki_`-Präfix bleibt (Kollisionsschutz) ──
+            { id: 'ki_grundentscheidung', label: 'Grundentscheidung', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'untersagung', label: 'Ich untersage jede KI-gestützte Nachbildung meiner Person nach meinem Tod.' },
+                { wert: 'erlaubnis',   label: 'Ich erlaube eine KI-gestützte Nachbildung meiner Person nach meinem Tod, unter den nachfolgend festgelegten Bedingungen.' },
+              ] },
+            { id: 'ki_zweck', label: 'Zweck', typ: 'mehrfachauswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'trauer',     label: 'zur persönlichen Trauerbegleitung im engsten Kreis' },
+                { wert: 'erinnerung', label: 'zur Bewahrung von Erinnerungen und Familiengeschichte' },
+                { wert: 'bildung',    label: 'zu Bildungs- oder Dokumentationszwecken' },
+              ] },
+            { id: 'ki_berechtigte', label: 'Berechtigte', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'benannte',    label: 'ausschließlich namentlich benannte Personen' },
+                { wert: 'angehoerige', label: 'meine engsten Angehörigen' },
+              ] },
+            { id: 'ki_berechtigte_personen', label: 'Namentlich benannte Personen', typ: 'refMehrfach', entitaet: 'person',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' } },
+            { id: 'ki_raum', label: 'Raum', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'privat',      label: 'nur privater Raum' },
+                { wert: 'oeffentlich', label: 'auch öffentlich zugängliche Räume (z. B. Gedenkseiten)' },
+              ] },
+            { id: 'ki_datenarten', label: 'Zulässige Datenarten', typ: 'mehrfachauswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'schriftverkehr', label: 'Schriftverkehr und Textnachrichten' },
+                { wert: 'sprache',        label: 'Sprachaufnahmen' },
+                { wert: 'fotovideo',      label: 'Foto- und Videomaterial' },
+                { wert: 'hinterlegt',     label: 'eigens hinterlegte Materialien' },
+              ] },
+            { id: 'ki_befristung', label: 'Befristung', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'jahre',         label: 'Löschung nach einer bestimmten Anzahl Jahre' },
+                { wert: 'letzte_person',  label: 'Löschung mit dem Tod der letzten zugangsberechtigten Person' },
+                { wert: 'zeitpunkt',     label: 'Löschung zu einem bestimmten Zeitpunkt' },
+              ] },
+            { id: 'ki_befristung_jahre', label: 'Anzahl Jahre', typ: 'text',
+              sichtbarWenn: { feld: 'ki_befristung', wert: 'jahre' }, beispiel: 'zehn' },
+            { id: 'ki_befristung_zeitpunkt', label: 'Zeitpunkt', typ: 'text',
+              sichtbarWenn: { feld: 'ki_befristung', wert: 'zeitpunkt' }, beispiel: '31.12.2040' },
+            { id: 'ki_verhaltensgrenze', label: 'Verhaltensgrenze', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'belegt', label: 'nur belegtes Material, keine darüber hinausgehenden Aussagen' },
+                { wert: 'frei',   label: 'frei im Rahmen des dokumentierten Charakters, keine Politik/Religion/Finanzen/Rechtsgeschäfte' },
+              ] },
+            { id: 'ki_nachlassverwaltung', label: 'Digitale Nachlassverwaltung', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              optionen: [
+                { wert: 'benannt',     label: 'benannte Person, bevollmächtigt zum Pausieren/Löschen' },
+                { wert: 'angehoerige', label: 'gemeinsam meine benannten Angehörigen' },
+              ] },
+            { id: 'ki_nachlassverwalter', label: 'Digitale Nachlassverwaltung — Person', typ: 'refMehrfach', entitaet: 'person',
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' } },
           ] },
         { id: 'betreuungsverfuegung',        label: 'Betreuungsverfügung vorhanden?',                  typ: 'auswahl', optionen: [
           { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' },
@@ -1672,13 +1853,29 @@ function _foldBevollLesen(v) {
     }
   }
 }
+// Lese-Spiegel der Bürger-App-Migration 38→39 (U2-ADR-089 Teil A Block 1): die Vollmacht-exklusive
+// Liste `vollmachten` ist in die geteilte `vorsorge_instrumente` aufgegangen (Diskriminante `typ`).
+// Ohne diesen Schritt zeigte die Lese-App nach der Spiegel-Umstellung vom 21.07. zwar Schema-39-
+// Dateien, aber KEINE Alt-Dateien mehr (Schema 29–38 tragen `vollmachten`) — der stille Ausfall
+// wäre nur verschoben worden. Read-only, additiv, idempotent: `vollmachten` wird angehängt und
+// entfernt, bestehende `vorsorge_instrumente` bleiben unangetastet.
+function _foldInstrumenteLesen(v) {
+  if (!v || !Array.isArray(v.vollmachten)) return;
+  const liste = Array.isArray(v.vorsorge_instrumente) ? v.vorsorge_instrumente : [];
+  for (const r of v.vollmachten) {
+    if (!r || typeof r !== 'object') continue;
+    liste.push(Object.assign({}, r, { typ: 'vorsorgevollmacht' }));
+  }
+  if (liste.length) v.vorsorge_instrumente = liste;
+  delete v.vollmachten;
+}
 function _foldVollmachtenLesen(obj) {
   const v = obj && obj.sektoren && obj.sektoren.vorsorge;
   if (!v || typeof v !== 'object') return obj;
   const hatFlach = v.vollmacht_person != null || v.vollmachtsGrundlage != null ||
     v.vollmachtsTyp != null || v.vollmacht_ort != null ||
     v.gesundheitsvollmacht_person != null || v.gesundheitsvollmacht_ort != null;
-  if (!hatFlach) { _foldBevollLesen(v); return obj; }
+  if (!hatFlach) { _foldBevollLesen(v); _foldInstrumenteLesen(v); return obj; }
   const liste = Array.isArray(v.vollmachten) ? v.vollmachten : [];
   const arten = Array.isArray(v.vollmachtsGrundlage) ? v.vollmachtsGrundlage
     : (v.vollmachtsGrundlage != null && String(v.vollmachtsGrundlage).trim() ? [String(v.vollmachtsGrundlage).trim()] : []);
@@ -1696,6 +1893,11 @@ function _foldVollmachtenLesen(obj) {
   if (liste.length) v.vollmachten = liste;
   delete v.vollmacht_person; delete v.vollmachtsGrundlage; delete v.vollmachtsTyp;
   delete v.vollmacht_ort; delete v.gesundheitsvollmacht_person; delete v.gesundheitsvollmacht_ort;
+  // Reihenfolge zwingend: erst die Einzel-Ref → Array normalisieren (die eben aus den Flachfeldern
+  // gebauten Einträge tragen `bevollmaechtigter` als Skalar), dann nach `vorsorge_instrumente`
+  // heben — sonst landete ein Skalar in einem refMehrfach-Unterfeld.
+  _foldBevollLesen(v);
+  _foldInstrumenteLesen(v);
   return obj;
 }
 let data = null;                 // entschlüsseltes Depot (read-only)
@@ -1962,8 +2164,24 @@ function erkenneFormat(obj) {
   return 'unbekannt';
 }
 
+/* ── Versions-Gate (B3, 21.07.2026) ────────────────────────────────────────
+   Bis hierher hatte die Lese-App KEINE explizite Versions-Prüfung: ein Nicht-v3-Umschlag lief
+   durch ~600k PBKDF2 und scheiterte erst an der AAD/GCM-Authentifizierung — fail-closed, aber
+   mit generischer Fehlermeldung und nach voller Ableitungs-Arbeit. Jetzt derselbe Gate wie in
+   der Bürger-App: Ablehnung VOR jeder Ableitung, über dieselbe Allowlist-Konstante.
+   Der Marker `vivodepotGrund` macht den Fall für den Aufrufer unterscheidbar, ohne Fehlertexte
+   zu vergleichen (die catch-Klausel im Passwort-Formular meldete sonst „Passwort falsch"). */
+function _versionsGate(umschlag) {
+  if (!umschlag || !KRYPTO_VERSION_ALLOWLIST.includes(umschlag.kryptoVersion)) {
+    const e = new Error('Lese-App: kryptoVersion nicht in der Allowlist (' + KRYPTO_VERSION_ALLOWLIST.join('/') + ').');
+    e.vivodepotGrund = 'version';
+    throw e;
+  }
+}
+
 /* ── Entschlüsselung Vollexport-Depot (read-only Spiegel von depotLaden) ───── */
 async function leseDepotUmschlag(umschlag, password) {
+  _versionsGate(umschlag);                                  // VOR jeder Ableitung (B3)
   const pbkdf2Salt = base64ToBytes(umschlag.pbkdf2.salt);
   const depotSalt  = base64ToBytes(umschlag.depotSalt);
   const depotUUID  = umschlag.depotUUID;
@@ -1981,6 +2199,7 @@ async function depotMasterHkdfKey(passwort, pbkdf2Salt) {
   return key;
 }
 async function leseSubUmschlag(umschlag, subPasswort) {
+  _versionsGate(umschlag);                                  // VOR jeder Ableitung (B3)
   const pbkdf2Salt = base64ToBytes(umschlag.pbkdf2.salt);
   const depotSalt  = base64ToBytes(umschlag.depotSalt);
   const masterKey  = await depotMasterHkdfKey(subPasswort, pbkdf2Salt);
@@ -2268,9 +2487,14 @@ function renderPasswort(art, umschlag, blackboxDatei) {
       } else { leseModus = 'anker'; subInfo = null; }
       renderVollExport();
     } catch (err) {
-      const f = el('pw-fehler'); f.textContent = STRINGS.pwFalsch; f.hidden = false;
+      // B3: Versions-Ablehnung ist KEIN Passwort-Fehler — sonst versucht die Nutzerin ein
+      // korrektes Passwort endlos erneut. Unterscheidung über den Marker, nicht über Fehlertexte.
+      const istVersion = !!(err && err.vivodepotGrund === 'version');
+      const f = el('pw-fehler');
+      f.textContent = istVersion ? STRINGS.versionNichtLesbar : STRINGS.pwFalsch;
+      f.hidden = false;
       el('pw-feld').value = '';
-      el('pw-feld').focus();
+      if (!istVersion) el('pw-feld').focus();   // bei Versions-Ablehnung hilft kein zweiter Versuch
     }
   });
   const pf = el('pw-feld'); if (pf && pf.focus) pf.focus();
