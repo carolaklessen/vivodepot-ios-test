@@ -1269,6 +1269,12 @@
     .pv-dok-toolbar { display: none !important; }
     .pv-dok-blatt { max-width: none; margin: 0; padding: 0; box-shadow: none; border-radius: 0; }
     .pv-dok-abschnitt { break-inside: avoid; }
+    /* Kassensturz-Posten „PDF-Fußzeile bricht": die Fußzeile trägt eine border-top und lief
+       bisher ungeschützt durch den Seitenumbruch — Trennlinie auf der einen, Text auf der
+       nächsten Seite. Die Abschnitte waren geschützt, die Fußzeile war es nie. Betrifft alle
+       drei generierten Dokumente (PV, KI, Testament-Anlage) und das Notfall-Blatt, die sich
+       diese Druck-Mechanik teilen. Echte Prüfung ist das Druckbild am Gerät, nicht node. */
+    .pv-dok-fuss { break-inside: avoid; }
   }
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -2691,7 +2697,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v73';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v74';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -4383,6 +4389,11 @@ const SEKTOREN = Object.freeze([
   { id: 'sozialversicherung',label: 'Sozialversicherung',   format: SEKTOR_FORMATE.SD_JWT_VC,  icon: 'shield',
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
     einfuehrungstext: 'Ihre Absicherung für Rente, Krankheit und Pflege — und wo die Unterlagen liegen.',
+    // pflwiz („Pflege-Übernahme") schreibt in diesen Sektor (ziel:{sektor:'sozialversicherung'}), hatte
+    // hier aber keinen Startknopf — der Einstieg über den Zielsektor fehlte (Kassensturz 22.07.,
+    // Befund bestätigt). Zweizeiler: pflwiz in die wizards-Liste des Zielsektors. (pflwiz bleibt
+    // zusätzlich über meine-menschen/gesundheit/vorsorge und das Pflegeheim-Anlassblatt erreichbar.)
+    wizards: ['pflwiz'],
     // U2-ADR-030: unsignierter SD-JWT-VC-Selbstauskunft-Export (Variante A). Pflegegrad reist auf
     // dem Sozial-Pfad, NICHT im klinischen FHIR-IPS (U2-ADR-018/019 entmedikalisieren ihn).
     exporte: [{ format: 'sd-jwt-vc-sozialversicherung', label: STRINGS.exportSozialversicherungLabel }],
@@ -4814,7 +4825,10 @@ const SEKTOREN = Object.freeze([
     ],
     // Geführter Einstieg (Welle 3): der Umzug-Wizard (umzwiz) schreibt seinen Bereich-9-Teil
     // (Versorger-Wechsel & Adressänderungen) hierher. Startknopf datenlage-adaptiv.
-    wizards: ['umzwiz'],
+    // kiwiz (KI-Verfügung „Verfügung zur digitalen Nachbildung", U2-ADR-069) hat `verwaltung` als
+    // Ziel-/Heimatsektor (MODULE-Registry, sektor:'verwaltung'), stand aber in keiner Startknopf-
+    // Liste — der Wizard war gebaut, aber unerreichbar (totes Versprechen, Kassensturz 22.07.).
+    wizards: ['umzwiz', 'kiwiz'],
 
     sektionen: [
       { id: 'bundid-vorgaenge', label: 'BundID und Vorgänge', felder: [
@@ -5199,11 +5213,11 @@ const SITUATIONEN = Object.freeze([
     einfuehrung: 'Ein Termin beim Notar oder bei der Bank steht an — für eine Vollmacht, ein Testament oder den Zugang zu Ihren Konten. Hier sehen Sie, was schon hinterlegt ist, und sammeln, was Sie mitnehmen und regeln müssen.',
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
-        { quelle: 'vorsorge', feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:testament' },
         { quelle: 'vorsorge', feld: 'testament_ort' },
-        { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
+        { quelle: 'vorsorge', feld: 'instrument:betreuungsverfuegung' },
         { quelle: 'finanzen', feld: 'konten' },
       ] },
       { titel: 'Beim Notar', eintraege: [
@@ -5269,9 +5283,9 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'verwaltung',     feld: 'pw_manager' },
       ] },
       { titel: 'Was geregelt sein sollte', eintraege: [
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'patientenverf_vorhanden' },
-        { quelle: 'vorsorge', feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
+        { quelle: 'vorsorge', feld: 'instrument:patientenverfuegung' },
+        { quelle: 'vorsorge', feld: 'instrument:testament' },
         { quelle: 'finanzen', feld: 'konten' },
       ] },
     ] },
@@ -5289,7 +5303,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'blutgruppe' },
         { quelle: 'gesundheit', feld: 'implantate' },
         { quelle: 'gesundheit', feld: 'kv_art' },
-        { quelle: 'vorsorge',   feld: 'patientenverf_vorhanden' },
+        { quelle: 'vorsorge',   feld: 'instrument:patientenverfuegung' },
         { quelle: 'vorsorge',   feld: 'patientenverf_ort' },
         { quelle: 'vorsorge',   feld: 'vorsorge_instrumente' },
       ] },
@@ -5317,7 +5331,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'sozialversicherung', feld: 'pflegekasse' },
         { quelle: 'gesundheit',         feld: 'krankheiten' },
         { quelle: 'gesundheit',         feld: 'medikamente' },
-        { quelle: 'vorsorge',           feld: 'betreuungsverfuegung' },
+        { quelle: 'vorsorge',           feld: 'instrument:betreuungsverfuegung' },
         { quelle: 'vorsorge',           feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Für den Einzug', eintraege: [
@@ -5339,7 +5353,7 @@ const SITUATIONEN = Object.freeze([
     einfuehrung: 'Im Erbfall müssen Angehörige vieles zugleich regeln — und finden oft nicht, was sie brauchen. Hier legen Sie es ihnen geordnet hin: was schon entschieden ist, wo die Papiere liegen, welche Verträge enden und wen man informieren muss.',
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
-        { quelle: 'vorsorge',      feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge',      feld: 'instrument:testament' },
         { quelle: 'vorsorge',      feld: 'testament_ort' },
         { quelle: 'vorsorge',      feld: 'erben' },
         { quelle: 'vorsorge',      feld: 'zvr_nummer' },
@@ -5423,9 +5437,11 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'kv_nummer' },
       ] },
       { titel: 'Aus Vorsorge', eintraege: [
-        { quelle: 'vorsorge', feld: 'patientenverf_vorhanden' },
+        // U2-ADR-089 Block 2: abgeleitet statt Flachfeld — ein Instrument, das nur als Record
+        // existiert, verschwand hier vorher lautlos aus dem Blatt der Vertrauensperson.
+        { quelle: 'vorsorge', feld: 'instrument:patientenverfuegung' },
         { quelle: 'vorsorge', feld: 'patientenverf_ort' },
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Meine Menschen', eintraege: [
@@ -5457,9 +5473,9 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'sozialversicherung', feld: 'pflegedienst' },  // typ:'ref' → Institution
       ] },
       { titel: 'Aus Vorsorge', eintraege: [
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },      // U2-ADR-089 Block 2
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
-        { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
+        { quelle: 'vorsorge', feld: 'instrument:betreuungsverfuegung' },   // Typ, nicht das Gate-Feld
         { quelle: 'vorsorge', feld: 'patientenverf_ort' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_koerper' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_ernaehrung' },
@@ -5502,11 +5518,11 @@ const _ANG_SITUATIONEN = Object.freeze([
     einfuehrung: 'Was Angehörige bei Behörden und im Nachlass regeln müssen — geordnet, mit Ablageorten und Kontakten.',
     bloecke: [
       { titel: 'Aus Vorsorge', eintraege: [
-        { quelle: 'vorsorge', feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:testament' },              // U2-ADR-089 Block 2
         { quelle: 'vorsorge', feld: 'testament_ort' },
         { quelle: 'vorsorge', feld: 'erben' },
         { quelle: 'vorsorge', feld: 'zvr_nummer' },
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Die ersten Schritte', eintraege: [
@@ -9075,16 +9091,24 @@ const B16_FELD_MAPPING = Object.freeze([
   { alt: 'schwerbehindertenausweis_ort',    sektorId: 'sozialversicherung', feldId: 'schwerbehindertenausweis_ort' },
   { alt: 'schwerbehindertenausweis_gueltig',sektorId: 'sozialversicherung', feldId: 'schwerbehindertenausweis_gueltig' },
   // ── Bereich 8: Vorsorge & Recht ──
+  // U2-ADR-089-Nachtrag §5 (Block 2 Etappe 4, 22.07.2026): Die vier Gate-Aliase BLEIBEN — und der
+  // bislang fehlende `betreuungsverfuegung` wird ERGÄNZT. Grund (Carola-Entscheid B): Das Gate ist
+  // der einzige Ort für „in Vorbereitung"; der Fremd-Import ist die einzige Stelle, an der ein
+  // externes „in Vorbereitung" ankommen kann. Streicht man den Alias, verwaist genau der
+  // Zwischenzustand, für den die Gates überhaupt behalten wurden (§3). ADR-089 Alternative 2
+  // („Import-Alias fällt weg") galt für die Detail-Aliase (Vollmacht-Person/-Ort usw., bereits mit
+  // U2-ADR-064/065 entfernt) und ist für die Gate-Aliase durch die spätere „in Vorbereitung"-
+  // Entscheidung AUFGEHOBEN. Der fehlende betreuungsverfuegung-Alias war ein echter Defekt: drei
+  // Gates nahmen einen Importwert an, das vierte ließ ihn ins Freitextfeld fallen.
+  // ACHTUNG Doppelname: `betreuungsverfuegung` ist Gate-Feld-ID UND Instrument-Typ UND Sektions-ID
+  // (Sektion 4765). Verifiziert: _feldDef('vorsorge','betreuungsverfuegung') liefert deterministisch
+  // das Gate-FELD (auswahl ja/nein/plant) — Sektion und Feld sind getrennte Namensräume, es gibt
+  // genau ein Feld dieser id. Der Import interpretiert den Wert daher korrekt gegen ja/nein/plant.
   { alt: 'testament_vorhanden',sektorId: 'vorsorge', feldId: 'testament_vorhanden' },
   { alt: 'testament_ort',  sektorId: 'vorsorge', feldId: 'testament_ort' },
   { alt: 'testament_datum',sektorId: 'vorsorge', feldId: 'testament_datum' },
-  // U2-ADR-065: erben ist refMehrfach (Array) — Sektor-Format-Import kann keinen Skalar in ein Array
-  // hängen (bewusster Verzicht, wie bei den Vollmacht-Details); native .vivodepot deckt die Migration ab.
   { alt: 'vollmacht_vorhanden',sektorId: 'vorsorge', feldId: 'vollmacht_vorhanden' },
-  // U2-ADR-064: die Vollmacht-Detailfelder (vollmacht_person/-ort, gesundheitsvollmacht_person/-ort)
-  // sind in den liste-Record vorsorge/vollmachten gewandert. Sektor-Format-Import kann keinen Skalar
-  // in einen Listen-Eintrag hängen (bewusster Pilot-Verzicht) → keine Alias-Zeile mehr. Native
-  // .vivodepot-Depots decken ihre Alt-Daten verlustfrei über die Migration 28→29 ab.
+  { alt: 'betreuungsverfuegung',sektorId: 'vorsorge', feldId: 'betreuungsverfuegung' },  // Gate (nicht Typ/Sektion)
   { alt: 'patientenverf_vorhanden',sektorId: 'vorsorge', feldId: 'patientenverf_vorhanden' },
   { alt: 'patientenverf_ort',  sektorId: 'vorsorge', feldId: 'patientenverf_ort' },
   { alt: 'patientenverf_arzt', sektorId: 'vorsorge', feldId: 'patientenverf_arzt' }, // ref
@@ -9728,6 +9752,17 @@ function angehoerigenCacheModell() {
     for (const b of (s.bloecke || [])) {
       for (const e of (b.eintraege || [])) {
         if (e.quelle === 'meine-menschen' && e.feld === 'menschen') { ziehtMenschen = true; continue; }
+        // U2-ADR-089 Block 2: Eine Instrument-Zeile ist ABGELEITET — es gibt kein Sektor-Feld
+        // dieses Namens. Der Cache muss ihre QUELLEN mitschneiden (Instrument-Liste + das
+        // historische Gate), sonst rechnet die Angehörigen-Sicht die Ableitung später auf
+        // einem leeren Subset und zeigt nichts. Genau die Sorte stiller Ausfall, um die es
+        // in diesem Block geht — hier im Cache, wo sie am schwersten auffiele.
+        if (typeof e.feld === 'string' && e.feld.startsWith(INSTRUMENT_ZEILE_PRAEFIX)) {
+          for (const q of instrumentZeileQuellFelder(e.feld.slice(INSTRUMENT_ZEILE_PRAEFIX.length))) {
+            setSektor('vorsorge', q);
+          }
+          continue;
+        }
         if (typeof e.quelle === 'string' && e.quelle.startsWith('sit:')) setSituation(e.quelle.slice(4), e.feld);
         else setSektor(e.quelle, e.feld);
       }
@@ -11636,6 +11671,31 @@ function personReferenzStellen(id) {
   }
   return stellen;
 }
+// U2-ADR-089-Nachtrag (1a): „Wird diese Person IRGENDWO referenziert?" — der Wächter für den
+// Karteileiche-Rollback beim Eintrags-Modal-Abbruch. BEWUSST breiter als personReferenzStellen:
+// jenes sammelt nur lesbare Fundstellen aus `ref`/`liste›ref`-Feldern (für den Lösch-Hinweis) und
+// erfasst refMehrfach (erben, bevollmaechtigter, Notfallkontakte, KI-Personen) NICHT. Hier zählt
+// Carolas verschärfte Grenze: eine irgendwo verwendete Person wird NIE gelöscht, auch nicht, wenn
+// sie in dieser Sitzung neu angelegt wurde. Darum ein struktur-generischer Tiefendurchlauf über den
+// GESAMTEN Datensatz (außer den Registern selbst, wo die Person als {id}, nie als {ref} steht), der
+// jedes {ref: id} findet — unabhängig davon, in welchem Feldtyp der Verweis wohnt (heutig oder künftig).
+function _personIrgendwoReferenziert(id) {
+  if (!id || !data || typeof data !== 'object') return false;
+  const gesehen = new Set();
+  let treffer = false;
+  const geh = (o) => {
+    if (treffer || !o || typeof o !== 'object' || gesehen.has(o)) return;
+    gesehen.add(o);
+    if (Array.isArray(o)) { o.forEach(geh); return; }
+    if (o.ref === id) { treffer = true; return; }   // Verweis-Objekt {ref[, override]}
+    for (const k in o) if (Object.prototype.hasOwnProperty.call(o, k)) geh(o[k]);
+  };
+  for (const k in data) {
+    if (k === 'menschen' || k === 'institutionen') continue;   // Register: Entität als {id}, kein {ref}
+    if (Object.prototype.hasOwnProperty.call(data, k)) geh(data[k]);
+  }
+  return treffer;
+}
 // Render-Helper: liefert den aktuellen ANZEIGE-Namen aus einem Ref-Objekt. `override` (String)
 // hat Vorrang vor der Auflösung. Leere/unbekannte Refs liefern '' — der Render-Pfad zeigt dann
 // die eine Leer-Phrase. Keine HTML-Escape hier (passiert beim Rendern).
@@ -12457,7 +12517,11 @@ const ui = {
   // `zweitAktion` (optional, additiv): eine ZWEITE Aktion neben Primär/Abbrechen — { label, handler(schliessen) }.
   // Genutzt z. B. von der D2-Schließen-Warnung ([Passwort setzen] [Trotzdem schließen]). Ohne Angabe
   // unverändert (rückwärts-kompatibel).
-  modal({ titel, koerperHTML, primaerLabel, onPrimaer, ohneAbbrechen, zweitAktion }) {
+  // `onAbbrechen` (optional, additiv, U2-ADR-089-Nachtrag 1a): läuft VOR dem Schließen, NUR auf dem
+  // echten Abbrechen-Weg (das „Abbrechen"-Knopf ist heute der EINZIGE Schließ-Pfad — kein X/Backdrop/
+  // Escape). NICHT bei onPrimaer/Speichern. Genutzt für den Rollback provisorisch im Eintrags-Modal
+  // angelegter, unreferenzierter Personen. Ohne Angabe unverändert.
+  modal({ titel, koerperHTML, primaerLabel, onPrimaer, ohneAbbrechen, zweitAktion, onAbbrechen }) {
     const host = document.getElementById('modal-rueck');
     const box = document.getElementById('modal-inhalt');
     // Härtung: ohne Modal-Container kein stiller Tot-Zustand — wenigstens ein Toast.
@@ -12483,7 +12547,14 @@ const ui = {
       try { if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, _scrollVorModal); } catch (_) {}
     };
     const abbr = document.getElementById('m-abbr');
-    if (abbr) abbr.onclick = schliessen;
+    // 1a: Abbruch-Hook VOR dem Schließen. Ein geworfener Fehler darf das Schließen nie verhindern
+    // (sonst totes Modal) — daher gekapselt. Ohne onAbbrechen exakt das alte Verhalten.
+    if (abbr) abbr.onclick = () => {
+      if (typeof onAbbrechen === 'function') {
+        try { onAbbrechen(); } catch (e) { try { console.error('onAbbrechen fehlgeschlagen:', e); } catch (_) {} }
+      }
+      schliessen();
+    };
     if (zweitAktion && typeof zweitAktion.handler === 'function') {
       const zweit = document.getElementById('m-zweit');
       if (zweit) zweit.onclick = () => zweitAktion.handler(schliessen);
@@ -15976,12 +16047,88 @@ function _datumEingabePlausibel(inp, v) {
   if (inp.max && v > inp.max) return false;
   return true;
 }
+/* 4. Fund (Erhebung `_autoSaveWennFeld`/`bearbeitungSpeichern`, 22.07.2026) — die Wizard-Delegation
+   des Chokepoints. Ein FREMDER Ausstieg aus einem laufenden Wizard (Sidebar, „Jetzt sichern",
+   Schließen, Notfall, Modus-Wechsel) soll den offenen Schritt über den WIZARD-EIGENEN, override-treuen
+   Pfad sichern, statt ihn fallenzulassen.
+
+   Warum hier im Chokepoint und nicht an den einzelnen Ausstiegen: Es gibt 17 direkte Aufrufer von
+   bearbeitungSpeichern. Jeden einzeln zu verdrahten hieße, eine zweite Allowlist zu schaffen — genau
+   die Bauform, die in dieser Woche dreimal gebrochen ist. Hier ist jeder heutige UND künftige
+   Aufrufer automatisch gedeckt.
+
+   Die Unterscheidung „wer muss sichern, wer hat schon" liegt bereits im ZUSTAND, es braucht keine
+   Liste: wizardSchrittSpeichern beginnt mit `if (!aktiverWizardId) return null`, und die
+   wizard-eigenen Ausstiege (wizardAbschluss/wizardAbbrechen) löschen diese ID, BEVOR sie oeffneSektor
+   rufen. Also:
+     · fremder Ausstieg  → aktiverWizardId gesetzt    → sichert (das ist die geschlossene Lücke)
+     · Abschluss/Abbruch → aktiverWizardId schon null → No-op (dort wurde eine Zeile vorher gesichert)
+     · Weiter/Zurück     → rufen bearbeitungSpeichern gar nicht → unberührt
+   Kein Doppel-Schreibvorgang, kein Ins-Leere-Laufen. (Test 11 prüft „genau ein Urheberschafts-Stempel".)
+
+   Die drei Ergebnisse (Carola-Entscheid 22.07., Weg A — „verwerfen, aber sagen"):
+     · gültig             → gesichert, am Override-Ort (Test 09 sichert die ziel-Treue weiter ab)
+     · leer + Pflichtfeld → STUMM. Es wurde nichts eingegeben, es geht nichts verloren, und eine
+                            Nutzerin darf einen Wizard unvollständig verlassen (UX-Spec: pausierbar).
+                            Ausdrücklich KEIN Hinweis und KEINE Blockade. (Anmerkung: heute trägt KEIN
+                            Wizard-Schritt `pflicht` — 0 von 94 —, dieser Zweig ist also vorsorglich;
+                            ein leeres optionales Feld liefert ohnehin null und ist ebenso stumm.)
+     · eingegeben, aber ungültig → kein Write, aber ein Hinweis — sonst glaubt die Nutzerin, es sei
+                            gesichert. Format bewusst wie im Sektor-Pfad (ui.toast(…, 'info'), s. das
+                            unplausible Datum in bearbeitungSpeichern Abschnitt a) mit dem bereits
+                            bestehenden Text-Mapper wizardFehlerText — kein neues Hinweis-Format, keine
+                            neuen STRINGS. Der getippte Wert bleibt im Feld stehen (anders als im
+                            Sektor-Pfad, der zurücksetzt): Bei „Jetzt sichern" bleibt die Sicht im
+                            Wizard, die Nutzerin soll ihn korrigieren können. Kein Re-Render — der
+                            Vertrag dieser Funktion ist „nur falten, NICHT neu rendern".
+
+   Persistenz-Markierung bewusst NICHT ergänzt: Der Wizard-Schreibweg (wizardZielSetzen →
+   sektorFeldSetzen) ruft markiereUngespeichert auch bei „Weiter" nicht. Hier zu markieren, dort nicht,
+   wäre eine neue Inkonsistenz — die Delegation verhält sich exakt wie ein normaler Schritt-Save.
+   (Dass der Wizard-Pfad generell nicht markiert, ist ein eigener, vorbestehender Punkt.) */
+function _wizardSchrittFalten() {
+  let r = null;
+  try {
+    r = wizardSchrittSpeichern();
+  } catch (e) {
+    // Ein Fehler hier darf die Navigation NIE blockieren (sonst sitzt die Nutzerin fest), aber auch
+    // nicht spurlos verschwinden — sonst wäre der nächste Fund wieder ein Zufallsfund.
+    try { console.error('Wizard-Schritt-Delegation fehlgeschlagen:', e); } catch (_) {}
+    return false;
+  }
+  if (!r) return false;                                   // nichts einzutragen (leer + optional, o. ä.)
+  if (r.ok === false) {
+    if (r.grund !== 'pflicht') {                          // 'pflicht' = leer → stumm, s. o.
+      try { ui.toast(wizardFehlerText(r.grund), 'info'); } catch (_) {}
+    }
+    return false;
+  }
+  return true;
+}
+
 // Auto-Save (UX-Spec VII „Sie können jederzeit pausieren") — vor jeder Navigations-Aktion
 // werden offene Edit-Eingaben wie ein „Fertig"-Klick übernommen: gestempelt, persistent in `data`.
 // Sektor-agnostisch, liest die data-edit/data-edit-ref-Inputs des aktiven Sektors. Liefert true,
 // wenn etwas gespeichert wurde; nop ohne Schreibrecht (!darfBearbeiten) oder ohne Render-Kontext.
 function bearbeitungSpeichern() {
   if (!Modus.darfBearbeiten()) return false;
+  // 1b-Fix (22.07.2026, Weg A — der CHOKEPOINT), erweitert um die Delegation (4. Fund, s. u.):
+  // Im Wizard NIE ein Sektor-Save. Diese Funktion kennt keinen Wizard-Fall und schriebe über den
+  // else-Zweig das im #content stehende Wizard-Feld nach `aktiverSektorId` (Startsektor), OHNE den
+  // Schritt-eigenen `ziel`-Override zu respektieren. Der Guard sitzt bewusst HIER und nicht nur im
+  // Autosave-Listener: `wizardAbschluss` ruft `oeffneSektor(ziel.sektor)`, das bearbeitungSpeichern()
+  // DIREKT aufruft, während das Wizard-Feld noch gerendert ist (empirisch belegt: sonst blieb beim
+  // „Fertig" eine Streu-Kopie im Startsektor, obwohl der Listener schon gegatet war). wizardLauf ruft
+  // bearbeitungSpeichern() VOR `aktiveAnsicht='wizard'` — Vor-Wizard-Edits werden also weiter
+  // geflusht. Berührt den Sektor-Kontext (data-refm-Autosave, 20.07.-Fix) nicht.
+  //
+  // 4. FUND (Erhebung 22.07.): Bloßes Verweigern war zu wenig. Der Wizard sichert seinen Schritt NUR
+  // bei seinen EIGENEN Ausstiegen (Weiter/Zurück/Abbrechen) — kein fremder Ausstieg (Sidebar,
+  // „Jetzt sichern", Schließen, Notfall, Modus) ruft wizardSchrittSpeichern. Bis hierher tauschte 1b
+  // also einen Falsch-Write gegen einen Nicht-Write: der getippte Wert des OFFENEN Schritts ging
+  // verloren (belegt über den entschlüsselten Datensatz). Darum wird jetzt DELEGIERT statt nur
+  // verweigert — der Guard bleibt (kein Falsch-Write), der richtige Write kommt dazu.
+  if (aktiveAnsicht === 'wizard') return _wizardSchrittFalten();
   const c = document.getElementById('content');
   if (!c || !c.querySelectorAll) return false;
 
@@ -16313,6 +16460,10 @@ function wizardZurueck() {
 // Abbrechen = Pause + Ausstieg: aktuellen Schritt sichern, Wizard schließen, zum Zuhause.
 function wizardAbbrechen() {
   wizardSchrittSpeichern();
+  /* Reihenfolge wie in wizardAbschluss und aus denselben zwei Gründen tragend (s. dortigen Kommentar):
+     erst sichern, dann `aktiverWizardId` löschen (macht die Delegation unten zum No-op — hier wurde
+     eine Zeile vorher gesichert), `aktiveAnsicht` aber bis in oeffneSektor hinein auf 'wizard' lassen
+     (das ist der 1b-Guard). Test 09 sichert den Abschluss-Zweig ab. */
   aktiverWizardId = null;
   wizardSchrittIndex = 0;
   wizardFehlerGrund = null;
@@ -16573,6 +16724,20 @@ function wizardAbschluss() {
   // Einheit 4: still einen Dokument-Datensatz registrieren (nur vvwiz/pvwiz/erbwiz;
   // Dedup-by-typ + idempotent). VOR dem Schließen, solange def.id bekannt ist.
   if (def && def.id) wizardDokumentRegistrieren(def.id, new Date());
+  /* REIHENFOLGE IST TRAGEND, keine Kosmetik (1b + 4. Fund, 22.07.2026):
+     `aktiverWizardId` wird hier gelöscht, `aktiveAnsicht` bleibt aber bis in oeffneSektor hinein auf
+     'wizard' stehen. Beides zusammen ist Absicht und trägt zwei Mechanismen:
+       · `aktiveAnsicht === 'wizard'` ist der Guard in bearbeitungSpeichern, den oeffneSektor gleich
+         als Erstes auslöst. Zöge jemand `aktiveAnsicht = 'sektor'` VOR diesen Aufruf (naheliegende
+         Aufräum-Kosmetik, weil der else-Zweig unten es direkt setzt), liefe bearbeitungSpeichern
+         ungeguardet, während aktiverSektorId noch der STARTsektor ist — das im #content stehende
+         Wizard-Feld landete als Streu-Kopie dort. Das ist exakt der 1b-Fehler.
+       · `aktiverWizardId === null` sorgt dafür, dass die Delegation (_wizardSchrittFalten) hier zum
+         No-op wird — der Schritt wurde in wizardWeiter schon gesichert, ein zweiter Write wäre falsch.
+     ABGESICHERT durch tests/e2e/09-wizard-override-sektor.spec.js: der Test fährt genau diesen Pfad
+     (Override-Schritt → „Fertig") und prüft über den entschlüsselten Datensatz, dass der Wert im
+     Ziel-Bereich UND in keinem anderen steht. Die vorgezogene Zuweisung wurde probeweise eingebaut —
+     der Test schlägt dann an. Wer hier umbaut, lässt ihn laufen. */
   aktiverWizardId = null;
   wizardSchrittIndex = 0;
   wizardFehlerGrund = null;
@@ -16792,8 +16957,13 @@ const PV_MODUL = Object.freeze({
         pruef: (d) => (Array.isArray(d.vorsorge_instrumente)
                         && d.vorsorge_instrumente.some(r => r && r.typ === 'vorsorgevollmacht'))
                       || d.vollmacht_vorhanden === 'ja' },
+      // U2-ADR-089 Block 2: Record ODER Gate — spiegelbildlich zur Vorsorgevollmacht-Zeile oben,
+      // die Block 1 schon umgestellt hat (a519850). Ohne diesen zweiten Zweig verschwand der Satz
+      // aus der Patientenverfügung, sobald die Betreuungsverfügung nur als Instrument-Record vorlag.
       { typ: 'crossRef', text: 'Ich habe eine Betreuungsverfügung errichtet.',
-        pruef: (d) => d.betreuungsverfuegung === 'ja' },
+        pruef: (d) => (Array.isArray(d.vorsorge_instrumente)
+                        && d.vorsorge_instrumente.some(r => r && r.typ === 'betreuungsverfuegung'))
+                      || d.betreuungsverfuegung === 'ja' },
     ] },
     { titel: 'Wertvorstellungen', bloecke: [
       { typ: 'freitext', feldId: 'pv_wertvorstellungen' },
@@ -17069,8 +17239,12 @@ function modulKarteStatus(m) {
   }
   const km = _MODUL_KARTE[m.id];
   const w = km ? d[km.gateFeld] : null;
-  if (m.id === 'ki-verfuegung') return w === 'erlaubnis' ? 'festgelegt' : (w === 'untersagung' ? 'untersagt' : 'keine');
-  if (w === 'ja') return 'vorhanden';
+  // U2-ADR-089 Block 2: ein Instrument-Record zählt als „vorhanden", auch wenn das alte Gate nie
+  // gesetzt wurde (Record schlägt Gate — dieselbe Ableitung wie in den Situationsblättern). „in
+  // Vorbereitung" bleibt am Gate, weil ein Record diesen Zwischenzustand nicht ausdrücken kann.
+  const hatRecord = m.instrumentTyp ? _instrumentVorhanden(m.instrumentTyp) : false;
+  if (m.id === 'ki-verfuegung') return (hatRecord || w === 'erlaubnis') ? 'festgelegt' : (w === 'untersagung' ? 'untersagt' : 'keine');
+  if (hatRecord || w === 'ja') return 'vorhanden';
   if (w === 'plant') return 'in Vorbereitung';
   return 'keine';
 }
@@ -17319,7 +17493,12 @@ function wizardStartHTML(wizardId) {
 // und zum Feld scrollen. Beantwortet „wo trage ich das ein?". Der Feld-Anker ist data-feld="<id>".
 function oeffneSektorFeld(sektorId, feldId) {
   oeffneSektor(sektorId);
-  const el = document.querySelector && document.querySelector('[data-feld="' + feldId + '"]');
+  // Skalar-Felder tragen data-feld, Listen data-feld-liste (U2-ADR-089 Block 2: der Click-Through
+  // einer Instrument-Zeile zielt auf die Liste vorsorge_instrumente). Beide Anker akzeptieren,
+  // damit der Sprung auch dort landet, wo das Instrument wohnt.
+  const el = document.querySelector &&
+    (document.querySelector('[data-feld="' + feldId + '"]') ||
+     document.querySelector('[data-feld-liste="' + feldId + '"]'));
   if (el && typeof el.scrollIntoView === 'function') {
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -17354,7 +17533,73 @@ function angBannerHTML() {
 // „Meine Menschen" zieht aus dem Register data.menschen[] (EIN Topf), nicht aus einem Sektor-Feld;
 // eine Quelle 'sit:<id>' (ADR-061v3, Blatt 4) zieht ein inline-Anlass-Feld aus data.situationen[<id>]
 // (z. B. der 23er erb_*-Satz aus 'erbfall') statt aus einem Sektor. Read-only, kein Schreibpfad.
+/* ════════════════════════════════════════════════════════════════════════════
+   U2-ADR-089 Block 2 — Instrument-Zeile („gibt es dieses Vorsorge-Instrument?")
+   ────────────────────────────────────────────────────────────────────────────
+   Bis Block 1 lasen die Querverweise das FLACHE Gate (vollmacht_vorhanden usw.)
+   und beantworteten die Frage allein daraus. Seit der geteilten Instrument-Liste
+   ist das die falsche Quelle: Wer ein Instrument als Record anlegt, ohne das alte
+   Gate zu pflegen, verschwindet aus jedem Blatt — still, ohne Fehler.
+
+   Die Zeile leitet daher generisch ab, über `instrumentTyp`, nicht über eine
+   handgepflegte Liste: Record vorhanden ODER Gate gesetzt. Sie erzeugt KEINE neue
+   Aufzählung — die Typ→Gate-Brücke steht bereits in ERKENNUNG_LEITFELDER, und sie
+   ist von Natur aus geschlossen: die vier Gates sind historisch, die beiden neueren
+   Instrumente (Sorgerechts- und KI-Verfügung) haben nie eines bekommen.
+
+   Auch die Beschriftungen sind geliehen, nicht erfunden: der Instrument-Name kommt
+   aus den `typ`-Optionen der Liste, die Wertetexte („ja" / „in Vorbereitung") aus
+   den Optionen des jeweiligen Gate-Feldes. Kein neuer Bürgertext.
+
+   ACHTUNG bei Suchen-und-Ersetzen: `betreuungsverfuegung` ist BEIDES — Gate-Feld-ID
+   und Instrument-Typ-Wert. Hier ist der Typ gemeint. */
+const INSTRUMENT_ZEILE_PRAEFIX = 'instrument:';
+
+function _vorsorgeFeldDef(feldId) {
+  const s = SEKTOR_BY_ID['vorsorge'];
+  return s && s.sektionen.flatMap(x => x.felder || []).find(f => f.id === feldId);
+}
+// Instrument-Name aus den `typ`-Optionen der geteilten Liste (eine Quelle, kein Duplikat).
+function _instrumentTypLabel(typ) {
+  const liste = _vorsorgeFeldDef('vorsorge_instrumente');
+  const typFeld = liste && (liste.unterFelder || []).find(f => f.id === 'typ');
+  const opt = typFeld && (typFeld.optionen || []).find(o => o.wert === typ);
+  return (opt && opt.label) || typ;
+}
+// Das historische Flachfeld-Gate dieses Typs — oder null, wenn der Typ nie eines hatte.
+function _instrumentGateFeldId(typ) {
+  const e = ERKENNUNG_LEITFELDER[typ];
+  return (e && e.leitfeld && e.leitfeld.feldId) || null;
+}
+// {feld, roh} für eine Instrument-Zeile. Record schlägt Gate: liegt ein Record vor, ist die
+// Antwort „ja", auch wenn das alte Gate nie gepflegt wurde. Ohne Record zählt das Gate weiter
+// — es trägt den Zustand „in Vorbereitung", den ein Record nicht ausdrücken kann.
+function instrumentZeileModell(typ) {
+  const gateId = _instrumentGateFeldId(typ);
+  const gateDef = gateId ? _vorsorgeFeldDef(gateId) : null;
+  const feld = {
+    id: INSTRUMENT_ZEILE_PRAEFIX + typ,
+    label: _instrumentTypLabel(typ),
+    typ: 'auswahl',
+    optionen: (gateDef && gateDef.optionen) || [],
+  };
+  let roh;
+  if (_instrumentVorhanden(typ)) roh = 'ja';
+  else if (gateId) roh = ((data && data.sektoren && data.sektoren.vorsorge) || {})[gateId];
+  return { feld, roh };
+}
+// Welche echten Felder eine Instrument-Zeile speist — für den Angehörigen-Cache, der einen
+// data-Subset schneidet und daraus später dieselbe Ableitung rechnen muss.
+function instrumentZeileQuellFelder(typ) {
+  const gateId = _instrumentGateFeldId(typ);
+  return gateId ? ['vorsorge_instrumente', gateId] : ['vorsorge_instrumente'];
+}
+
 function crossRefFeldUndRoh(quelle, feldId) {
+  // Virtuelle Instrument-Zeile (U2-ADR-089 Block 2) — abgeleitet, kein Sektor-Feld.
+  if (quelle === 'vorsorge' && typeof feldId === 'string' && feldId.startsWith(INSTRUMENT_ZEILE_PRAEFIX)) {
+    return instrumentZeileModell(feldId.slice(INSTRUMENT_ZEILE_PRAEFIX.length));
+  }
   if (quelle === 'meine-menschen' && feldId === 'menschen') {
     return { feld: MENSCHEN_REGISTER_FELD, roh: (data && Array.isArray(data.menschen) ? data.menschen : []) };
   }
@@ -18573,8 +18818,13 @@ function situationSektorZeileHTML(quelleSektorId, feldId) {
   const { feld: quelleFeld, roh } = crossRefFeldUndRoh(quelleSektorId, feldId);
   const label = (quelleFeld && quelleFeld.label) || feldId;
   const quelleLabel = (quelleSektor && quelleSektor.label) || quelleSektorId;
+  // U2-ADR-089 Block 2: Eine Instrument-Zeile hat kein eigenes DOM-Feld — der Click-Through
+  // zeigte sonst auf ein data-feld, das es nicht gibt (der Guard fängt es ab, aber der Klick
+  // liefe ins Leere). Er landet stattdessen auf der Instrument-Liste, wo das Instrument wohnt.
+  const klickFeld = (typeof feldId === 'string' && feldId.startsWith(INSTRUMENT_ZEILE_PRAEFIX))
+    ? 'vorsorge_instrumente' : feldId;
   let h = '<div class="feld-zeile klick-durch" data-klick-sektor="' + escapeHTML(quelleSektorId) +
-    '" data-klick-feld="' + escapeHTML(feldId) + '" title="' + escapeHTML(STRINGS.situationKlickHinweis) + '">';
+    '" data-klick-feld="' + escapeHTML(klickFeld) + '" title="' + escapeHTML(STRINGS.situationKlickHinweis) + '">';
   h += '<div class="feld-label">' + escapeHTML(label) +
     ' <span class="quelle-tag">(' + escapeHTML(quelleLabel) + ')</span></div>';
   h += '<div class="feld-wert">' + feldWertHTML(quelleFeld || { typ: 'text' }, roh) +
@@ -20171,11 +20421,36 @@ function _listenEintragFehlerToast(grund) {
    Sub-Werte zurück (liesEintragAusDOM) und ruft die Mutations-Funktionen aus
    sektor-frei. Inline-Anlage neuer Personen/Institutionen läuft über
    flowRefNeueEntitaet — bei „__neu__"-Auswahl im Dropdown. */
+
+// U2-ADR-089-Nachtrag (1a) — Karteileiche-Rollback. Der Inline-Editor im Eintrags-Modal
+// (_refSubPickerVerdrahten, „+ neue Person") schreibt die Person SOFORT ins Register; committet
+// wird der Eintrag aber erst mit dem Speichern-Klick. Wird der äußere Dialog abgebrochen, bliebe
+// eine unreferenzierte Person zurück. Dieser Modul-Zustand merkt die in DER LAUFENDEN Modal-Sitzung
+// provisorisch angelegten Personen-IDs; beide Eintrags-Flows setzen ihn beim Öffnen zurück, füllen
+// ihn über den Inline-Editor und leeren ihn beim Speichern (dort ist die Person gewollt) bzw. rollen
+// beim Abbruch zurück. Nicht verschachtelt — ui.modal hat genau einen Host, Modals stapeln nicht.
+let _eintragModalNeuePersonen = [];
+// Beim Abbruch: die in dieser Sitzung neu angelegten Personen entfernen, die von NICHTS referenziert
+// werden. Vorbestehende Personen stehen nie in der Liste (nur der Inline-Editor füllt sie); eine
+// irgendwo referenzierte wird verschont (Carolas Grenze — schlimmer als eine Karteileiche wäre, eine
+// anderswo verwendete Person aus dem Register zu tilgen). Liefert die Zahl der entfernten.
+function _eintragModalAbbruchRollback() {
+  let entfernt = 0;
+  for (const id of _eintragModalNeuePersonen) {
+    if (!_personIrgendwoReferenziert(id)) {
+      try { personLoeschen(id); entfernt++; } catch (_) {}   // schon weg → tolerieren
+    }
+  }
+  _eintragModalNeuePersonen = [];
+  return entfernt;
+}
+
 function flowListenEintragHinzufuegen(sektorId, feld) {
   if (imVorschau()) { flowDepotAnlegen(); return; }   // Setup-first: kein Listen-Eintrag vor dem Akteur — erst einrichten
   // Muster B: VOR dem Modal-Öffnen merken — sonst überschreibt das Tippen IM Modal die Spur des
   // zuvor auf der Sicht offenen Eingabefelds, bevor onPrimaer das Rendern auslöst.
   const _zustandVorModal = _scrollUndFokusMerken();
+  _eintragModalNeuePersonen = [];   // 1a: Sitzung frisch starten
   const koerperHTML = listenEintragInputsHTML(feld, {});
   ui.modal({
     titel: STRINGS.listenEintragTitelNeu,
@@ -20187,10 +20462,12 @@ function flowListenEintragHinzufuegen(sektorId, feld) {
       const pruef = _listenEintragPruefen(sektorId, feld.id, feld, eintrag, -1);
       if (!pruef.ok) { _listenEintragFehlerToast(pruef.grund); return; }   // Modal bleibt offen
       listenEintragHinzufuegen(sektorId, feld.id, eintrag);
+      _eintragModalNeuePersonen = [];   // 1a: Speichern = gewollt, nichts zurückrollen
       if (typeof schliessen === 'function') schliessen();
       renderContent(true);
       _scrollUndFokusWiederherstellen(_zustandVorModal);
     },
+    onAbbrechen: _eintragModalAbbruchRollback,   // 1a: unreferenzierte Neuanlagen zurückrollen
   });
   _refSubPickerVerdrahten(feld);
   _refMehrfachVerdrahten(document.getElementById('modal-inhalt'), (fid) => (feld.unterFelder || []).find(u => u.id === fid));
@@ -20202,6 +20479,7 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
   const eintrag = liste[index] || {};
   // Muster B: VOR dem Modal-Öffnen merken — s. Kommentar in flowListenEintragHinzufuegen.
   const _zustandVorModal = _scrollUndFokusMerken();
+  _eintragModalNeuePersonen = [];   // 1a: Sitzung frisch starten (auch beim Bearbeiten kann inline eine Person angelegt werden)
   const koerperHTML = listenEintragInputsHTML(feld, eintrag);
   ui.modal({
     titel: STRINGS.listenEintragTitelBearbeiten,
@@ -20213,10 +20491,12 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
       const pruef = _listenEintragPruefen(sektorId, feld.id, feld, neu, index);
       if (!pruef.ok) { _listenEintragFehlerToast(pruef.grund); return; }   // Modal bleibt offen
       listenEintragAktualisieren(sektorId, feld.id, index, neu);
+      _eintragModalNeuePersonen = [];   // 1a: Speichern = gewollt, nichts zurückrollen
       if (typeof schliessen === 'function') schliessen();
       renderContent(true);
       _scrollUndFokusWiederherstellen(_zustandVorModal);
     },
+    onAbbrechen: _eintragModalAbbruchRollback,   // 1a: unreferenzierte Neuanlagen zurückrollen
   });
   _refSubPickerVerdrahten(feld);
   _refMehrfachVerdrahten(document.getElementById('modal-inhalt'), (fid) => (feld.unterFelder || []).find(u => u.id === fid));
@@ -20307,9 +20587,16 @@ function _refSubPickerVerdrahten(feld) {
           if (gd && gd.value) patch.geburtsdatum = gd.value;
           if (gj && gj.value && gj.value.trim()) patch.geburtsjahr = gj.value.trim();
         }
-        const newId = (uf.entitaet === 'institution')
+        const istInstitution = (uf.entitaet === 'institution');
+        const newId = istInstitution
           ? institutionHinzufuegen({ name, art: uf.art })
           : personHinzufuegen(patch);   // A1: rollenloses Register — Rolle steckt im Feld uf
+        // 1a: die provisorisch angelegte Person für den Abbruch-Rollback merken. Sie steht ab
+        // jetzt im Register (data.menschen), ist aber nur im Modal-DOM referenziert — committet
+        // erst der Speichern-Klick. Bricht die Nutzerin den ÄUSSEREN Dialog ab, bliebe sie sonst
+        // als Karteileiche zurück. (Institutionen: identischer Pfad, aber kein institutionLoeschen —
+        // bewusst außerhalb dieses Fixes, s. Bericht.)
+        if (!istInstitution) _eintragModalNeuePersonen.push(newId);
         const opt = document.createElement('option');
         opt.value = newId;
         opt.textContent = name;
@@ -21391,9 +21678,28 @@ function _erstEintragToastVielleicht(zielEl) {
     const _autoSaveWennFeld = (ev) => {
       const t = ev && ev.target;
       if (!t || !t.getAttribute) return;
+      // U2-ADR-089-Nachtrag / 1b-Fix (22.07.2026, Weg A): Im Wizard NICHT feuern. bearbeitungSpeichern()
+      // kennt keinen Wizard-Fall und schriebe über den else-Zweig nach `aktiverSektorId` (Startsektor),
+      // OHNE den Schritt-eigenen `ziel`-Override zu respektieren — ein Blur auf einem Override-Schritt
+      // (z. B. erbwiz `nachlass_vermoegen` → finanzen) landete so fälschlich im Startsektor. Der Wizard
+      // sichert seinen Schritt ohnehin bei JEDEM Ausstieg (Weiter/Zurück/Abbrechen) über den eigenen,
+      // override-treuen Pfad wizardSchrittSpeichern → wizardZielSetzen; der Blur ist hier reine Redundanz
+      // plus Fehl-Write (empirisch belegt: ohne Blur landet der Wert korrekt, mit Blur nur die Streu-
+      // Kopie zusätzlich). Der Guard gated nur nach Ansicht — der Sektor-Kontext (data-refm-Autosave,
+      // 20.07.-Fix) bleibt unberührt.
+      if (aktiveAnsicht === 'wizard') return;
+      // `data-edit-multi` (Mehrfachauswahl-Checkboxen) ergänzt 22.07.2026: bearbeitungSpeichern liest
+      // sie (Abschnitt d), der Auslöser fehlte — dieselbe Mengen-Ungleichheit wie bei `data-refm` am
+      // 20.07. Heute ändert die Ergänzung NICHTS (belegt): es gibt kein mehrfachauswahl-Feld auf
+      // Sektor-Ebene; die beiden existierenden (ki_zweck, ki_datenarten) sind Unterfelder der
+      // Instrument-Liste und leben im Modal (außerhalb dieses #content-Listeners), die Wizard-Schritte
+      // sind vom Wizard-Guard oben abgefangen. Sie schließt die Lücke, BEVOR das erste Sektor-Feld
+      // dieses Typs entsteht — statt sie als „bekannt latent" zu verwalten. Absicherung gegen den
+      // nächsten Fall dieser Art: tests/autosave-allowlist.test.js (statisch, node, ohne Blindzone).
       if (t.hasAttribute('data-edit') || t.hasAttribute('data-edit-ref') ||
           t.hasAttribute('data-edit-override') || t.hasAttribute('data-chip-eingabe') ||
-          t.hasAttribute('data-chip-liste') || t.hasAttribute('data-refm')) {
+          t.hasAttribute('data-chip-liste') || t.hasAttribute('data-refm') ||
+          t.hasAttribute('data-edit-multi')) {
         bearbeitungSpeichern();   // nur falten, NICHT neu rendern
         _erstEintragToastVielleicht(t);   // D3: Erst-Eintrag-Toast (einmal pro Sitzung, passwortlos)
       }

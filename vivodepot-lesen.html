@@ -1621,11 +1621,11 @@ const SITUATIONEN = Object.freeze([
     einfuehrung: 'Ein Termin beim Notar oder bei der Bank steht an — für eine Vollmacht, ein Testament oder den Zugang zu Ihren Konten. Hier sehen Sie, was schon hinterlegt ist, und sammeln, was Sie mitnehmen und regeln müssen.',
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'vollmachten' },
-        { quelle: 'vorsorge', feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
+        { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
+        { quelle: 'vorsorge', feld: 'instrument:testament' },
         { quelle: 'vorsorge', feld: 'testament_ort' },
-        { quelle: 'vorsorge', feld: 'betreuungsverfuegung' },
+        { quelle: 'vorsorge', feld: 'instrument:betreuungsverfuegung' },
         { quelle: 'finanzen', feld: 'konto_haupt_bank' },
       ] },
       { titel: 'Beim Notar', eintraege: [
@@ -1691,9 +1691,9 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'verwaltung',     feld: 'pw_manager' },
       ] },
       { titel: 'Was geregelt sein sollte', eintraege: [
-        { quelle: 'vorsorge', feld: 'vollmacht_vorhanden' },
-        { quelle: 'vorsorge', feld: 'patientenverf_vorhanden' },
-        { quelle: 'vorsorge', feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
+        { quelle: 'vorsorge', feld: 'instrument:patientenverfuegung' },
+        { quelle: 'vorsorge', feld: 'instrument:testament' },
         { quelle: 'finanzen', feld: 'konto_haupt_bank' },
       ] },
     ] },
@@ -1711,9 +1711,9 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'blutgruppe' },
         { quelle: 'gesundheit', feld: 'implantate' },
         { quelle: 'gesundheit', feld: 'kv_art' },
-        { quelle: 'vorsorge',   feld: 'patientenverf_vorhanden' },
+        { quelle: 'vorsorge',   feld: 'instrument:patientenverfuegung' },
         { quelle: 'vorsorge',   feld: 'patientenverf_ort' },
-        { quelle: 'vorsorge',   feld: 'vollmachten' },
+        { quelle: 'vorsorge',   feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Für den Aufenthalt', eintraege: [
         { feld: { id: 'kh_termin',          label: 'Aufnahme — Datum, Klinik, Station', typ: 'text', beispiel: 'Klinikum Großhadern, Station C2, Aufnahme 12.08.' } },
@@ -1739,8 +1739,8 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'sozialversicherung', feld: 'pflegekasse' },
         { quelle: 'gesundheit',         feld: 'krankheiten' },
         { quelle: 'gesundheit',         feld: 'medikamente' },
-        { quelle: 'vorsorge',           feld: 'betreuungsverfuegung' },
-        { quelle: 'vorsorge',           feld: 'vollmachten' },
+        { quelle: 'vorsorge',           feld: 'instrument:betreuungsverfuegung' },
+        { quelle: 'vorsorge',           feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Für den Einzug', eintraege: [
         { feld: { id: 'ph_einrichtung',     label: 'Einrichtung — Name & Adresse',          typ: 'text', beispiel: 'Caritas-Seniorenheim, München-Schwabing' } },
@@ -1761,7 +1761,7 @@ const SITUATIONEN = Object.freeze([
     einfuehrung: 'Im Erbfall müssen Angehörige vieles zugleich regeln — und finden oft nicht, was sie brauchen. Hier legen Sie es ihnen geordnet hin: was schon entschieden ist, wo die Papiere liegen, welche Verträge enden und wen man informieren muss.',
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
-        { quelle: 'vorsorge',      feld: 'testament_vorhanden' },
+        { quelle: 'vorsorge',      feld: 'instrument:testament' },
         { quelle: 'vorsorge',      feld: 'testament_ort' },
         { quelle: 'vorsorge',      feld: 'erben' },
         { quelle: 'vorsorge',      feld: 'zvr_nummer' },
@@ -1869,6 +1869,57 @@ function _foldInstrumenteLesen(v) {
   if (liste.length) v.vorsorge_instrumente = liste;
   delete v.vollmachten;
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   U2-ADR-089 Block 2 (Lese-Spiegel) — abgeleitete Instrument-Zeile
+   ────────────────────────────────────────────────────────────────────────────
+   Wortgleicher Spiegel des Kern-Verhaltens (vivodepot.html, instrumentZeileModell):
+   „gibt es dieses Vorsorge-Instrument?" wird aus Record ODER Gate abgeleitet, nicht
+   mehr aus dem flachen Gate allein. Ein Instrument, das nur als Record existiert,
+   verschwand hier vorher lautlos aus dem Situationsblatt — genau die Regression, die
+   Block 1 in der Lese-App hinterlassen hatte (aa15787, eine Registry weiter).
+
+   Die Typ→Gate-Zuordnung ist ein bewusster SPIEGEL von ERKENNUNG_LEITFELDER im Kern
+   (Freigabe Carola, 22.07.2026). Die Lese-App besitzt diese Registry nicht, also wird
+   die Zuordnung hier klein gehalten. Sie ist GESCHLOSSEN, keine offene Aufzählung:
+   die vier Gates sind historisch und eingefroren, Sorgerechts- und KI-Verfügung haben
+   nie eines bekommen. Ein siebtes Instrument erweitert diese Map NICHT — es hätte
+   schlicht kein Gate und zeigte record-only. */
+const INSTRUMENT_ZEILE_PRAEFIX = 'instrument:';
+const _INSTRUMENT_GATE_LESEN = Object.freeze({
+  vorsorgevollmacht:    'vollmacht_vorhanden',
+  patientenverfuegung:  'patientenverf_vorhanden',
+  testament:            'testament_vorhanden',
+  betreuungsverfuegung: 'betreuungsverfuegung',
+});
+function _vorsorgeFeldDefLesen(feldId) {
+  const s = SEKTOR_BY_ID['vorsorge'];
+  return s && s.sektionen.flatMap(x => x.felder || []).find(f => f.id === feldId);
+}
+function _instrumentTypLabelLesen(typ) {
+  const liste = _vorsorgeFeldDefLesen('vorsorge_instrumente');
+  const typFeld = liste && (liste.unterFelder || []).find(f => f.id === 'typ');
+  const opt = typFeld && (typFeld.optionen || []).find(o => o.wert === typ);
+  return (opt && opt.label) || typ;
+}
+function _instrumentVorhandenLesen(typ) {
+  const v = data && data.sektoren && data.sektoren.vorsorge;
+  const liste = (v && Array.isArray(v.vorsorge_instrumente)) ? v.vorsorge_instrumente : [];
+  return liste.some(r => r && r.typ === typ && r.id);
+}
+// {feld, roh} einer Instrument-Zeile. Record schlägt Gate; ohne Record trägt das Gate
+// weiter „in Vorbereitung" — den Zustand, den ein Record nicht ausdrücken kann.
+function instrumentZeileModellLesen(typ) {
+  const gateId = _INSTRUMENT_GATE_LESEN[typ] || null;
+  const gateDef = gateId ? _vorsorgeFeldDefLesen(gateId) : null;
+  const feld = { id: INSTRUMENT_ZEILE_PRAEFIX + typ, label: _instrumentTypLabelLesen(typ),
+    typ: 'auswahl', optionen: (gateDef && gateDef.optionen) || [] };
+  let roh;
+  if (_instrumentVorhandenLesen(typ)) roh = 'ja';
+  else if (gateId) roh = ((data && data.sektoren && data.sektoren.vorsorge) || {})[gateId];
+  return { feld, roh };
+}
+
 function _foldVollmachtenLesen(obj) {
   const v = obj && obj.sektoren && obj.sektoren.vorsorge;
   if (!v || typeof v !== 'object') return obj;
@@ -2090,8 +2141,15 @@ function situationModell(sitOrId) {
     for (const eintrag of (block.eintraege || [])) {
       if (eintrag && eintrag.quelle) {
         const qS = SEKTOR_BY_ID[eintrag.quelle];
-        const qF = qS && qS.sektionen.flatMap(s2 => s2.felder || []).find(f => f.id === eintrag.feld);
-        const roh = ((data && data.sektoren[eintrag.quelle]) || {})[eintrag.feld];
+        // U2-ADR-089 Block 2: abgeleitete Instrument-Zeile (Record ODER Gate) statt Flachfeld.
+        let qF, roh;
+        if (typeof eintrag.feld === 'string' && eintrag.feld.startsWith(INSTRUMENT_ZEILE_PRAEFIX)) {
+          const m = instrumentZeileModellLesen(eintrag.feld.slice(INSTRUMENT_ZEILE_PRAEFIX.length));
+          qF = m.feld; roh = m.roh;
+        } else {
+          qF = qS && qS.sektionen.flatMap(s2 => s2.felder || []).find(f => f.id === eintrag.feld);
+          roh = ((data && data.sektoren[eintrag.quelle]) || {})[eintrag.feld];
+        }
         zeilen.push({ label: (qF && qF.label) || eintrag.feld, wert: feldWertText(qF || { typ: 'text' }, roh), quelle: (qS && qS.label) || eintrag.quelle });
       } else if (eintrag && eintrag.feld && typeof eintrag.feld === 'object') {
         const f = eintrag.feld;
