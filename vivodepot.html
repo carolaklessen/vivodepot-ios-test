@@ -2697,7 +2697,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v74';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v75';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -2706,7 +2706,7 @@ const SCHALEN_STAND = 'v74';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-07-22';
+const BUILD_DATUM = '2026-07-25';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -3386,8 +3386,14 @@ const STRINGS = Object.freeze({
   ampelTitel: "Ihr Stand auf einen Blick",
   ampelHinweis: "Beim Öffnen aus Ihren Angaben berechnet — keine Erinnerungen aus dem Internet, keine Benachrichtigungen.",
   ampelStatusGruen: "Aktuell",
+  prueftermineOhneRhythmus: "Kein Rhythmus festgelegt",   // datiert, aber kein Prüf-Rhythmus gesetzt
   ampelStatusGelb: "Bald fällig",
   ampelStatusRot: "Überfällig",
+  // Prüftermin-Sicht, Klartext-Kanal neben dem aria-hidden-Farbpunkt (WCAG 1.4.1, 23.07.2026).
+  // Der Text ist der tragende Kanal; ohne die Farbe verständlich, Sie-Form, keine Aufforderung.
+  prueftermineZeileRot: "Prüftermin überschritten",
+  prueftermineZeileGelb: "Prüftermin steht an",
+  prueftermineZeileGruen: "Nächste Prüfung {datum}",   // {datum} = Monat Jahr
   ampelLeer: "Sobald Sie bei einem Eintrag ein Datum hinterlegen, sehen Sie hier den Stand.",
   ampelGeprueft: "Als geprüft markieren",
   ampelAnsehen: "Ansehen / bearbeiten",
@@ -3671,6 +3677,7 @@ const STRINGS = Object.freeze({
   exportDocxFertig: "Word-Datei gespeichert.",
   exportDocxLeer: "In diesem Bereich ist nichts zum Ausgeben hinterlegt.",
   exportDocxFehlt: "Die Word-Datei kann hier gerade nicht erzeugt werden.",
+  exportDocxTitel: "Bereich als Word-Datei",
   exportSensibelEinschliessen: "Auch sensible Angaben einschließen (z. B. IBAN, Steuer-ID)",
   exportSensibelHinweis: "Standardmäßig bleiben besonders schützenswerte Felder außen vor. Nur einschließen, wenn die Empfänger-App sie wirklich braucht.",
 
@@ -4046,7 +4053,7 @@ const SEKTOREN = Object.freeze([
     exporte: [{ format: 'vcard-menschen', label: STRINGS.exportVcardMenschenLabel }],   // Welle 2 (vCard)
     // Geführter Einstieg: der Sorgerechts-Wizard (srwiz) und – Welle 2/3 – Pflege/Heirat schreiben
     // ihren Bereich-2-Teil hierher; der Startknopf ist datenlage-adaptiv (erstellen/bearbeiten).
-    wizards: ['srwiz', 'pflwiz', 'heirwiz'],
+    wizards: ['pflwiz', 'heirwiz'],
     sektionen: [
       { id: 'menschen-liste', label: 'Menschen',
         hint: 'Menschen, die Ihnen wichtig sind. Manche kennt jeder, manche kennt sonst niemand — alle gehören hierher: auch nicht-verheiratete Partner*innen, beste Freund*innen, wichtige Bezugspersonen. Einmal erfasst, überall im Vivodepot referenzierbar.',
@@ -4181,7 +4188,7 @@ const SEKTOREN = Object.freeze([
     exporte: [{ format: 'sd-jwt-vc-finanzen', label: STRINGS.exportFinanzenLabel }],   // Welle 1
     // Geführter Einstieg: der Erbschafts-Wizard (erbwiz) schreibt seinen Bereich-4-Teil
     // (Vermögensübersicht für den Nachlass) hierher. Startknopf datenlage-adaptiv.
-    wizards: ['erbwiz'],
+    wizards: [],
     // Standard-Dokument-Liste (U2-ADR-014, Einheit 2). Heimat-Bereich der Bankvollmacht:
     // ihr Gegenstand sind die Konten (siehe konto_haupt_bank/-iban), und Angehörige brauchen
     // sie für den laufenden Zahlungsverkehr. Die Vollmachts-ART selbst wird als Eintrag
@@ -4190,7 +4197,6 @@ const SEKTOREN = Object.freeze([
     // Vorverknüpfung (Heimat finanzen, Feld in vorsorge; Konsequenz 7 erlaubt das ausdrücklich).
     standardDokumente: [
       { typ: 'bankvollmacht', name: 'Bankvollmacht', empfRhythmusMonate: 12,
-        hinweis: 'Jährlich prüfen, ob die Kontovollmacht noch besteht und die richtige Person umfasst.',
         felder: [{ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente' }] },
     ],
     sektionen: [
@@ -4454,11 +4460,17 @@ const SEKTOREN = Object.freeze([
   { id: 'vorsorge',          label: 'Vorsorge & Recht',     format: SEKTOR_FORMATE.GENERISCH,  icon: 'scale',
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
     einfuehrungstext: 'Vollmacht, Testament, Patientenverfügung — damit Ihr Wille gilt.',
-    // Schnitt 2.3/2.4 — geführter Einstieg in Bereich 8: zwei Wizards füllen denselben Sektor.
-    // Primär die Vorsorgevollmacht (vvwiz), zusätzlich die Patientenverfügung (pvwiz). Beide als
-    // datenlage-adaptive Startknöpfe oben im Bereich; beide schreiben dieselben Felder.
-    wizardId: 'vvwiz',
-    wizards: ['pvwiz', 'bwwiz', 'srwiz', 'erbwiz', 'pflwiz', 'heirwiz'],
+    // Schnitt 2.3/2.4 — geführter Einstieg in Bereich 8. U2-ADR-096: Der Vorsorgevollmacht-Wizard
+    // (vvwiz) ist ersatzlos entfallen; ein Instrument entsteht durch den Listen-Eintrag selbst.
+    // Damit gibt es keinen PRIMÄREN Wizard mehr — `wizardId` steht bewusst auf null, die drei
+    // verbliebenen Einstiege stehen gleichrangig in `wizards`.
+    //
+    // Hier stand bis 23.07. 'pvwiz', aus einem pauschalen vvwiz→pvwiz-Ersetzen. Folgenlos nur durch
+    // Zufall: Der Knopf-Bau entdoppelt, und pvwiz stand ohnehin in `wizards`. Der Kommentar darüber
+    // beschrieb weiter einen Zustand, den es nicht mehr gab — ein Kommentar, der lügt, ist schlechter
+    // als keiner.
+    wizardId: null,
+    wizards: ['pvwiz', 'pflwiz', 'heirwiz'],
     exporte: [{ format: 'ics-vorsorge', label: STRINGS.exportIcsLabel }],   // Welle 2 (ICS-Termine)
     // Standard-Dokument-Liste (U2-ADR-014, Stufe 2/Einheit 2). Additiver Registry-Schlüssel,
     // strukturgleich zu exporte/wizards — Katalog typischer Dokumente dieses Bereichs. KEINE
@@ -4468,23 +4480,33 @@ const SEKTOREN = Object.freeze([
     // null = kein fester Rhythmus (nur bei Änderung / ablauf-getrieben).
     standardDokumente: [
       { typ: 'vorsorgevollmacht', name: 'Vorsorgevollmacht', empfRhythmusMonate: 12,
-        hinweis: 'Jährlich prüfen, ob die bevollmächtigte Person und der Umfang noch stimmen.',
-        felder: [{ sektorId: 'vorsorge', feldId: 'vollmacht_vorhanden' }] },
+        hinweis: 'In der Praxis wird empfohlen, eine Vorsorgevollmacht gelegentlich erneut zu datieren und zu unterschreiben — das erleichtert es Dritten, sie als aktuellen Willen anzuerkennen.',
+        felder: [{ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente' }] },
       { typ: 'patientenverfuegung', name: 'Patientenverfügung', empfRhythmusMonate: 12,
-        hinweis: 'Jährlich prüfen, ob die Behandlungswünsche noch Ihrem Willen entsprechen.',
-        felder: [{ sektorId: 'vorsorge', feldId: 'patientenverf_vorhanden' }] },
+        hinweis: 'Eine Patientenverfügung gilt unbefristet. In der Praxis wird empfohlen, sie gelegentlich erneut zu datieren und zu unterschreiben — das erleichtert es Ärztinnen und Ärzten, sie als aktuellen Willen anzuerkennen.',
+        felder: [{ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente' }] },
       // Betreuungsverfügung (U2-ADR-033): Basis-Vorlage analog VV/PV — bwwiz registriert diesen Kopf
       // am Abschluss (WIZARD_DOKUMENT_MAP) und das Panel erkennt ihn am Leitfeld (ERKENNUNG_LEITFELDER).
+      // Kein Hinweis (Block Prüftermine, 23.07.2026): Für die Betreuungsverfügung liegt keine
+      // belegbare Praxis-Aussage zu einem Prüf-Rhythmus vor. Ein erfundener „jährlich prüfen"-Text
+      // wäre eine Empfehlung Vivodepots — ersatzlos entfernt statt erfunden.
       { typ: 'betreuungsverfuegung', name: 'Betreuungsverfügung', empfRhythmusMonate: 12,
-        hinweis: 'Jährlich prüfen, ob die vorgeschlagene Betreuungsperson und Ihre Wünsche noch stimmen.',
-        felder: [{ sektorId: 'vorsorge', feldId: 'betreuungsverfuegung' }] },
+        felder: [{ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente' }] },
+      // U2-ADR-096 (Carola-Entscheid 22.07.): Die KI-Verfügung wohnt seit E3 in der Vorsorge-
+      // Instrument-Liste — ein Typ, der dort steht, aber keinen Dokument-Datensatz anlegen kann,
+      // waere genau der Halb-Zustand, den dieser Umbau beseitigt. Damit erscheint sie im
+      // Dokument-Panel und im Prueftermin-Rhythmus wie Patientenverfuegung und Vollmacht, und
+      // kiwiz kann wieder in die WIZARD_DOKUMENT_MAP — diesmal funktionsfaehig statt aspirativ.
+      // Kein Hinweis (Block Prüftermine, 23.07.2026): keine belegbare Praxis-Aussage — s. Betreuung.
+      { typ: 'ki-verfuegung', name: 'Verfügung zur digitalen Nachbildung', empfRhythmusMonate: 12,
+        felder: [{ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente' }] },
       // Gesundheitsvollmacht NICHT als eigenes Standard-Dokument (Carola, 04.06.2026): in der
       // Praxis Teil der Vorsorgevollmacht, kein eigenständiges Dokument. Die Gesundheitssorge-
       // FELDER (gesundheitsvollmacht_person/-ort, s. u.) bleiben unangetastet — nur der
       // Standard-Listen-Eintrag + seine Feld-Vorverknüpfung entfallen.
       { typ: 'testament', name: 'Testament', empfRhythmusMonate: null,
         hinweis: 'Kein fester Rhythmus — bei Änderung der Lebensumstände (Heirat, Geburt, Trennung, Vermögen) prüfen.',
-        felder: [{ sektorId: 'vorsorge', feldId: 'testament_datum' }] },
+        felder: [{ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente' }] },
     ],
     sektionen: [
       // U2-ADR-089 (Entwurf 17.07.) Teil A Block 1 — „Meine Vorsorge": eine geteilte liste über alle
@@ -4579,10 +4601,21 @@ const SEKTOREN = Object.freeze([
             { id: 'ueberlappung_hinweis', label: 'Hinweis', typ: 'hinweis',
               sichtbarWenn: { feld: 'art', wert: ['general', 'gesundheit', 'bank'] },
               hint: 'Diese Vollmacht kann sich mit anderen überschneiden — achten Sie darauf, dass Ihre Vollmachten zueinander passen.' },
+            // U2-ADR-096 (E4): Die ZVR-Nummer war das EINZIGE Feld, zu dem der entfallende vvwiz das
+            // letzte Tor gewesen wäre — sie hatte kein Gegenstück in der Liste. Sie ist nicht
+            // streichbar: über den ZVR-Eintrag findet ein Gericht die Vollmacht überhaupt erst.
+            { id: 'zvr_nummer', label: 'Zentrales Vorsorgeregister — Eintragungsnummer', typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              beispiel: 'ZVR-2024-987654' },
             // ── Patientenverfügung (typ='patientenverfuegung') ───────────────────────────
             // „Grundhaltung" bewusst NICHT gebaut: kein lebendes Quellfeld (historische Kandidaten
             // patientenverf_haltung/_wunsch/palliativ_wunsch sind verwaist, s. u.), und die BMJ-
             // Wertvorstellungs-Bausteine bleiben laut ADR-089 Entscheidung 1 wizard-intern.
+            // U2-ADR-096 (E1): heimatloses Flachfeld, hierher verortet statt gestrichen — die
+            // ärztliche Begleitung gehört zur Patientenverfügung, nicht in einen eigenen Ort.
+            { id: 'patientenverf_arzt', label: 'Ärztlich begleitet durch', typ: 'ref', entitaet: 'person',
+              rolle: 'arzt', verweisZweck: 'aerztlich',
+              sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' } },
             { id: 'organspende', label: 'Organspende', typ: 'auswahl',
               sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' },
               optionen: [
@@ -4603,9 +4636,23 @@ const SEKTOREN = Object.freeze([
                 { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
                 { wert: 'unklar',     label: 'Noch unklar — Beratung gewünscht' },
               ] },
-            { id: 'vermaechtnisse', label: 'Besondere Wünsche & Vermächtnisse', typ: 'textarea',
+            /* Testament-Verzicht (Block F): Der Zeilen-Hinweis steht bewusst VOR den
+               Testament-Feldern — er ordnet ein, was hier möglich ist und was nicht. Der hint am
+               Notizfeld unten trägt den vierten Satz, weil er an einen Moment gebunden ist: den
+               des Tippens. Ein Hinweis fünf Felder weiter oben ist dann außer Sicht. */
+            { id: 'testament_verzicht_hinweis', label: 'Zum Testament', typ: 'hinweis',
               sichtbarWenn: { feld: 'typ', wert: 'testament' },
-              beispiel: 'Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein' },
+              hint: 'Hier lässt sich festhalten, dass ein Testament vorhanden ist und wo es liegt. Aufgesetzt wird es nicht in Vivodepot, sondern bei einer Notarin, einem Notar oder in anwaltlicher Beratung.' },
+            /* Label und Platzhalter waren „Besondere Wünsche & Vermächtnisse" und führten mit
+               „Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein" testamentarische
+               Sprache VOR. „Vermächtnis" ist ein Rechtsbegriff des BGB — ein Feld, das so heißt und
+               so beispielt, sagt: hier setzt man Vermächtnisse aus. Das untergräbt den Verzicht
+               stärker als ein fehlender Hinweistext, weil es nicht erklärt, sondern vormacht.
+               Die id bleibt `vermaechtnisse` — sie wird an anderer Stelle referenziert. */
+            { id: 'vermaechtnisse', label: 'Persönliche Notizen dazu', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'testament' },
+              hint: 'Was Sie hier notieren, sind Ihre Aufzeichnungen; ein Testament wird daraus nicht.',
+              beispiel: 'Gedanken und offene Fragen, die ich festhalten möchte' },
             // ── Betreuungsverfügung (typ='betreuungsverfuegung') — Feld-IDs bewusst mit Präfix
             // beibehalten (nicht gekürzt): ein gemeinsames unterFelder-Array über alle sechs Typen
             // verlangt global eindeutige IDs, sonst kollidieren z. B. Betreuungs- und Sorgerechts-„person" ──
@@ -4698,119 +4745,35 @@ const SEKTOREN = Object.freeze([
       // PV-Reste (patientenverf_haltung/_wunsch, palliativ_wunsch) aus dem Formular entfernt — der
       // BMJ-Wizard schreibt sie nicht mehr (Daten verwaisen, keine Migration). organspende BLEIBT — sie
       // speist die Notfall-QR-Allowlist (NOTFALL_KERN_FELDER). Gate-Werte + -Konsumenten unverändert.
-      { id: 'vorsorgevollmacht', label: 'Vorsorgevollmacht', felder: [
-        { id: 'zvr_nummer',                  label: 'Zentrales Vorsorgeregister — Eintragungsnummer', typ: 'text', beispiel: 'ZVR-2024-987654' },
-        { id: 'vollmacht_vorhanden',         label: 'Vorsorgevollmacht vorhanden?',                    typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] },
-        // U2-ADR-064s ehemaliges `vollmachten`-Listenfeld (Art · Person · Form · Ablageort je
-        // Eintrag) ist per Schema 39 (U2-ADR-089, 17.07., Teil A Block 1) nach `vorsorge_instrumente`
-        // (Sektion „meine-vorsorge", typ='vorsorgevollmacht') umgehängt — kein zweites Feld hier,
-        // sonst zwei Schreib-Orte für dieselbe Vollmacht. depotNormalisieren erledigt die Umhängung
-        // bestehender Records verlustfrei (Verwaisungsregel), siehe Schema 38→39.
-      ] },
-      { id: 'patientenverfuegung', label: 'Patientenverfügung', felder: [
-        { id: 'patientenverf_vorhanden',     label: 'Patientenverfügung vorhanden?',                   typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] },
-        { id: 'organspende',                 label: 'Organspende',                                     typ: 'auswahl', optionen: [
-          { wert: 'ja',       label: 'ja, vollumfänglich' },
-          { wert: 'teil',     label: 'ja, eingeschränkt' },
-          { wert: 'nein',     label: 'nein' },
-          { wert: 'familie',  label: 'Familie entscheidet' },
-        ] },
-        { id: 'organspende_einschraenkung',  label: 'Welche Einschränkung?',                            typ: 'textarea',
-          sichtbarWenn: { feld: 'organspende', wert: 'teil' },
-          beispiel: 'z. B. nur Herz und Nieren; keine Hornhaut; nur für Transplantation, nicht für Forschung',
-          hint: 'Ohne diese Angabe wäre die Einschränkung später nicht nachvollziehbar.' },
-        { id: 'patientenverf_ort',           label: 'Ablageort Patientenverfügung',                    typ: 'text', beispiel: 'beim Hausarzt · Hinweiszettel im Geldbeutel',
-          sichtbarWenn: { feld: 'patientenverf_vorhanden', wert: ['ja', 'plant'] },
-          hint: 'Idealerweise beim Hausarzt hinterlegt und im Portemonnaie einen Hinweiszettel tragen.' },
-        // Modul
-        { id: 'patientenverf_arzt',          label: 'Patientenverfügung — ärztlich begleitet durch',   typ: 'ref',  entitaet: 'person', rolle: 'arzt', ebene: 'modul',
-          verweisZweck: 'aerztlich',
-          sichtbarWenn: { feld: 'patientenverf_vorhanden', wert: ['ja', 'plant'] } },
-        // Pflege-Übernahme (pflwiz, B8-Teil): Stand der Vorsorgedokumente, wenn jemand pflegebedürftig wird.
-        { id: 'pflege_vorsorge_geprueft',    label: 'Vorsorgedokumente bei Pflegebedarf geprüft?',     typ: 'auswahl', ebene: 'modul', optionen: [
-          { wert: 'ja',   label: 'ja, alles aktuell' },
-          { wert: 'teil', label: 'teilweise — muss noch ergänzt werden' },
-          { wert: 'nein', label: 'noch nicht geprüft' },
-        ],
-          hint: 'Vollmacht, Betreuungsverfügung und Patientenverfügung sollten vorliegen, bevor die Pflege übernommen wird — sonst entscheidet im Ernstfall niemand rechtssicher.' },
-      ] },
-      { id: 'testament-erbe', label: 'Testament & Erbe', felder: [
-        { id: 'testament_vorhanden',         label: 'Testament vorhanden?',                            typ: 'auswahl', optionen: [
-          { wert: 'ja',    label: 'ja' }, { wert: 'nein',  label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] },
-        { id: 'testament_ort',               label: 'Ablageort Original',                              typ: 'text', beispiel: 'beim Notar Dr. Sommer, München',
-          sichtbarWenn: { feld: 'testament_vorhanden', wert: ['ja', 'plant'] },
-          hint: 'Das Original muss nach dem Tod dem Nachlassgericht vorgelegt werden.' },
-        { id: 'testament_datum',             label: 'Datum der letzten Änderung',                      typ: 'datum',
-          sichtbarWenn: { feld: 'testament_vorhanden', wert: ['ja', 'plant'] } },
-        // Erbe-Inhalt gilt AUCH ohne Testament (gesetzliche Erbfolge) → bewusst NICHT ans Testament-Gate gekoppelt.
-        { id: 'erben',                       label: 'Erben — Kurzübersicht',                           typ: 'refMehrfach', entitaet: 'person', verweisZweck: 'familiaer' },
-        { id: 'erbfolge_hinweis',            label: 'Gesetzliche Erbfolge oder abweichender Wille?',   typ: 'auswahl', optionen: [
-          { wert: 'gesetzlich', label: 'Die gesetzliche Erbfolge soll gelten' },
-          { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
-          { wert: 'unklar',     label: 'Noch unklar — Beratung gewünscht' },
-        ],
-          hint: 'Ohne Testament gilt die gesetzliche Erbfolge (Verwandte und Ehegatte, §§ 1924 ff. BGB). Mit Testament können Sie abweichend bestimmen — bis zur Grenze des Pflichtteils.' },
-        { id: 'vermaechtnisse',              label: 'Besondere Wünsche & Vermächtnisse',               typ: 'textarea', beispiel: 'Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein',
-          hint: 'Ein Vermächtnis ist ein einzelner Gegenstand oder Betrag für eine bestimmte Person (§ 1939 BGB) — ohne dass sie Erbin wird.' },
-      ] },
-      { id: 'pflegewuensche', label: 'Pflegewünsche',
-        hint: 'Diese Angaben ergänzen die Patientenverfügung und helfen Pflegepersonen, Ihren Willen zu kennen.',
+      // U2-ADR-096 (22.07.2026) — DER EINE ORT. Die fuenf Instrument-Sektionen mit ihren
+      // „vorhanden?"-Gates und Flachfeldern sind aufgeloest: ein Instrument lebt ausschliesslich
+      // als Eintrag in `vorsorge_instrumente` (Sektion „meine-vorsorge" oben). Ein Eintrag = vorhanden;
+      // der Zwischenzustand „in Vorbereitung" (`plant`) entfaellt mit den Gates und kehrt spaeter
+      // ueber die Merkliste zurueck (nicht Teil dieses Umbaus). Was hier bleibt, sind die Felder,
+      // die KEIN Instrument beschreiben.
+      { id: 'erbe', label: 'Erbe',
+        hint: 'Wer erbt — unabhaengig davon, ob ein Testament vorliegt. Das Testament selbst steht oben unter „Meine Vorsorge".',
         felder: [
-          { id: 'pflegewuensche_koerper',     label: 'Körperpflege & Würde',              typ: 'textarea', beispiel: 'tägliche Körperpflege gewohnt; Intimsphäre wahren' },
-          { id: 'pflegewuensche_ernaehrung',  label: 'Ernährung & Besonderheiten',        typ: 'textarea', beispiel: 'vegetarisch; keine Tomaten; viel Tee' },
-          { id: 'pflegewuensche_alltag',      label: 'Alltag & Aktivitäten',              typ: 'textarea', beispiel: 'morgens Radio; nachmittags Gartenspaziergang wenn möglich' },
-          { id: 'pflegewuensche_sonstiges',   label: 'Sonstige Wünsche & Hinweise',       typ: 'textarea', beispiel: 'religiöse Begleitung erwünscht; meine Brille immer in Reichweite' },
-          { id: 'hilfsmittel',                label: 'Vorhandene Hilfsmittel',            typ: 'text', ebene: 'modul', beispiel: 'Rollator (zuhause), Hörgerät beidseitig' },
+          // Erbe-Inhalt gilt AUCH ohne Testament (gesetzliche Erbfolge, §§ 1924 ff. BGB) → per
+          // U2-ADR-067 §3 bewusst NICHT ans Testament gekoppelt und darum vom Abriss ausgenommen.
+          { id: 'erben',                       label: 'Erben — Kurzuebersicht',                          typ: 'refMehrfach', entitaet: 'person', verweisZweck: 'familiaer' },
         ] },
-      // Betreuung & Sorge — Felder des Betreuungsverfügungs-Wizards (bwwiz) und des Sorgerechts-
-      // Wizards (srwiz, B8-Teil). Manuell ausfüllbar UND von den Wizards gesetzt; dieselben Felder,
-      // kein paralleles Modell. WICHTIG (Datenmodell-Regel): Die Sorgerechtsverfügung ist eine
-      // EIGENE Verfügung — sie ist KEINE erteilte Vollmacht und wird NIE in vollmachtsGrundlage/
-      // vollmachtsTyp geschrieben. Die gesetzliche Vertretungsbefugnis selbst lebt in Bereich 2
-      // (Schutzbefohlene, Sub-Depot-Grundlage), nicht hier.
-      { id: 'betreuungsverfuegung', label: 'Betreuungsverfügung',
-        hint: 'Wen soll das Gericht als rechtliche Betreuung bestellen, falls Sie es selbst nicht mehr können? Ein Vorschlag an das Betreuungsgericht — keine Vollmacht.',
+      { id: 'pflegewuensche', label: 'Pflegewuensche',
+        hint: 'Diese Angaben ergaenzen die Patientenverfuegung und helfen Pflegepersonen, Ihren Willen zu kennen.',
         felder: [
-          { id: 'betreuungsverfuegung',        label: 'Betreuungsverfügung vorhanden?',                  typ: 'auswahl', optionen: [
-            { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-          ] },
-          { id: 'betreuung_person',   label: 'Betreuungsverfügung — vorgeschlagene Person',  typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
-            verweisZweck: 'vollmacht',
-            sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] },
-            hint: 'Wen soll das Gericht als rechtliche Betreuung bestellen, falls eine Betreuung nötig wird? Anders als eine Vollmacht ist das ein Vorschlag an das Betreuungsgericht (Betreuungsrecht, §§ 1814 ff. BGB).' },
-          { id: 'betreuung_ersatz',   label: 'Betreuungsverfügung — Ersatzperson',           typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte',
-            verweisZweck: 'vollmacht',
-            sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] } },
-          { id: 'betreuung_wuensche', label: 'Was die Betreuung regeln soll',                typ: 'textarea', beispiel: 'Wohnung halten, solange es geht; vertraute Hausärztin behalten',
-            sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] } },
-          { id: 'betreuung_ausschluss', label: 'Was die Betreuung nicht soll / wer nicht',    typ: 'textarea', beispiel: 'kein Umzug ins Heim ohne Rücksprache mit der Familie; Person X soll nicht bestellt werden',
-            sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] } },
-          { id: 'betreuung_ort',      label: 'Betreuungsverfügung — Ablageort des Originals', typ: 'text', beispiel: 'Ordner „Vorsorge" · Hinweiszettel im Geldbeutel',
-            sichtbarWenn: { feld: 'betreuungsverfuegung', wert: ['ja', 'plant'] } },
-        ] },
-      { id: 'sorgerechtsverfuegung', label: 'Sorgerechtsverfügung',
-        hint: 'Wer soll die Sorge für Ihre minderjährigen Kinder übernehmen, wenn Sie es nicht mehr können? Eine eigene Verfügung — keine Vollmacht.',
-        felder: [
-          { id: 'sorgerechtsverfuegung',         label: 'Sorgerechtsverfügung vorhanden?',          typ: 'auswahl', optionen: [
-            { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
+          { id: 'pflegewuensche_koerper',     label: 'Koerperpflege & Wuerde',            typ: 'textarea', beispiel: 'taegliche Koerperpflege gewohnt; Intimsphaere wahren' },
+          { id: 'pflegewuensche_ernaehrung',  label: 'Ernaehrung & Besonderheiten',       typ: 'textarea', beispiel: 'vegetarisch; keine Tomaten; viel Tee' },
+          { id: 'pflegewuensche_alltag',      label: 'Alltag & Aktivitaeten',             typ: 'textarea', beispiel: 'morgens Radio; nachmittags Gartenspaziergang wenn moeglich' },
+          { id: 'pflegewuensche_sonstiges',   label: 'Sonstige Wuensche & Hinweise',      typ: 'textarea', beispiel: 'religioese Begleitung erwuenscht; meine Brille immer in Reichweite' },
+          { id: 'hilfsmittel',                label: 'Vorhandene Hilfsmittel',            typ: 'text', ebene: 'modul', beispiel: 'Rollator (zuhause), Hoergeraet beidseitig' },
+          // Prozess-Marker aus pflwiz (B8), KEIN Instrument-Feld — darum nicht in die Liste migriert,
+          // sondern hierher verortet, wo er thematisch hingehoert. pflwiz schreibt ihn weiter.
+          { id: 'pflege_vorsorge_geprueft',   label: 'Vorsorgedokumente bei Pflegebedarf geprueft?',    typ: 'auswahl', ebene: 'modul', optionen: [
+            { wert: 'ja',   label: 'ja, alles aktuell' },
+            { wert: 'teil', label: 'teilweise — muss noch ergaenzt werden' },
+            { wert: 'nein', label: 'noch nicht geprueft' },
           ],
-            hint: 'Eine Sorgerechtsverfügung benennt, wer die Sorge für Ihre minderjährigen Kinder übernehmen soll, wenn Sie es nicht mehr können (§ 1782 BGB). Sie ist eine eigene Verfügung — keine erteilte Vollmacht.' },
-          { id: 'sorgerechtsverfuegung_person',  label: 'Sorgerechtsverfügung — vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'familie',
-            verweisZweck: 'vollmacht',
-            sichtbarWenn: { feld: 'sorgerechtsverfuegung', wert: ['ja', 'plant'] },
-            hint: 'Wen schlagen Sie als Vormund / Sorgeberechtigte für Ihre Kinder vor?' },
-          { id: 'sorgerechtsverfuegung_ersatz',  label: 'Sorgerechtsverfügung — Ersatzperson',      typ: 'ref', entitaet: 'person', rolle: 'familie',
-            verweisZweck: 'vollmacht',
-            sichtbarWenn: { feld: 'sorgerechtsverfuegung', wert: ['ja', 'plant'] } },
-          { id: 'sorgerechtsverfuegung_wuensche', label: 'Wünsche zur Erziehung & Betreuung',        typ: 'textarea', beispiel: 'Geschwister sollen zusammenbleiben; gewohnte Schule beibehalten',
-            sichtbarWenn: { feld: 'sorgerechtsverfuegung', wert: ['ja', 'plant'] } },
-          { id: 'sorgerechtsverfuegung_ort',     label: 'Sorgerechtsverfügung — Ablageort',         typ: 'text', beispiel: 'beim Notar · Ordner „Kinder"',
-            sichtbarWenn: { feld: 'sorgerechtsverfuegung', wert: ['ja', 'plant'] } },
+            hint: 'Vollmacht, Betreuungsverfuegung und Patientenverfuegung sollten vorliegen, bevor die Pflege uebernommen wird — sonst entscheidet im Ernstfall niemand rechtssicher.' },
         ] },
       // „Erinnerungen"-Sektion bewusst entfernt (war Wizard-Slot, leer und kollidierte
       // mit „Erinnerungsstücke & Briefe" in Persönliches). Geführte Eingaben (vvwiz, pvwiz)
@@ -4874,15 +4837,10 @@ const SEKTOREN = Object.freeze([
       // KI-Verfügung — seit U2-ADR-069 eine Instanz des geteilten Dokument-Generators (KI_KORPUS +
       // KI_MODUL). Umbenannt von "Mein digitales Weiterleben" (Muster H, 15.07.2026): der alte Name
       // klang breiter als das Feature — es regelt NUR Zustimmung/Grenzen zu einer KI-Nachbildung der
-      // eigenen Person, keine Verwaltung digitaler Konten/Social-Media (die existiert nur als Freitext
-      // an erb_digitales/social_media, unverändert). Die fünf v0-1-Felder werden über den kiwiz-Wizard
-      // erfasst (verbatim-Bausteine, im Wizard lesbar — nicht als Dropdown hier); aus den Angaben stellt
-      // Vivodepot eine Testament-Anlage zusammen (Knopf in der Sektor-Sicht, s. renderSektor). Die alten
-      // ki_verhalten_*-Felder verwaisen (weiter lesbar; Umzug an den Zielort mit der Gesamt-Migration /
-      // Bild C). Kein Schema-Bump, additive ki_*-Felder.
-      { id: 'ki-verfuegung', label: 'Verfügung zur digitalen Nachbildung',
-        hint: 'KI-Systeme können aus Ihren digitalen Spuren eine Nachbildung Ihrer Person erstellen, die nach Ihrem Tod weiter „handelt". Über den geführten Weg „Verfügung zur digitalen Nachbildung" legen Sie fest, ob und unter welchen Bedingungen das erlaubt sein soll; daraus entsteht ein Entwurf zum eigenhändigen Unterschreiben und Beilegen zu Ihrem Testament (§ 2247 BGB).',
-        felder: [] },
+      /* Die Sektion „Verfügung zur digitalen Nachbildung" ist mit Block H entfallen (23.07.2026).
+         Sie trug seit Block E KEIN einziges Feld mehr: Die zwölf ki_*-Werte wohnen in der
+         Vorsorge-Instrument-Liste. Zurück blieb eine Überschrift, auf die die Regal-Karte sprang —
+         ein Sprungziel ohne Inhalt. Die Karte führt jetzt an den einen Ort wie die übrigen fünf. */
     ] },
   { id: 'wohnen',            label: 'Wohnen & Eigentum',    format: SEKTOR_FORMATE.GENERISCH,  icon: 'home',
     // Wohnungen sind Objekte mit Sachdaten — die Adresse der Hauptwohnung ist die Meldeadresse
@@ -5216,7 +5174,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
         { quelle: 'vorsorge', feld: 'instrument:testament' },
-        { quelle: 'vorsorge', feld: 'testament_ort' },
+        { quelle: 'vorsorge', feld: 'liste:vorsorge_instrumente:testament:ort' },
         { quelle: 'vorsorge', feld: 'instrument:betreuungsverfuegung' },
         { quelle: 'finanzen', feld: 'konten' },
       ] },
@@ -5304,7 +5262,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'implantate' },
         { quelle: 'gesundheit', feld: 'kv_art' },
         { quelle: 'vorsorge',   feld: 'instrument:patientenverfuegung' },
-        { quelle: 'vorsorge',   feld: 'patientenverf_ort' },
+        { quelle: 'vorsorge',   feld: 'liste:vorsorge_instrumente:patientenverfuegung:ort' },
         { quelle: 'vorsorge',   feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Für den Aufenthalt', eintraege: [
@@ -5354,9 +5312,10 @@ const SITUATIONEN = Object.freeze([
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
         { quelle: 'vorsorge',      feld: 'instrument:testament' },
-        { quelle: 'vorsorge',      feld: 'testament_ort' },
+        { quelle: 'vorsorge',      feld: 'liste:vorsorge_instrumente:testament:ort' },
         { quelle: 'vorsorge',      feld: 'erben' },
-        { quelle: 'vorsorge',      feld: 'zvr_nummer' },
+        // U2-ADR-096: zvr_nummer ist Unterfeld der Vollmacht-Zeile geworden — Selektor statt Flachfeld.
+        { quelle: 'vorsorge',      feld: 'liste:vorsorge_instrumente:vorsorgevollmacht:zvr_nummer' },
         { quelle: 'persoenliches', feld: 'bestattung_art' },
         { quelle: 'persoenliches', feld: 'bestattung_unternehmen' },
         { quelle: 'persoenliches', feld: 'bestattung_ort' },
@@ -5440,7 +5399,7 @@ const _ANG_SITUATIONEN = Object.freeze([
         // U2-ADR-089 Block 2: abgeleitet statt Flachfeld — ein Instrument, das nur als Record
         // existiert, verschwand hier vorher lautlos aus dem Blatt der Vertrauensperson.
         { quelle: 'vorsorge', feld: 'instrument:patientenverfuegung' },
-        { quelle: 'vorsorge', feld: 'patientenverf_ort' },
+        { quelle: 'vorsorge', feld: 'liste:vorsorge_instrumente:patientenverfuegung:ort' },
         { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
       ] },
@@ -5476,7 +5435,7 @@ const _ANG_SITUATIONEN = Object.freeze([
         { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },      // U2-ADR-089 Block 2
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
         { quelle: 'vorsorge', feld: 'instrument:betreuungsverfuegung' },   // Typ, nicht das Gate-Feld
-        { quelle: 'vorsorge', feld: 'patientenverf_ort' },
+        { quelle: 'vorsorge', feld: 'liste:vorsorge_instrumente:patientenverfuegung:ort' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_koerper' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_ernaehrung' },
         { quelle: 'vorsorge', feld: 'pflegewuensche_alltag' },
@@ -5519,9 +5478,10 @@ const _ANG_SITUATIONEN = Object.freeze([
     bloecke: [
       { titel: 'Aus Vorsorge', eintraege: [
         { quelle: 'vorsorge', feld: 'instrument:testament' },              // U2-ADR-089 Block 2
-        { quelle: 'vorsorge', feld: 'testament_ort' },
+        { quelle: 'vorsorge', feld: 'liste:vorsorge_instrumente:testament:ort' },
         { quelle: 'vorsorge', feld: 'erben' },
-        { quelle: 'vorsorge', feld: 'zvr_nummer' },
+        // U2-ADR-096: zvr_nummer ist Unterfeld der Vollmacht-Zeile geworden — Selektor statt Flachfeld.
+        { quelle: 'vorsorge', feld: 'liste:vorsorge_instrumente:vorsorgevollmacht:zvr_nummer' },
         { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
       ] },
@@ -5605,7 +5565,10 @@ const ANLAESSE = Object.freeze([
   { id: 'arzt',        klasse: 2, label: 'Arzttermin',                          icon: 'stethoscope',   ziel: { sbl: 2 } },
   { id: 'krankenhaus', klasse: 2, label: 'Krankenhaus-Aufenthalt',             icon: 'heartPulse',    ziel: { sbl: 5 } },
   { id: 'pflegeheim',  klasse: 2, label: 'Einzug ins Pflegeheim',              icon: 'shield',        ziel: { wizard: 'pflwiz' } },
-  { id: 'erbfall',     klasse: 3, label: 'Erbfall',                             icon: 'fileText',      ziel: { wizard: 'erbwiz' } },
+  // U2-ADR-096: erbwiz ist entfernt (spiegelte nur Felder). Der Anlass fuehrt jetzt auf sein
+  // Situationsblatt — dort steht der Erbfall-Ueberblick. Ein ziel.wizard auf einen nicht mehr
+  // existierenden Wizard waere ein toter Einstieg (dieselbe Klasse wie die kiwiz-Sackgasse).
+  { id: 'erbfall',     klasse: 3, label: 'Erbfall',                             icon: 'fileText',      ziel: { sbl: 'erbfall' } },
   { id: 'einfach-so',  klasse: 3, label: 'Einfach so — weil es Zeit wird',      icon: 'star',          ziel: { step: 'assistenten' } },
   { id: 'umsehen',     klasse: 0, label: 'Ich schaue mich erst einmal um',      icon: 'chevronRight',  ziel: { demo: true } },
 ]);
@@ -5977,59 +5940,36 @@ const WIZARDS = Object.freeze([
   //    Bürger-Sprache, Sie-Form, eine Frage pro Schritt; BGB-Vokabel nur in Hilfetexten.
   //    Hält seit U2-ADR-064 nur noch das Gate vollmacht_vorhanden + die ZVR-Nummer; die einzelnen
   //    Vollmachten leben als liste-Record „vollmachten" (Art · Person · Form · Ablageort). ──
-  { id: 'vvwiz', titel: 'Vorsorgevollmacht', icon: 'scale',
-    ziel: { sektor: 'vorsorge' },
-    einleitung: 'Eine Vorsorgevollmacht legt fest, wer für Sie entscheiden darf, wenn Sie es selbst einmal nicht können — bei medizinischen Fragen, Bank, Wohnung, Behörden.\n\nOhne Vollmacht bestellt das Betreuungsgericht eine rechtliche Betreuung. Das kostet Zeit, und Sie können nicht mitbestimmen, wer es wird. Mit Vollmacht steht es fest.\n\nWir gehen das Schritt für Schritt durch — Sie können jederzeit pausieren.',
-    schritte: [
-      // U2-ADR-064: vvwiz hält nur noch das GATE (vorhanden?) + die ZVR-Nummer. Die einzelnen
-      // Vollmachten (Art · Person · Form · Ablageort) sind seit dem liste-Record ein wiederholbarer
-      // Datensatz und werden pro Vollmacht als Eintrag unter „Erteilte Vollmachten" erfasst — der
-      // Wizard schreibt keine Skalar-Detailfelder mehr (die Schritt-Engine kennt keine Listen-Anhänge).
-      { frage: 'Haben Sie bereits eine Vorsorgevollmacht?',
-        hilfetext: 'Diese Frage hält nur fest, OB eine Vollmacht besteht (oder in Vorbereitung ist). Die einzelnen Vollmachten selbst — Art, bevollmächtigte Person, Form und Ablageort — tragen Sie danach als Einträge unter „Erteilte Vollmachten" in „Vorsorge & Recht" ein; jede Vollmacht ein eigener Eintrag.',
-        feld: { id: 'vollmacht_vorhanden', label: 'Vorsorgevollmacht vorhanden?', typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] } },
-      { frage: 'Sind Sie im Zentralen Vorsorgeregister eingetragen?',
-        hilfetext: 'Das Zentrale Vorsorgeregister der Bundesnotarkammer ermöglicht Betreuungsgerichten, Ihre Vollmacht im Ernstfall zu finden. Falls eingetragen, tragen Sie hier die Registrierungsnummer ein.',
-        feld: { id: 'zvr_nummer', label: 'Zentrales Vorsorgeregister — Eintragungsnummer', typ: 'text', beispiel: 'ZVR-2024-987654' } },
-    ],
-    abschluss: { toast: 'Ihre Angaben zur Vorsorgevollmacht sind in „Vorsorge & Recht" gespeichert.' } },
-
-  // ── pvwiz — Patientenverfügung nach den amtlichen BMJ-Textbausteinen (PV-Bau 10.07.).
-  //    Die Schritte kommen aus PV_BMJ.steps (eine Quelle für Wizard UND Dokument-Generator,
-  //    Wortlaut 1:1). Rahmen-Schritte (vorhanden-Gate, Ablageort, ärztliche Begleitung) bleiben
-  //    Vivodepot-Metadaten. Die frühere Grundhaltung (patientenverf_haltung/_wunsch, palliativ_wunsch,
-  //    organspende/_einschraenkung) verwaist bewusst — weiter lesbar, wird vom Wizard nicht mehr
-  //    geschrieben (kein Schema-Bump, additive pv_*-Felder). Schreibt in data.sektoren.vorsorge. ──
   { id: 'pvwiz', titel: 'Patientenverfügung', icon: 'fileText',
     ziel: { sektor: 'vorsorge' },
     einleitung: 'Diese Verfügung entsteht aus den amtlichen Textbausteinen des Bundesministeriums der Justiz. Sie beantworten Frage für Frage; am Ende stellt Vivodepot daraus ein druckbares Dokument im amtlichen Wortlaut zusammen — Vivodepot formuliert nichts selbst, sondern setzt nur die von Ihnen gewählten Bausteine in der amtlichen Reihenfolge zusammen.\n\nWichtig: Zum Wirksamwerden müssen Sie das fertige Dokument ausdrucken, mit Ort und Datum versehen und eigenhändig unterschreiben.\n\nEs sind einige Fragen. Sie können jederzeit pausieren — Ihre Angaben bleiben gespeichert.',
     schritte: [
-      { frage: 'Haben Sie bereits eine Patientenverfügung?',
-        hilfetext: 'Diese Frage hält nur fest, OB bereits eine besteht. Mit den folgenden Schritten stellen Sie den Inhalt neu zusammen.',
-        feld: { id: 'patientenverf_vorhanden', label: 'Patientenverfügung vorhanden?', typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] } },
+      // U2-ADR-096: Der frühere Gate-Schritt „Haben Sie bereits eine Patientenverfügung?" ist
+      // entfallen. Das Gate gibt es nicht mehr — der Wizard hätte in ein Feld geschrieben, das
+      // keine Definition mehr hat (stiller Waisen-Write). Die Frage ist ohnehin gegenstandslos
+      // geworden: Wer den Wizard durchläuft, stellt eine Patientenverfügung zusammen; der
+      // Abschluss legt den Instrument-Record an. Ein Eintrag IST die Aussage „vorhanden".
       // Die amtlichen BMJ-Schritte (Situationen → Maßnahmen → Ort/Beistand/Schweigepflicht →
       // Verbindlichkeit → Wertvorstellungen → Organspende → Schlussformeln → Aktualisierung).
       ...PV_BMJ.steps.map(s => ({ frage: s.frage, hilfetext: s.hilfetext, feld: s.feld })),
-      { frage: 'Wo ist Ihre Patientenverfügung hinterlegt?',
-        hilfetext: 'Idealerweise beim Hausarzt hinterlegt und mit einem Hinweiszettel im Portemonnaie auffindbar. (Vivodepot-Notiz, steht nicht im amtlichen Dokument.)',
-        feld: { id: 'patientenverf_ort', label: 'Ablageort Patientenverfügung', typ: 'text', beispiel: 'beim Hausarzt · Hinweiszettel im Geldbeutel' } },
-      { frage: 'Wurde die Patientenverfügung ärztlich begleitet — durch wen?',
-        hilfetext: 'Eine ärztliche Beratung ist nicht vorgeschrieben, stärkt aber die Aussagekraft. Falls vorhanden, wählen oder erfassen Sie die Ärztin/den Arzt. (Vivodepot-Notiz.)',
-        feld: { id: 'patientenverf_arzt', label: 'Patientenverfügung — ärztlich begleitet durch', typ: 'ref', entitaet: 'person', rolle: 'arzt' } },
+      // U2-ADR-096: Ablageort und ärztliche Begleitung leben jetzt als Unterfelder an der
+      // Instrument-Zeile (`ort`, `patientenverf_arzt` bei typ='patientenverfuegung'). Sie hier als
+      // Wizard-Schritt zu belassen hätte in entfallene Flachfelder geschrieben. Erfasst werden sie
+      // am Instrument-Eintrag — dem einen Ort.
     ],
     abschluss: { toast: 'Ihre Angaben sind gespeichert. Vivodepot stellt jetzt Ihr Dokument zusammen — zum Ausdrucken und Unterschreiben.', dokument: 'pv' } },
 
   // ── kiwiz — KI-Verfügung „Verfügung zur digitalen Nachbildung" (U2-ADR-069). Zweite Instanz des geteilten
   //    Generators: Schritte aus KI_KORPUS.steps (eine Quelle für Wizard UND Generator, wie PV_BMJ→pvwiz).
-  //    Ziel: Sektor 'verwaltung' (heutige Heimat; der Umzug an den Zielort reitet mit der Gesamt-Migration,
-  //    Bild C). Anders als die PV: Forschungssynthese, kein amtlicher Standard — Bindung erst über § 2247 BGB.
+  //    Ziel: die KI-Zeile der Vorsorge-Instrument-Liste (U2-ADR-096 Block E / E3). Der angekündigte Umzug
+  //    ist damit vollzogen — die zwölf ki_*-Werte wohnen an EINEM Ort, sichtbar und korrigierbar.
+  //    Vorher schrieb der Wizard flach nach 'verwaltung', wo keines dieser Felder deklariert ist,
+  //    während dieselben ids als Unterfelder in 'vorsorge' lebten: gespeichert, aber für die Bürgerin
+  //    unsichtbar und unkorrigierbar; nur der Dokument-Generator las sie.
+  //    Anders als die PV: Forschungssynthese, kein amtlicher Standard — Bindung erst über § 2247 BGB.
   //    Feld 1 (Grundentscheidung) ist der Eingang; bei „Untersagung" filtert der Generator die Felder 2–5. ──
   { id: 'kiwiz', titel: 'Verfügung zur digitalen Nachbildung', icon: 'fileText',
-    ziel: { sektor: 'verwaltung' },
+    ziel: { sektor: 'vorsorge', liste: 'vorsorge_instrumente', typ: 'ki-verfuegung' },
     einleitung: 'KI-Systeme können aus Ihren digitalen Spuren eine Nachbildung Ihrer Person erstellen — als Chatbot, Stimme oder Avatar. Hier legen Sie fest, ob das nach Ihrem Tod erlaubt sein soll und unter welchen Bedingungen.\n\nAnders als die Patientenverfügung beruht diese Verfügung nicht auf amtlichen Vorlagen, sondern auf Forschung (Edilife/Cambridge/Zürich). Bindend wird sie erst, wenn Sie das erzeugte Dokument eigenhändig unterschreiben und Ihrem Testament beilegen (§ 2247 BGB).\n\nSie beantworten Frage für Frage; am Ende stellt Vivodepot daraus einen druckbaren Entwurf zusammen. Sie können jederzeit pausieren.',
     schritte: [
       // Die fünf v0-1-Felder (Grundentscheidung/Zweck → Personenkreis → Datenumfang → Kennzeichnung → Widerruf).
@@ -6041,106 +5981,11 @@ const WIZARDS = Object.freeze([
   //    der Vorsorgevollmacht: schlägt dem Betreuungsgericht eine Person vor, falls eine recht-
   //    liche Betreuung nötig wird. KEINE erteilte Vollmacht — schreibt NIE in vollmachtsGrundlage/
   //    vollmachtsTyp. Schreibt in dieselben Bereich-8-Felder wie die manuelle Eingabe. ──
-  { id: 'bwwiz', titel: 'Betreuungsverfügung', icon: 'scale',
-    ziel: { sektor: 'vorsorge' },
-    einleitung: 'Eine Betreuungsverfügung sagt einem Gericht, wen es als rechtliche Betreuung bestellen soll, falls Sie Ihre Angelegenheiten einmal nicht mehr selbst regeln können — und was diese Person beachten soll. Anders als bei einer Vollmacht entscheidet am Ende das Gericht; Ihr Vorschlag ist aber maßgeblich (§§ 1814 ff. BGB).\n\nWir gehen das Schritt für Schritt durch — Sie können jederzeit pausieren.',
-    schritte: [
-      { frage: 'Haben Sie bereits eine Betreuungsverfügung?',
-        feld: { id: 'betreuungsverfuegung', label: 'Betreuungsverfügung vorhanden?', typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' },
-        ] } },
-      { frage: 'Wen schlagen Sie als Ihre rechtliche Betreuung vor?',
-        hilfetext: 'Anders als bei einer Vollmacht entscheidet am Ende das Betreuungsgericht — Ihr Vorschlag ist aber maßgeblich (Betreuungsrecht, §§ 1814 ff. BGB). Über „Neue Person anlegen" erfassen Sie sie direkt.',
-        feld: { id: 'betreuung_person', label: 'Vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' } },
-      { frage: 'Wen benennen Sie als Ersatz, falls diese Person nicht kann?',
-        feld: { id: 'betreuung_ersatz', label: 'Ersatzperson', typ: 'ref', entitaet: 'person', rolle: 'bevollmaechtigte' } },
-      { frage: 'Was soll diese Person regeln dürfen?',
-        hilfetext: 'Zum Beispiel Wohnung, Finanzen, Gesundheitssorge oder der Aufenthaltsort. Je konkreter, desto besser kann Ihr Wille befolgt werden.',
-        feld: { id: 'betreuung_wuensche', label: 'Was die Betreuung regeln soll', typ: 'textarea', beispiel: 'Wohnung halten, solange es geht; vertraute Hausärztin behalten' } },
-      { frage: 'Was soll sie nicht dürfen — oder wen möchten Sie ausschließen?',
-        hilfetext: 'Hier können Sie Grenzen setzen oder eine Person nennen, die nicht als Betreuung bestellt werden soll.',
-        feld: { id: 'betreuung_ausschluss', label: 'Was die Betreuung nicht soll / wer nicht', typ: 'textarea', beispiel: 'kein Umzug ins Heim ohne Rücksprache mit der Familie; Person X nicht' } },
-      { frage: 'Wo wird die Betreuungsverfügung aufbewahrt?',
-        hilfetext: 'Im Ernstfall muss sie schnell auffindbar sein. Gut sind ein fester Ablageort und ein Hinweiszettel im Portemonnaie.',
-        feld: { id: 'betreuung_ort', label: 'Ablageort des Originals', typ: 'text', beispiel: 'Ordner „Vorsorge" · Hinweiszettel im Geldbeutel' } },
-    ],
-    abschluss: { toast: 'Ihre Angaben zur Betreuungsverfügung sind in „Vorsorge & Recht" gespeichert.' } },
-
-  // ── srwiz — Sorgerecht (Welle 1). Schreibt in ZWEI Bereiche: Standardziel ist Sektor 'vorsorge'
-  //    (Bereich 8) für die Sorgerechtsverfügung; zwei Schritte tragen ein eigenes `ziel`
-  //    'meine-menschen' (Bereich 2) für die Schutzbefohlenen + die gesetzliche Vertretung.
-  //    DATENMODELL-REGEL (Carola, fest): Sorgerecht ist KEINE erteilte Vollmacht — schreibt NIE in
-  //    vollmachtsGrundlage/vollmachtsTyp. Die gesetzliche Vertretungsbefugnis (B2) ist die Sub-Depot-
-  //    Grundlage; sie und die Sorgerechtsverfügung (B8) werden NICHT gekoppelt. ──
-  { id: 'srwiz', titel: 'Sorgerecht', icon: 'users',
-    ziel: { sektor: 'vorsorge' },
-    einleitung: 'Wer sorgt für Ihre minderjährigen Kinder, wenn Sie es einmal nicht mehr können? Wir halten zuerst fest, für wen Sie verantwortlich sind, und dann, wen Sie als Sorgeberechtigte vorschlagen. Sie können jederzeit pausieren.',
-    schritte: [
-      { frage: 'Für welche minderjährigen Kinder oder Schutzbefohlenen tragen Sie die Verantwortung?',
-        ziel: { sektor: 'meine-menschen' },
-        hilfetext: 'Die einzelnen Personen erfassen Sie in der Kinder-Liste in „Meine Menschen" — hier genügt ein Verweis.',
-        feld: { id: 'schutzbefohlene', label: 'Minderjährige Kinder / Schutzbefohlene', typ: 'textarea', beispiel: 'Anna (12) und Lukas (9); Pflegekind Mia (7)' } },
-      // U2-ADR-036 (C): Der frühere Schritt „Wie ist die gesetzliche Vertretung heute geregelt?"
-      // (schrieb das globale schutzbefohlene_vertretung-Feld) entfiel. Die gesetzliche Vertretung wird
-      // jetzt PRO KIND in der Kinder-Liste erfasst (sorgerecht_kind) — der srwiz würde sonst eine zweite,
-      // globale Quelle anlegen (die entdoppelte Lage). Schritt 1 (Schutzbefohlene-Verweis) bleibt.
-      { frage: 'Haben Sie bereits eine Sorgerechtsverfügung?',
-        hilfetext: 'Eine Sorgerechtsverfügung benennt, wer die Sorge für Ihre Kinder übernehmen soll, wenn Sie ausfallen (§ 1782 BGB). Sie ist eine eigene Verfügung — keine Vollmacht.',
-        feld: { id: 'sorgerechtsverfuegung', label: 'Sorgerechtsverfügung vorhanden?', typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] } },
-      { frage: 'Wen schlagen Sie als Sorgeberechtigte oder Vormund vor?',
-        hilfetext: 'Über „Neue Person anlegen" erfassen Sie die Person direkt.',
-        feld: { id: 'sorgerechtsverfuegung_person', label: 'Vorgeschlagene Person', typ: 'ref', entitaet: 'person', rolle: 'familie' } },
-      { frage: 'Wen benennen Sie als Ersatz, falls diese Person nicht kann?',
-        feld: { id: 'sorgerechtsverfuegung_ersatz', label: 'Ersatzperson', typ: 'ref', entitaet: 'person', rolle: 'familie' } },
-      { frage: 'Welche Wünsche haben Sie zur Erziehung und Betreuung?',
-        hilfetext: 'Zum Beispiel, dass Geschwister zusammenbleiben oder die gewohnte Schule erhalten bleibt.',
-        feld: { id: 'sorgerechtsverfuegung_wuensche', label: 'Wünsche zur Erziehung & Betreuung', typ: 'textarea', beispiel: 'Geschwister sollen zusammenbleiben; gewohnte Schule beibehalten' } },
-      { frage: 'Wo ist die Sorgerechtsverfügung hinterlegt?',
-        feld: { id: 'sorgerechtsverfuegung_ort', label: 'Ablageort', typ: 'text', beispiel: 'beim Notar · Ordner „Kinder"' } },
-    ],
-    abschluss: { toast: 'Ihre Angaben zum Sorgerecht sind gespeichert — die Sorgerechtsverfügung in „Vorsorge & Recht", die Schutzbefohlenen in „Meine Menschen".' } },
-
-  // ── erbwiz — Erbschaftsregelung (Welle 2). Standardziel Sektor 'vorsorge' (B8) für Testament &
-  //    Erbfolge; ein Schritt trägt das Ziel 'finanzen' (B4) für die Vermögensübersicht. Keine
-  //    eigenen Rechts-Volltexte — Vivodepot ist kein Rechtsberater (BGB-Bezug nur als Tooltip). ──
-  { id: 'erbwiz', titel: 'Erbschaftsregelung', icon: 'fileText',
-    ziel: { sektor: 'vorsorge' },
-    einleitung: 'Wir gehen durch, was beim Erbe geregelt sein sollte: ob ein Testament da ist, wo es liegt, und was Ihnen darüber hinaus wichtig ist. Sie können jederzeit pausieren.',
-    schritte: [
-      { frage: 'Haben Sie ein Testament?',
-        feld: { id: 'testament_vorhanden', label: 'Testament vorhanden?', typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] } },
-      { frage: 'Wo liegt das Original?',
-        hilfetext: 'Das Original muss nach dem Tod dem Nachlassgericht vorgelegt werden — ein fester Ablageort oder die Verwahrung beim Notar hilft.',
-        feld: { id: 'testament_ort', label: 'Ablageort Original', typ: 'text', beispiel: 'beim Notar Dr. Sommer · Ordner „Vorsorge"' } },
-      { frage: 'Wann haben Sie es zuletzt geändert?',
-        feld: { id: 'testament_datum', label: 'Datum der letzten Änderung', typ: 'datum' } },
-      { frage: 'Soll die gesetzliche Erbfolge gelten — oder weicht Ihr Wille bewusst davon ab?',
-        hilfetext: 'Ohne Testament gilt die gesetzliche Erbfolge (Verwandte und Ehegatte, §§ 1924 ff. BGB). Mit Testament können Sie abweichend bestimmen — bis zur Grenze des Pflichtteils.',
-        feld: { id: 'erbfolge_hinweis', label: 'Gesetzliche Erbfolge oder abweichender Wille?', typ: 'auswahl', optionen: [
-          { wert: 'gesetzlich', label: 'Die gesetzliche Erbfolge soll gelten' },
-          { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
-          { wert: 'unklar',     label: 'Noch unklar — Beratung gewünscht' },
-        ] } },
-      // U2-ADR-065: „Wer soll erben?" gekappt (wie vvwiz) — erben ist jetzt ein refMehrfach-Feld
-      // (mehrere Personen, umsortierbar) und wird direkt im Sektor „Vorsorge & Recht" erfasst; die
-      // lineare Wizard-Schritt-Engine kennt kein refMehrfach-Widget.
-      { frage: 'Gibt es besondere Wünsche oder Vermächtnisse?',
-        hilfetext: 'Ein Vermächtnis ist ein einzelner Gegenstand oder Betrag für eine bestimmte Person (§ 1939 BGB) — ohne dass sie Erbin wird.',
-        feld: { id: 'vermaechtnisse', label: 'Besondere Wünsche & Vermächtnisse', typ: 'textarea', beispiel: 'Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein' } },
-      { frage: 'Welche Vermögenswerte gehören zum Nachlass?',
-        ziel: { sektor: 'finanzen' },
-        hilfetext: 'Ein Überblick, was im Erbfall vorhanden ist — die Zugänge selbst bleiben in den Konto-Feldern.',
-        feld: { id: 'nachlass_vermoegen', label: 'Vermögenswerte für den Nachlass', typ: 'textarea', beispiel: 'Eigentumswohnung München; Depot ING; Lebensversicherung Allianz' } },
-    ],
-    abschluss: { toast: 'Ihre Angaben zur Erbschaftsregelung sind gespeichert — Testament in „Vorsorge & Recht", Vermögensübersicht in „Finanzen".' } },
-
-  // ── anamwiz — Anamnese (Welle 2). Ziel Sektor 'gesundheit' (B5). Nutzt die Paket-3-Code-Listen
-  //    (Diagnosen / Allergene / Wirkstoffe; Impfstoff-Liste ist Stub — Freitext bleibt möglich) —
-  //    die Felder tragen ihren codeListe-Marker. Schreibt in dieselben Felder wie die manuelle Eingabe. ──
+  // U2-ADR-096 (22.07.2026): vvwiz, bwwiz, srwiz und erbwiz ERSATZLOS entfernt. Sie fragten zu
+  // 100 % dieselben Felder ab, die im Formular danebenstanden, und erzeugten kein Dokument —
+  // nach dem Wizard-Prinzip ohne Berechtigung. Das direkte Eintragen in `vorsorge_instrumente`
+  // ist der Weg. Ein Testament-Erstellungs-Wizard wird bewusst NICHT nachgebaut (U2-ADR-033:
+  // Verfasser-Haftung); der Verzicht steht als Hinweis am Instrument.
   { id: 'anamwiz', titel: 'Anamnese', icon: 'stethoscope',
     ziel: { sektor: 'gesundheit' },
     einleitung: 'Ein paar Fragen zu Ihrer Krankengeschichte — damit Sie sie bei Arztbesuchen, Überweisungen und Klinik-Aufnahmen parat haben und im Ernstfall nichts Wichtiges fehlt.\n\nBei einigen Feldern können Sie aus Vorschlägen wählen; Freitext geht immer. Sie können jederzeit pausieren.',
@@ -6240,18 +6085,13 @@ const WIZARDS = Object.freeze([
         ziel: { sektor: 'meine-menschen' },
         hilfetext: 'Über „Neue Person anlegen" erfassen Sie sie direkt.',
         feld: { id: 'ehepartner', label: 'Ehe- / Lebenspartner*in', typ: 'ref', entitaet: 'person', rolle: 'partner' } },
-      { frage: 'Möchten Sie Ihr Testament an die neue Lage anpassen?',
-        ziel: { sektor: 'vorsorge' },
-        hilfetext: 'Eine Heirat ändert die gesetzliche Erbfolge. Prüfen Sie, ob Ihr Testament noch Ihren Willen abbildet.',
-        feld: { id: 'testament_vorhanden', label: 'Testament vorhanden?', typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] } },
-      { frage: 'Und Ihre Vorsorgevollmacht — ist sie noch aktuell?',
-        ziel: { sektor: 'vorsorge' },
-        hilfetext: 'Viele möchten nach der Heirat die Partner*in bevollmächtigen. Das geschieht nicht automatisch — eine Vollmacht muss erteilt werden.',
-        feld: { id: 'vollmacht_vorhanden', label: 'Vorsorgevollmacht vorhanden?', typ: 'auswahl', optionen: [
-          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' }, { wert: 'plant', label: 'in Vorbereitung' },
-        ] } },
+      // U2-ADR-096: Die beiden Vorsorge-Schritte hingen an den entfallenen Gates
+      // `testament_vorhanden`/`vollmacht_vorhanden` und schrieben nach dem Abriss in Felder ohne
+      // Definition — stiller Waisen-Write, dritter Wizard mit diesem Rest (nach pvwiz und kiwiz).
+      // Ersatzlos entfallen: Ein Instrument entsteht als Eintrag in `vorsorge_instrumente`, nicht
+      // als Gate-Antwort in einem Anlass-Wizard. Der ANLASS bleibt richtig — eine Heirat aendert
+      // die gesetzliche Erbfolge —, aber der Hinweis darauf gehoert an die Vorsorge-Stelle, nicht
+      // als Schreibzugriff hierher. Vorgemerkt als eigener kleiner Posten, nicht hier erfunden.
     ],
     abschluss: { toast: 'Ihre Angaben rund um die Heirat sind gespeichert — verteilt auf Identität, Meine Menschen und Vorsorge & Recht.' } },
 
@@ -6419,6 +6259,114 @@ function uuidV4() {
   const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
   return h.slice(0, 8) + '-' + h.slice(8, 12) + '-' + h.slice(12, 16) + '-' + h.slice(16, 20) + '-' + h.slice(20);
 }
+/* Die aktuelle Schema-Version an EINER Stelle. Vorher stand die Zahl als Literal in
+   `leeresDepot()`, in der letzten Migrationsstufe und in 25 Tests — bei jedem Bump 27
+   Stellen, und wer eine vergisst, bekommt kein Fehlersignal, sondern eine stille
+   Abweichung. Tests, die „die aktuelle Version" meinen, lesen ab jetzt diese Konstante;
+   wer eine BESTIMMTE historische Stufe meint, schreibt weiterhin die Zahl hin — das
+   sind zwei verschiedene Aussagen und sollen verschieden aussehen. */
+const SCHEMA_VERSION_AKTUELL = 40;
+
+/* ── ALT-LABEL-REGISTER — was ein entferntes Feld hinterlässt ──────────────────────────
+   Wird ein Feld aus dem Modell entfernt, bleiben seine WERTE im Depot stehen
+   (Verwaisungsregel: Bürgerdaten werden nie gelöscht). Was verschwindet, ist die FRAGE —
+   das Label. Und ohne die Frage sagt der Wert nichts.
+
+   Belegt am 23.07.2026 an den fünf `ki_verhalten_*`: Der gespeicherte Code `familie`
+   kommt in VIER dieser Felder vor und bedeutet jedes Mal etwas anderes —
+   „Familie entscheidet", „die ganze Familie und enge Freunde", „die Familie soll das
+   entscheiden". Eine Bürgerin, die viermal `familie` läse, hätte weniger als nichts:
+   vier gleich aussehende Einträge mit verschiedener Bedeutung. Darum trägt das Register
+   die OPTIONSLABELS je Feld mit, nicht nur das Feld-Label — sonst verschiebt es das
+   Problem nur eine Ebene nach oben.
+
+   GEERNTET, SOLANGE DIE QUELLE STAND: Alle zehn Einträge sind aus den noch vorhandenen
+   Lese-App-Deklarationen und einem historischen Commit erzeugt, nicht abgetippt. Ab jetzt
+   ist es einfach, in Zukunft schwer: Wird ein Feld künftig aus BEIDEN Apps entfernt, ohne
+   dass jemand daran denkt, ist sein Label nur noch über `git log -S` beschaffbar — und das
+   setzt voraus, dass jemand weiß, dass er suchen muss.
+
+   NUR ANWACHSEND. Ein Eintrag wird nie geändert und nie entfernt: Er beschreibt einen
+   Zustand der Vergangenheit, und der ändert sich nicht. Ein Feld zu entfernen HEISST,
+   seinen Registereintrag zu schreiben (U2-ADR-096, Konformitätsklausel).
+
+   Die Ansicht „Frühere Angaben", die daraus liest, ist bewusst NICHT Teil dieses Schritts
+   (Carola, 23.07.): Sie wird durch Warten nicht teurer, und der Branch trägt bereits den
+   Vorsorge-Umbau und die Lese-App-Parität. Das Register ist die Ernte, die Anzeige folgt. */
+const ALT_LABEL_REGISTER = Object.freeze([
+  { sektor: 'vorsorge', entferntAm: '2026-07-10', adr: 'U2-ADR-067',
+    feld: { id: 'palliativ_wunsch', label: 'Palliativversorgung & Sterbebegleitung', typ: 'textarea' } },
+  { sektor: 'vorsorge', entferntAm: '2026-07-10', adr: 'U2-ADR-067',
+    feld: { id: 'patientenverf_haltung', label: 'Grundhaltung — Behandlung bei aussichtsloser Lage', typ: 'auswahl',
+        optionen: [
+          { wert: 'lebenserhalt', label: 'Lebenserhaltende Maßnahmen ausschöpfen, solange Aussicht auf Besserung besteht' },
+          { wert: 'leiden_lindern', label: 'Keine lebensverlängernden Maßnahmen — im Vordergrund steht die Linderung von Leiden' },
+          { wert: 'palliativ', label: 'Ausschließlich palliative Begleitung; ein Sterben in Würde zulassen' },
+          { wert: 'arzt_vertrauen', label: 'Im Zweifel sollen meine Ärztinnen/Ärzte mit meiner Vertrauensperson entscheiden' },
+        ] } },
+  { sektor: 'vorsorge', entferntAm: '2026-07-10', adr: 'U2-ADR-067',
+    feld: { id: 'patientenverf_wunsch', label: 'Behandlungswünsche (Kurzform)', typ: 'textarea' } },
+  { sektor: 'verwaltung', entferntAm: '2026-07-11', adr: 'U2-ADR-069',
+    feld: { id: 'ki_verhalten_grundsatz', label: 'Darf eine digitale Version von mir in meinem Namen auftreten und handeln?', typ: 'auswahl',
+        optionen: [
+          { wert: 'ja', label: 'ja' },
+          { wert: 'nein', label: 'nein' },
+          { wert: 'familie', label: 'Familie entscheidet' },
+        ] } },
+  { sektor: 'verwaltung', entferntAm: '2026-07-11', adr: 'U2-ADR-069',
+    feld: { id: 'ki_verhalten_fuer_wen', label: 'Für wen darf eine digitale Version von mir handeln?', typ: 'auswahl',
+        optionen: [
+          { wert: 'angehoerige', label: 'engste Angehörige' },
+          { wert: 'familie', label: 'die ganze Familie und enge Freunde' },
+          { wert: 'wissenschaft', label: 'wissenschaftliche Zwecke' },
+          { wert: 'offen', label: 'ohne Einschränkung' },
+        ] } },
+  { sektor: 'verwaltung', entferntAm: '2026-07-11', adr: 'U2-ADR-069',
+    feld: { id: 'ki_verhalten_dauer', label: 'Wie lange darf eine digitale Version aktiv sein?', typ: 'auswahl',
+        optionen: [
+          { wert: 'kinder', label: 'solange meine Kinder leben' },
+          { wert: '10jahre', label: 'max. 10 Jahre nach meinem Tod' },
+          { wert: 'unbegrenzt', label: 'unbegrenzt' },
+          { wert: 'familie', label: 'die Familie soll das entscheiden' },
+        ] } },
+  { sektor: 'verwaltung', entferntAm: '2026-07-11', adr: 'U2-ADR-069',
+    feld: { id: 'ki_verhalten_rahmen', label: 'In welchen Situationen darf sie handeln?', typ: 'auswahl',
+        optionen: [
+          { wert: 'fragen', label: 'nur Fragen über mein Leben' },
+          { wert: 'gespraech', label: 'auch Gesprächspartner*in für die Familie' },
+          { wert: 'entscheidungen', label: 'auch bei Entscheidungen mitwirken' },
+          { wert: 'familie', label: 'die Familie soll das entscheiden' },
+        ] } },
+  { sektor: 'verwaltung', entferntAm: '2026-07-11', adr: 'U2-ADR-069',
+    feld: { id: 'ki_verhalten_notiz', label: 'Eigene Ergänzungen', typ: 'textarea' } },
+  { sektor: 'meine-menschen', entferntAm: '2026-06-19', adr: 'U2-ADR-022',
+    feld: { id: 'erwachsene_kinder', label: 'Erwachsene Kinder', typ: 'liste',
+        unterFelder: [
+          { id: 'vorname', label: 'Vorname', typ: 'text' },
+          { id: 'nachname', label: 'Nachname', typ: 'text' },
+          { id: 'geburtsjahr', label: 'Geburtsjahr', typ: 'text' },
+          { id: 'wohnort', label: 'Wohnort', typ: 'text' },
+          { id: 'telefon', label: 'Telefon', typ: 'text' },
+          { id: 'anmerkung', label: 'Anmerkung', typ: 'text' }
+        ] } },
+  { sektor: 'gesundheit', entferntAm: '2026-07-04', adr: 'U2-ADR-050',
+    feld: { id: 'laborwerte', label: 'Laborwerte (Hb, Kreatinin, CRP)', typ: 'liste',
+        unterFelder: [
+          { id: 'analyt', label: 'Laborwert', typ: 'auswahl',
+              optionen: [
+                { wert: 'hb', label: 'Hämoglobin (Hb)' },
+                { wert: 'kreatinin', label: 'Kreatinin' },
+                { wert: 'crp', label: 'CRP (C-reaktives Protein)' },
+              ] },
+          { id: 'wert', label: 'Messwert', typ: 'text' },
+          { id: 'einheit', label: 'Einheit', typ: 'text' },
+          { id: 'ref_low', label: 'Referenzbereich von', typ: 'text' },
+          { id: 'ref_high', label: 'Referenzbereich bis', typ: 'text' },
+          { id: 'datum', label: 'Datum der Messung', typ: 'datum' }
+        ] } },
+]);
+
+
 
 function leeresDepot() {
   return {
@@ -6429,7 +6377,7 @@ function leeresDepot() {
     // Schema 20 (Teil 5.1): der Urheberschafts-Stempel trägt zusätzlich `eingabeDurchName`
     // (Namens-Snapshot der eintragenden Person, ADR-005-Erweiterung). Additiv & rückwärts-
     // kompatibel — Stempel ohne das Feld werden bei der Anzeige auf akteurName() zurückgeführt.
-    schemaVersion: 39,                       // Schema 39 (U2-ADR-089, Teil A Block 1, 17.07.2026): Vorsorge-Instrument-Liste — die bisher Vollmacht-exklusive Liste `vollmachten` wird Teil der geteilten Liste `vorsorge_instrumente` (unterschieden per `typ`); Records bekommen additiv typ:'vorsorgevollmacht', altes Feld entfällt. Migration verlustfrei (Rename+Retag). Die anderen fünf Instrumente (Testament/PV/Betreuung/Sorgerecht/KI) bleiben additiv unmigriert (Carola-Entscheidung). Schema 38 (E1 Option C, CC-Auftrag Chip-Mechanik 13.07.2026): gesundheit/allergien, medikamente, krankheiten (Code-Slot-Felder) → Chip-Array {text, code?} statt Skalar (Freitext oder codierter Einzelwert); Migration Skalar→[EIN Chip] verlustfrei, KEIN Komma-Splitting. Schema 37 (U2-ADR-074, Phase 5): finanzen/konto_haupt_bank + konto_haupt_iban (ein Konto, zwei Skalarfelder) → Liste `konten` {bank · art · iban · bankvollmacht (Record-id-Verweis auf art:'bank'-Vollmacht in Vorsorge) · notiz}; Migration Skalar→Liste verlustfrei (ein Eintrag, leer→entfällt, stabile id). Art = Vorschlagsliste + frei (native datalist). VC-Export/CAMT ruhen. Schema 36 (U2-ADR-073, Phase 4 Teil 2): persoenliches/abhaengige_personen Freitext → Liste „allgemeine Abhängige" {wer · hinweis}; Migration Text→[{wer}] verlustfrei (keine „;"-Trennung), id bleibt, crossSektor-Projektion typ-generisch. Schema 35 (U2-ADR-073, Phase 4 Teil 1): fünf verstreute Slot-Gruppen → je EINE Liste — Fahrzeuge (mobilitaet: auto1/2/_ausweis/_leasing), Kreditkarten (finanzen: kreditkarte1/2), Haustiere (identitaet: tier_*), Personen-Briefe (persoenliches: brief_1/2/3), Weitere Wohnungen (wohnen: zw_*, Hybrid — Hauptwohnung bleibt Singleton). Migration Skalar→Liste verlustfrei (leere Werte fallen weg, stabile id je Eintrag). Schema 34 (U2-ADR-072, Teil 2): drei Facharzt-Slots gesundheit/facharzt_1/2/3 → EINE Liste `fachaerzte` {arzt (Person-Ref) · fach (Text)}; Migration Skalar→Liste verlustfrei (leere Slots fallen weg, stabile id je Eintrag). Schema 33 (U2-ADR-072, Phase 3): Notfallkontakte gesundheit/hauptpflegeperson ref → refMehrfach (mehrere Kontakte); Migration Einzel→Array verlustfrei, QR löst die Liste typ-generisch auf. Schema 32 (U2-ADR-071-Nachtrag): jeder Listen-Record bekommt eine stabile `id` (Cross-Sektor-Verweise überleben Umsortieren); Migration vergibt id an id-lose vollmachten-Records, verlustfrei. Schema 31 (U2-ADR-065-Nachlauf): vorsorge/erben → refMehrfach (mehrere Erben, umsortierbar); Migration Einzel→Array verlustfrei. Schema 30 (U2-ADR-065): Vollmacht-bevollmaechtigter → refMehrfach (Array {ref,override}, umsortierbar) + vertretungsModus (gleichwertig/nacheinander, nur bei >1 Person); Migration Einzel→Array verlustfrei. Schema 29 (U2-ADR-064): Vollmacht-Flachfelder → liste-Record `vollmachten` (Art/Person/Form/Ablageort); Gate vollmacht_vorhanden bleibt; ADR-063 für vollmachtsGrundlage supersediert. Schema 28 (U2-ADR-063): vollmachtsGrundlage = mehrfachauswahl (Array). Schema 27 (U2-ADR-062): angehoerigenCache + angehoerigen_passwort_ort (Stufe-2-Vertrauens-Cache). Schema 26 (U2-ADR-051): data.codeListen[]. Schema 25 (E1–E3): laborwerte weg + Verwaisung. Schema 24 (U2-ADR-045): autoritative Original-Ablage.
+    schemaVersion: SCHEMA_VERSION_AKTUELL,   // Schema 40 (U2-ADR-096 Block E, 23.07.2026): die KI-Verfuegung wohnt in der Vorsorge-Instrument-Liste, nicht mehr flach in verwaltung
     kryptoVersion: CRYPTO_VERSION_AKTUELL,   // = 3
     menschen: [],                            // data.menschen[] — zentraler Kontakt-Speicher (ADR-095, U2-ADR-008)
     institutionen: [],                       // data.institutionen[] — zentraler Institutionen-Speicher (U2-ADR-008). Adressen leben als String-Feld AUF Person/Institution (keine separate data.adressen[] — eine Adresse pro Entität ist die Norm).
@@ -7919,8 +7867,9 @@ const NOTFALL_KERN_FELDER = Object.freeze([
   { sektor: 'gesundheit', feld: 'medikamente' },
   { sektor: 'gesundheit', feld: 'krankheiten' },
   { sektor: 'gesundheit', feld: 'hauptpflegeperson' },   // Notfallkontakt (aufgelöster Name)
-  { sektor: 'vorsorge',   feld: 'organspende' },
-  { sektor: 'vorsorge',   feld: 'patientenverf_ort' },
+  // U2-ADR-096 §5: ueber den Selektor, mit `genauEine` — nie mehr als eine Zeile je Typ im Klartext.
+  { sektor: 'vorsorge',   feld: 'liste:vorsorge_instrumente:patientenverfuegung:organspende' },
+  { sektor: 'vorsorge',   feld: 'liste:vorsorge_instrumente:patientenverfuegung:ort' },
 ]);
 
 // Reines Daten-Modell des Notfall-Kerns: nur gefüllte Allowlist-Felder, als {label, wert}.
@@ -7928,9 +7877,14 @@ function notfallKernModell() {
   const zeilen = [];
   for (const e of NOTFALL_KERN_FELDER) {
     const sek = SEKTOR_BY_ID[e.sektor];
-    const feld = sek && sek.sektionen.flatMap(s => s.felder || []).find(f => f.id === e.feld);
+    // U2-ADR-096 §5a: Instrument-Felder ueber den Selektor, IMMER mit `genauEine` — die
+    // Klartext-Menge darf nicht mit der Zahl der Instrument-Zeilen wachsen. Keine Ausnahme.
+    const sel = _listenSelektorZerlegen(e.feld);
+    const feld = feldDefFuer(e.sektor, e.feld);
+    const roh = sel
+      ? listenUnterfeldRoh(e.sektor, sel.listeId, sel.typWert, sel.unterfeldId, { genauEine: true })[0]
+      : ((data && data.sektoren[e.sektor]) || {})[e.feld];
     if (!feld) continue;
-    const roh = ((data && data.sektoren[e.sektor]) || {})[e.feld];
     if (!feldEingetragen(feld, roh)) continue;     // leere Felder raus → kompakt
     zeilen.push({ label: feld.label, wert: _wertTextMenschlich(feld, roh) });
   }
@@ -8353,16 +8307,19 @@ function icsHatTermine() {
 }
 
 // Word/docx (Welle 2) — GATED auf die inline docx-Bibliothek (3.2-Blocker). Datenmodell rein/
-// testbar (sensibel-Felder raus); das Zeichnen nutzt window.docx und degradiert sauber, wenn
-// die Bibliothek fehlt (Headless/Test) — wie der QR/PDF-Pfad.
-function docxBereichModell(sektorId) {
+// testbar; das Zeichnen nutzt window.docx und degradiert sauber, wenn die Bibliothek fehlt
+// (Headless/Test) — wie der QR/PDF-Pfad. Sensibel-Filter U2-ADR-024-Angleich (25.07.): derselbe
+// EINE Prüfpfad wie beim PDF-Zwilling (feldIstSensibel) — die Opt-in-Two-Step-Auswahl (optionen)
+// schaltet frei, was mitgegeben werden soll.
+function docxBereichModell(sektorId, optionen) {
   const sek = SEKTOR_BY_ID[sektorId];
   if (!sek) return null;
+  const inklSensibel = !!(optionen && optionen.sensibel);
   const daten = (data && data.sektoren[sektorId]) || {};
   const zeilen = [];
   for (const s of (sek.sektionen || [])) {
     for (const f of (s.felder || [])) {
-      if (f.sensibel) continue;                       // sensible Felder nicht in den Auto-Export
+      if (!inklSensibel && feldIstSensibel(f, sektorId)) continue;   // schema- ODER nutzer-sensibel zurückhalten; Opt-in schaltet frei
       const roh = daten[f.id];
       if (!feldEingetragen(f, roh)) continue;
       // E2 D0 (15.07.2026): Verweis-Export-Regel — Felder mit `verweisZweck` (Top-Level ref/
@@ -8386,34 +8343,43 @@ function docxBereichModell(sektorId) {
   }
   return { titel: sek.label, zeilen };
 }
-function flowDocxExport(sektorId) {
-  const modell = docxBereichModell(sektorId);
-  if (!modell || !modell.zeilen.length) { if (ui && ui.toast) ui.toast(STRINGS.exportDocxLeer, 'info'); return; }
+// U2-ADR-024-Angleich (25.07., Entscheidung Carola): DOCX läuft — wie flowBereichPdf — durch die
+// Two-Step-Bürger-Ansicht (Ankreuzen vor dem Export, nichts vorausgewählt, Abbrechen = kein Export).
+// Der Bau steckt in `bauen(opt)` und ehrt die ephemere Feld-Auswahl über docxBereichModell(sektorId,
+// opt). Direktaufruf mit `optionen` umgeht den Dialog (Programm-/Testpfad), analog zum PDF-Zwilling.
+function flowDocxExport(sektorId, optionen) {
+  if (!SEKTOR_BY_ID[sektorId]) return;
   if (typeof window === 'undefined' || !window.docx) { if (ui && ui.toast) ui.toast(STRINGS.exportDocxFehlt, 'info'); return; }
-  try {
-    const D = window.docx;
-    const kinder = [new D.Paragraph({ text: modell.titel, heading: D.HeadingLevel.HEADING_1 })];
-    for (const z of modell.zeilen) {
+  const bauen = (opt) => {
+    const modell = docxBereichModell(sektorId, opt);
+    if (!modell || !modell.zeilen.length) { if (ui && ui.toast) ui.toast(STRINGS.exportDocxLeer, 'info'); return; }
+    try {
+      const D = window.docx;
+      const kinder = [new D.Paragraph({ text: modell.titel, heading: D.HeadingLevel.HEADING_1 })];
+      for (const z of modell.zeilen) {
+        kinder.push(new D.Paragraph({ children: [
+          new D.TextRun({ text: z.label + ': ', bold: true }),
+          new D.TextRun({ text: String(z.wert == null ? '' : z.wert) }),
+        ] }));
+      }
+      // U2-ADR-025: Haftungshinweis Fassung C als Dokument-Fuß (verbatim, konsistent zum PDF-Fuß);
+      // [Datum] = Erstellungsdatum im DD.MM.YYYY-Muster wie pdfFussText/situationPdfMeta.
+      const _d = new Date(); const _z = (n) => String(n).padStart(2, '0');
+      const _datum = _z(_d.getDate()) + '.' + _z(_d.getMonth() + 1) + '.' + _d.getFullYear();
       kinder.push(new D.Paragraph({ children: [
-        new D.TextRun({ text: z.label + ': ', bold: true }),
-        new D.TextRun({ text: String(z.wert == null ? '' : z.wert) }),
+        new D.TextRun({ text: STRINGS.dokFussHaftung + ' · ' + _datum, italics: true, size: 16, color: '666666' }),
       ] }));
-    }
-    // U2-ADR-025: Haftungshinweis Fassung C als Dokument-Fuß (verbatim, konsistent zum PDF-Fuß);
-    // [Datum] = Erstellungsdatum im DD.MM.YYYY-Muster wie pdfFussText/situationPdfMeta.
-    const _d = new Date(); const _z = (n) => String(n).padStart(2, '0');
-    const _datum = _z(_d.getDate()) + '.' + _z(_d.getMonth() + 1) + '.' + _d.getFullYear();
-    kinder.push(new D.Paragraph({ children: [
-      new D.TextRun({ text: STRINGS.dokFussHaftung + ' · ' + _datum, italics: true, size: 16, color: '666666' }),
-    ] }));
-    const doc = new D.Document({ sections: [{ children: kinder }] });
-    D.Packer.toBlob(doc).then((blob) => {
-      dateiAusgeben(blob, 'Vivodepot_' + sektorId + '.docx',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document').then((weg) => {
-        if (weg !== 'abgebrochen' && weg !== 'vorschau' && ui && ui.toast) ui.toast(STRINGS.exportDocxFertig, 'ok');
+      const doc = new D.Document({ sections: [{ children: kinder }] });
+      D.Packer.toBlob(doc).then((blob) => {
+        dateiAusgeben(blob, 'Vivodepot_' + sektorId + '.docx',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document').then((weg) => {
+          if (weg !== 'abgebrochen' && weg !== 'vorschau' && ui && ui.toast) ui.toast(STRINGS.exportDocxFertig, 'ok');
+        });
       });
-    });
-  } catch (e) { if (ui && ui.toast) ui.toast(STRINGS.exportDocxFehlt, 'info'); }
+    } catch (e) { if (ui && ui.toast) ui.toast(STRINGS.exportDocxFehlt, 'info'); }
+  };
+  if (optionen !== undefined) { bauen(optionen); return; }
+  flowExportUebersicht({ sektorId, titel: STRINGS.exportDocxTitel, aufFortfahren: bauen });
 }
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -9104,17 +9070,8 @@ const B16_FELD_MAPPING = Object.freeze([
   // (Sektion 4765). Verifiziert: _feldDef('vorsorge','betreuungsverfuegung') liefert deterministisch
   // das Gate-FELD (auswahl ja/nein/plant) — Sektion und Feld sind getrennte Namensräume, es gibt
   // genau ein Feld dieser id. Der Import interpretiert den Wert daher korrekt gegen ja/nein/plant.
-  { alt: 'testament_vorhanden',sektorId: 'vorsorge', feldId: 'testament_vorhanden' },
-  { alt: 'testament_ort',  sektorId: 'vorsorge', feldId: 'testament_ort' },
-  { alt: 'testament_datum',sektorId: 'vorsorge', feldId: 'testament_datum' },
-  { alt: 'vollmacht_vorhanden',sektorId: 'vorsorge', feldId: 'vollmacht_vorhanden' },
-  { alt: 'betreuungsverfuegung',sektorId: 'vorsorge', feldId: 'betreuungsverfuegung' },  // Gate (nicht Typ/Sektion)
-  { alt: 'patientenverf_vorhanden',sektorId: 'vorsorge', feldId: 'patientenverf_vorhanden' },
-  { alt: 'patientenverf_ort',  sektorId: 'vorsorge', feldId: 'patientenverf_ort' },
-  { alt: 'patientenverf_arzt', sektorId: 'vorsorge', feldId: 'patientenverf_arzt' }, // ref
   { alt: 'patientenverf_wunsch',sektorId: 'vorsorge', feldId: 'patientenverf_wunsch' },
   { alt: 'patientenverfuegung_text',sektorId: 'vorsorge', feldId: 'patientenverf_wunsch' }, // alt → selbes Ziel
-  { alt: 'organspende',    sektorId: 'vorsorge', feldId: 'organspende' },
   { alt: 'palliativ_wunsch',sektorId: 'vorsorge', feldId: 'palliativ_wunsch' },
   { alt: 'pflegewuensche_koerper',   sektorId: 'vorsorge', feldId: 'pflegewuensche_koerper' },
   { alt: 'pflegewuensche_ernaehrung',sektorId: 'vorsorge', feldId: 'pflegewuensche_ernaehrung' },
@@ -9299,6 +9256,70 @@ function parseVivodepotBeta(text) {
 
 // b16-Daten → { felder, listen } im Import-Plan-Format. Erste Quelle je Ziel gewinnt; alles ohne
 // neues Ziel (oder doppelt belegtes Ziel) landet in der Sammel-Notiz (identitaet/notizen_start).
+/* U2-ADR-096 · Import fremder Depots in die Instrument-Liste.
+   Die „vorhanden?"-Gates sind mit dem Umbau entfallen. Die Aliase durften deshalb NICHT
+   geloescht werden: ein fremdes `testament_vorhanden = ja` fiele sonst lautlos auf den Boden
+   (Carola-Korrektur 22.07. — Datenverlust-Klasse, und die einzige Stelle, an der ein Fehler
+   FREMDE Daten verschluckt statt der eigenen). Sie sind stattdessen UMGEBAUT: ein importiertes
+   „vorhanden" legt einen Instrument-Record an, genau wie der E1-Umzug es fuer den eigenen
+   Altbestand tut.
+
+   Der Weg fuehrt bewusst ueber den LISTEN-Kanal des Import-Plans (`plan.listen`), nicht ueber
+   Flachfelder: Damit entsteht der Record ueber denselben Pfad wie jede andere Listen-Uebernahme
+   UND die Import-Vorschau zeigt ihn VORHER an („Neue Eintraege: N") — vorher zeigen statt
+   hinterher melden, ohne dafuer einen zweiten Mechanismus zu bauen. */
+const B16_INSTRUMENT_IMPORT = Object.freeze([
+  { typ: 'vorsorgevollmacht',    gate: 'vollmacht_vorhanden',     felder: {} },
+  { typ: 'patientenverfuegung',  gate: 'patientenverf_vorhanden',
+    felder: { patientenverf_ort: 'ort', patientenverf_arzt: 'patientenverf_arzt', organspende: 'organspende' } },
+  { typ: 'testament',            gate: 'testament_vorhanden',
+    felder: { testament_ort: 'ort', testament_datum: 'datum' } },
+  { typ: 'betreuungsverfuegung', gate: 'betreuungsverfuegung',    felder: {} },
+]);
+
+// Baut aus den b16-Rohdaten die Instrument-Zeilen. Regeln (alle im Test festgehalten):
+//   · Gate 'ja'            → Zeile entsteht
+//   · Gate 'nein'          → KEINE Zeile („es gibt keins" ist eine Aussage, kein Instrument)
+//   · Gate 'plant'         → KEINE Zeile. Der Zwischenzustand ist mit den Gates entfallen (E2);
+//                            eine Zeile wuerde ein Instrument vortaeuschen, das es nicht gibt.
+//                            BEWUSSTER Verlust, im Test dokumentiert — keine Luecke.
+//   · Detail OHNE Gate     → Zeile entsteht trotzdem. Ein Ablageort ist eine echte Angabe der
+//                            Buergerin; sie darf nicht verschwinden, nur weil das Gate-Feld im
+//                            fremden Depot fehlte. (Fund beim Test-Schreiben, ueber den Auftrag hinaus.)
+function _b16InstrumentZeilen(d, verbraucht) {
+  const zeilen = [];
+  for (const def of B16_INSTRUMENT_IMPORT) {
+    const gateRoh = Object.prototype.hasOwnProperty.call(d, def.gate) ? _b16Wert(d[def.gate]) : '';
+    if (Object.prototype.hasOwnProperty.call(d, def.gate)) verbraucht.add(def.gate);
+    // `_ausGate` markiert: diese Zeile stammt aus einem GATE, nicht aus einer echten
+    // Instrument-Liste des fremden Depots. Nur solche Zeilen werden beim Anwenden dedupliziert —
+    // ein Gate kann genau ein Instrument ausdruecken, daraus darf nie eine zweite Zeile entstehen.
+    // Der Marker wird beim Anwenden entfernt und erreicht die Daten nie.
+    const rec = { typ: def.typ, _ausGate: true };
+    let hatDetail = false;
+    for (const altK in def.felder) {
+      if (!Object.prototype.hasOwnProperty.call(d, altK)) continue;
+      verbraucht.add(altK);
+      const w = _b16Wert(d[altK]);
+      if (w === '') continue;
+      const uf = def.felder[altK];
+      rec[uf] = _wertAusText(_instrumentUnterfeldDef(uf), w);
+      hatDetail = true;
+    }
+    const gateSagtJa = (gateRoh === 'ja');
+    if (!gateSagtJa && !hatDetail) continue;      // 'nein'/'plant'/nichts und keine Details → keine Zeile
+    if (!gateSagtJa && (gateRoh === 'nein' || gateRoh === 'plant') && !hatDetail) continue;
+    zeilen.push(rec);
+  }
+  return zeilen;
+}
+// Felddefinition eines Instrument-Unterfelds (fuer die Wert-Interpretation beim Import).
+function _instrumentUnterfeldDef(unterfeldId) {
+  const l = (SEKTOR_BY_ID.vorsorge.sektionen || []).flatMap(s => s.felder || [])
+    .find(f => f.id === 'vorsorge_instrumente');
+  return ((l && l.unterFelder) || []).find(u => u.id === unterfeldId) || { typ: 'text' };
+}
+
 function _b16Felder(parsed) {
   const felder = [], listen = [];
   if (!parsed || !parsed.data || typeof parsed.data !== 'object') return { felder, listen };
@@ -9317,6 +9338,11 @@ function _b16Felder(parsed) {
     if (benutztZiel.has(zielK)) { nichtZugeordnet.push(m.alt + ': ' + w); continue; }
     felder.push({ sektorId: m.sektorId, feldId: m.feldId, wert: _wertAusText(_feldDef(m.sektorId, m.feldId), w) });
     benutztZiel.add(zielK);
+  }
+  // U2-ADR-096: Instrument-Zeilen aus Gates + Detailfeldern (ueber den Listen-Kanal, s. o.).
+  {
+    const instrZeilen = _b16InstrumentZeilen(d, verbraucht);
+    if (instrZeilen.length) listen.push({ sektorId: 'vorsorge', feldId: 'vorsorge_instrumente', eintraege: instrZeilen });
   }
   // Listen → Bereich „Meine Menschen". Rest-Unterfelder ohne Ziel (z. B. bei Kindern) wandern
   // verlustfrei in die globale Sammel-Notiz, mit Kontext-Präfix.
@@ -10632,6 +10658,34 @@ function importAnwenden(plan, optionen) {
           listenEintragHinzufuegen(l.sektorId, l.feldId, e, extra);
         }
         listen++;
+      }
+      continue;
+    }
+    // U2-ADR-096: Instrument-Import ist DEDUP-PFLICHTIG. listenEintragHinzufuegen haengt sonst
+    // unbedingt an — ein zweiter Import desselben fremden Depots erzeugte ein zweites Testament.
+    // Die Einzigartigkeits-Sperre der App (_instrumentEinzigartig) sitzt im Listen-Pfad der
+    // Oberflaeche, nicht hier. Gemergt wird additiv: vorhandene Werte bleiben stehen (Import
+    // ueberschreibt nie still, dieselbe Disziplin wie bei den Skalarfeldern), leere werden gefuellt.
+    if (l.sektorId === 'vorsorge' && l.feldId === 'vorsorge_instrumente') {
+      for (const e0 of (l.eintraege || [])) {
+        const ausGate = !!e0._ausGate;
+        const e = Object.assign({}, e0); delete e._ausGate;   // Marker erreicht die Daten nie
+        // NUR gate-erzeugte Zeilen deduplizieren. Eine echte Instrument-Liste aus einem fremden
+        // Depot kann MEHRERE gueltige Zeilen desselben Typs tragen — zwei Vorsorgevollmachten
+        // (Gesundheit + Bank) gelten nebeneinander, ebenso Sorgerechtsverfuegungen je Kind. Genau
+        // dafuer steht die Auswahl-Form „alle" in U2-ADR-096. Wuerde hier pauschal dedupliziert,
+        // verschwaende die zweite SPURLOS (der Merge fuellt nur leere Felder, art/ort waren belegt)
+        // — ein stiller Verlust gegen einen anderen getauscht. (Carola-Befund 23.07.)
+        const vorhanden = (ausGate && data.sektoren.vorsorge && Array.isArray(data.sektoren.vorsorge.vorsorge_instrumente))
+          ? data.sektoren.vorsorge.vorsorge_instrumente.find(r => r && r.typ === e.typ) : null;
+        if (vorhanden) {
+          for (const k of Object.keys(e)) {
+            if (k === 'typ' || k === 'id') continue;
+            if ((vorhanden[k] == null || vorhanden[k] === '') && e[k] != null && e[k] !== '') { vorhanden[k] = e[k]; listen++; }
+          }
+          continue;
+        }
+        listenEintragHinzufuegen(l.sektorId, l.feldId, e, extra); listen++;
       }
       continue;
     }
@@ -14303,13 +14357,15 @@ function versionHinweisFaellig(jetzt, buildDatum, schwelleTage) {
 const ERINNERUNG_TERMIN_FENSTER_TAGE = 30;   // „Anstehende Termine": Fenster in Tagen
 
 /* ── Ampel-Status (grün/gelb/rot) — übernommen aus beta.16 ──────────────────
-   b16 war faktisch jährlich: < 11 Monate seit dem maßgeblichen Datum = grün,
-   11..<14 = gelb, ab 14 = rot. Damit die Ampel auch OHNE explizit gesetztes
-   Intervall arbeitet, gilt ein Standard-Rhythmus von 12 Monaten. Mit gesetztem
-   pruefIntervallMonate skaliert sie am Intervall:
+   Skaliert am Intervall, das die Bürgerin gesetzt hat:
 
      basis      = aktualisiertAm || erstelltAm
-     intervall  = pruefIntervallMonate || ERINNERUNG_STANDARD_INTERVALL_MONATE (12)
+     intervall  = pruefIntervallMonate (nur wenn > 0; sonst KEINE Intervall-Stufe)
+
+   KEIN stiller Default mehr (Block Prüftermine, 23.07.2026): Ohne gesetztes Intervall
+   entsteht keine Intervall-Stufe. Eine Patientenverfügung gilt nach § 1827 BGB lebenslang;
+   die früheren 12 Monate waren keine Regel, die Vivodepot wiedergab, sondern eine, die es
+   AUFSTELLTE — und noch dazu aus einer unsichtbaren Zahl. Kein Intervall = keine Aussage.
      grün  wenn  jetzt <  basis + (intervall − 1) Monate   → „Aktuell"
      gelb  wenn  jetzt <  basis + (intervall + 2) Monate   → „Bald fällig"
      rot   sonst (jetzt ≥ basis + (intervall + 2) Monate)  → „Überfällig"
@@ -14319,7 +14375,6 @@ const ERINNERUNG_TERMIN_FENSTER_TAGE = 30;   // „Anstehende Termine": Fenster 
    Ein zusätzliches hartes ablaufDatum (Ausweis/Pass) ÜBERSTEUERT nur nach oben
    (eskaliert, deeskaliert nie): in den nächsten 30 Tagen → mindestens GELB,
    überschritten → ROT. Endstufe = die schärfere von Intervall- und Ablauf-Stufe. */
-const ERINNERUNG_STANDARD_INTERVALL_MONATE = 12;   // b16 war jährlich
 const ERINNERUNG_AMPEL_GELB_PUFFER_MONATE = 2;     // Gelb-Fenster nach Intervall-Ende
 const _AMPEL_RANG = { gruen: 0, gelb: 1, rot: 2 };
 // Liefert für einen Eintrag { stufe:'gruen'|'gelb'|'rot', text, basisDatum, ablaufDatum, tageBis }
@@ -14330,10 +14385,10 @@ function dokumentAmpelStatus(e, jetzt) {
   const hatAblauf = !!e.ablaufDatum;
   if (!basis && !hatAblauf) return null;   // Eintrag ohne Datum → keine Ampel
 
-  let stufe = null;   // Intervall-Stufe (nur wenn ein Basis-Datum vorliegt)
-  if (basis) {
-    const iv = (parseInt(e.pruefIntervallMonate, 10) > 0)
-      ? parseInt(e.pruefIntervallMonate, 10) : ERINNERUNG_STANDARD_INTERVALL_MONATE;
+  let stufe = null;   // Intervall-Stufe: nur bei Basis-Datum UND gesetztem Intervall
+  const ivGesetzt = parseInt(e.pruefIntervallMonate, 10);
+  if (basis && ivGesetzt > 0) {
+    const iv = ivGesetzt;
     const gruenBis = _erDatumPlusMonate(basis, iv - 1);
     const gelbBis  = _erDatumPlusMonate(basis, iv + ERINNERUNG_AMPEL_GELB_PUFFER_MONATE);
     if (gruenBis != null && _erTageBis(gruenBis, jetzt) > 0) stufe = 'gruen';
@@ -14552,9 +14607,8 @@ function _prueftermineFaelligAm(doc, status) {
   // null, wenn weder Ablauf noch Basis vorliegen.
   if (doc.ablaufDatum) return doc.ablaufDatum;
   const basis = status && status.basisDatum;
-  if (!basis) return null;
-  const iv = (parseInt(doc.pruefIntervallMonate, 10) > 0)
-    ? parseInt(doc.pruefIntervallMonate, 10) : ERINNERUNG_STANDARD_INTERVALL_MONATE;
+  const iv = parseInt(doc.pruefIntervallMonate, 10);
+  if (!basis || !(iv > 0)) return null;   // ohne gesetztes Intervall keine berechnete Fälligkeit
   return _erDatumPlusMonate(basis, iv);
 }
 function prueftermineDokumente(jetzt) {
@@ -14565,9 +14619,16 @@ function prueftermineDokumente(jetzt) {
     if (!doc.gueltigAb) continue;                       // nur datierte Dokumente
     if (doc.quelle === 'erkannt-abgelehnt') continue;   // dünne Ablehnungen nie
     const st = dokumentAmpel(doc, jetzt);
-    if (!st) continue;                                  // ohne berechenbare Ampel überspringen
     const sek = SEKTOR_BY_ID[doc.sektorId];
     const name = doc.name || (sek && sek.label) || doc.typ || STRINGS.prueftermineNamenlos;
+    if (!st) {
+      // Datiert, aber KEIN Rhythmus (und kein Ablauf): erscheint OHNE Ampelstatus (Nachtrag
+      // 24.07.). Der Bereich ist das einzige Fenster, durch das jemand von der Funktion erfaehrt;
+      // ausgeblendet liesse sie sich nicht kennenlernen. Vivodepot behauptet keine Fälligkeit —
+      // es SAGT, dass keine festgelegt ist, statt zu schweigen.
+      liste.push({ id: doc.id, name: name, sektorId: doc.sektorId || '', ohneRhythmus: true });
+      continue;
+    }
     liste.push({
       id: doc.id, name: name, sektorId: doc.sektorId || '',
       stufe: st.stufe, text: st.text,
@@ -14576,6 +14637,9 @@ function prueftermineDokumente(jetzt) {
     });
   }
   liste.sort((a, b) => {
+    // Zeilen ohne Rhythmus stehen HINTER allen bewerteten (Nachtrag 24.07.).
+    if (!!a.ohneRhythmus !== !!b.ohneRhythmus) return a.ohneRhythmus ? 1 : -1;
+    if (a.ohneRhythmus) return String(a.name).localeCompare(String(b.name));
     const d = _AMPEL_RANG[b.stufe] - _AMPEL_RANG[a.stufe];
     if (d !== 0) return d;
     // gleiche Stufe: ältere Basis (länger her) zuerst; sonst Name alphabetisch
@@ -14947,6 +15011,95 @@ function depotNormalisieren(d) {
     delete _v39.vollmachten;
   }
   if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 39) ziel.schemaVersion = 39;
+
+  // Wert einer Migrations-Notiz menschenlesbar machen (Arrays kommaweise, sonst String).
+  function _wertAlsText40(w) { return Array.isArray(w) ? w.join(', ') : String(w); }
+  /* ── Schema 40 (U2-ADR-096 Block E) — die KI-Verfügung zieht an ihren Ort ──────────────
+     Block E stellt `kiwiz` auf die Instrument-Zeile um. Ohne diesen Schritt wäre der
+     Altbestand danach UNERREICHBAR: Der Wizard liest die Zeile, die leer ist, und die
+     Bürgerin sähe ein leeres Formular, während ihre Antworten unsichtbar in `verwaltung`
+     liegen. Sie müsste alles neu eingeben — dieselbe Verlust-Klasse wie ein stiller
+     Schlucker, nur zeitversetzt bis zum nächsten Öffnen.
+
+     Verwaisungsregel: Es wird NUR verschoben, nichts bewertet, nichts verworfen. Ein Wert,
+     der heute unplausibel aussieht, zieht trotzdem mit — Bestandsdaten werden nie wegen
+     einer neuen Regel blockiert.
+
+     Idempotent über die Quelle: Nach dem ersten Lauf gibt es keine `ki_*` in `verwaltung`
+     mehr, der zweite Lauf findet nichts und legt darum auch keine zweite Zeile an. Ohne
+     ki_*-Werte entsteht KEINE Zeile — eine leere wäre ein Geistereintrag, der im Regal
+     eine KI-Verfügung anzeigt, die nie angelegt wurde. */
+  const _vw40 = ziel.sektoren && ziel.sektoren.verwaltung;
+  if (_vw40 && typeof _vw40 === 'object') {
+    /* Mass ist die DEKLARATION, nicht das Praefix. Die erste Fassung filterte auf `ki_` und traf
+       damit auch die fuenf `ki_verhalten_*` — ein anderes, frueher entferntes Feature. Die landeten
+       als Waisen-Schluessel in der KI-Zeile: aus `verwaltung` entfernt, wo die Lese-App sie noch
+       anzeigt, und dort abgelegt, wo KEINE App sie deklariert. Ein Wert, den danach niemand mehr
+       sieht. Dieselbe Klasse wie ein pauschales ID-Ersetzen: mechanisch passend, semantisch falsch.
+       Ein Praefix ist keine Zugehoerigkeit. */
+    const _kiDekl = new Set(((_listenFeldDef('vorsorge', 'vorsorge_instrumente') || {}).unterFelder || [])
+      .map(u => u.id));
+    const _kiIds = Object.keys(_vw40).filter(k => _kiDekl.has(k));
+    if (_kiIds.length) {
+      if (!ziel.sektoren.vorsorge || typeof ziel.sektoren.vorsorge !== 'object') ziel.sektoren.vorsorge = {};
+      const _vs40 = ziel.sektoren.vorsorge;
+      const _l40 = Array.isArray(_vs40.vorsorge_instrumente) ? _vs40.vorsorge_instrumente : [];
+      let _z40 = _l40.find(r => r && r.typ === 'ki-verfuegung');
+      if (!_z40) { _z40 = { id: uuidV4(), typ: 'ki-verfuegung' }; _l40.push(_z40); }
+      /* KOLLISION — belegtes Zielfeld trifft auf einen abweichenden Altwert.
+         Moeglich, sobald jemand die KI-Verfuegung per Wizard ausgefuellt (flach) UND spaeter eine
+         Zeile von Hand angelegt hat. Die erste Fassung dieser Migration nahm den Zielwert und
+         LOESCHTE den ankommenden — spurlos. Das ist derselbe Merge-Schlucker, der am Morgen beim
+         Import entschieden wurde, nur in die andere Richtung: Ein Wert, den die Buergerin selbst
+         eingetragen hat, darf nicht verschwinden, weil eine Migration ihn fuer ueberfluessig haelt.
+         Der Zeilenwert bleibt gueltig (die neuere, sichtbare Angabe) — der abweichende Altwert wird
+         SICHTBAR an der Zeile aufgehoben. Identische Werte erzeugen KEINE Notiz; Rauschen in einem
+         Hinweisfeld macht die echten Hinweise unglaubwuerdig. */
+      const _konflikte40 = [];
+      for (const _k of _kiIds) {
+        const _alt = _vw40[_k];
+        if (_z40[_k] === undefined) _z40[_k] = _alt;
+        else if (JSON.stringify(_z40[_k]) !== JSON.stringify(_alt)) {
+          const _uf = _listenUnterfeldDef('vorsorge', 'vorsorge_instrumente', _k);
+          const _name = (_uf && _uf.label) || _k;
+          _konflikte40.push(_name + ': „' + _wertAlsText40(_alt) + '"');
+        }
+        delete _vw40[_k];
+      }
+      if (_konflikte40.length) {
+        // Sie-Form, wie jeder Buerger-Text (auch Hinweise aus einer Migration).
+        const _notiz = 'Aus einer frueheren Fassung uebernommen, weil Ihre Angabe hier bereits '
+          + 'ausgefuellt war — bitte pruefen Sie, welche gelten soll: ' + _konflikte40.join('; ');
+        _z40.zusatz = _z40.zusatz ? (_z40.zusatz + ' | ' + _notiz) : _notiz;
+      }
+      _vs40.vorsorge_instrumente = _l40;
+      /* Der Stempel zieht MIT. Er sagt, WER einen Wert gesetzt hat, und trägt die Provenienz
+         durch Export und Angehörigen-Sicht. Ein Umzug, der ihn abschneidet, macht aus fremder
+         Auskunft still eine eigene — die Klasse Fehler, gegen die T-CROSS-06 gebaut wurde.
+         Die ki_*-Stempel liegen feldweise unter `verwaltung`; am Ziel ist das Listenfeld der
+         Träger, also werden sie dorthin zusammengeführt (ältester zuerst). */
+      const _uv = ziel.urheberschaft && ziel.urheberschaft.verwaltung;
+      if (_uv && typeof _uv === 'object') {
+        const _umzug = [];
+        for (const _k of _kiIds) {
+          if (Array.isArray(_uv[_k])) _umzug.push(..._uv[_k]);
+          delete _uv[_k];
+        }
+        if (_umzug.length) {
+          if (!ziel.urheberschaft.vorsorge || typeof ziel.urheberschaft.vorsorge !== 'object') ziel.urheberschaft.vorsorge = {};
+          const _uz = ziel.urheberschaft.vorsorge;
+          const _bestand = Array.isArray(_uz.vorsorge_instrumente) ? _uz.vorsorge_instrumente : [];
+          _uz.vorsorge_instrumente = _bestand.concat(_umzug)
+            .sort((a, b) => String((a && a.ts) || '').localeCompare(String((b && b.ts) || '')));
+        }
+      }
+    }
+  }
+  // Bewusst die LITERALE 40, nicht SCHEMA_VERSION_AKTUELL: Diese Stufe hebt auf 40 und wird das
+  // immer tun. Mit der Konstante wanderte sie beim naechsten Bump stillschweigend mit und
+  // uebersprunge die dann fehlende Stufe 40→41 — die Kette haette ein Loch, das niemand sieht.
+  // (Der Ketten-Test „Lueckenlosigkeit" hat genau das gefangen, als ich es falsch gebaut hatte.)
+  if (typeof ziel.schemaVersion === 'number' && ziel.schemaVersion < 40) ziel.schemaVersion = 40;
   _kindVerhaeltnisseMigrieren(ziel);                // U2-ADR-036 (E): vor den Dokument-/Erinnerungs-Pfaden
   const reg = _dokumenteRoot(ziel);                 // legt data.dokumente[] additiv an
   if (!reg) return ziel;
@@ -15055,11 +15208,28 @@ function prueftermineSektionHTML() {
     }
     h += '<div class="ampel-liste">';
     for (const r of liste) {
-      let meta = escapeHTML(r.text);
-      if (r.aktualisiertAm) meta += ' · ' + escapeHTML(STRINGS.prueftermineAktualisiert.replace('{datum}', datumKurz(r.aktualisiertAm)));
-      if (r.faelligAm) meta += ' · ' + escapeHTML(STRINGS.prueftermineFaellig.replace('{datum}', datumKurz(r.faelligAm)));
-      h += '<div class="ampel-zeile" data-dokument-id="' + escapeHTML(r.id) + '">' +
-        '<span class="ampel-dot ' + _ampelDotKlasse(r.stufe) + '" aria-hidden="true"></span>' +
+      // Klartext-Kanal (WCAG 1.4.1): der Farbpunkt ist aria-hidden, DIESER Text trägt die
+      // Aussage. Grün nennt den nächsten Termin, rot/gelb den Zustand. Praezisierung des
+      // frueheren „Aktuell/Bald faellig/Ueberfaellig", nicht Verdopplung.
+      let meta;
+      if (r.ohneRhythmus) {
+        // Datiert, aber kein Rhythmus: eine FESTSTELLUNG, kein Hinweis darauf, dass man einen
+        // festlegen sollte. Kein Farbpunkt, kein Status, keine Fälligkeit.
+        meta = escapeHTML(STRINGS.prueftermineOhneRhythmus);
+      } else {
+        let kern;
+        if (r.stufe === 'rot') kern = STRINGS.prueftermineZeileRot;
+        else if (r.stufe === 'gelb') kern = STRINGS.prueftermineZeileGelb;
+        else kern = r.faelligAm
+          ? STRINGS.prueftermineZeileGruen.replace('{datum}', datumMonatJahr(r.faelligAm))
+          : STRINGS.ampelStatusGruen;
+        meta = escapeHTML(kern);
+        if (r.aktualisiertAm) meta += ' · ' + escapeHTML(STRINGS.prueftermineAktualisiert.replace('{datum}', datumKurz(r.aktualisiertAm)));
+      }
+      // Ohne Rhythmus: KEIN Farbpunkt (nicht dot-green als „grün getarnt" — es ist kein Zustand).
+      const punkt = r.ohneRhythmus ? '' : ('<span class="ampel-dot ' + _ampelDotKlasse(r.stufe) + '" aria-hidden="true"></span>');
+      h += '<div class="ampel-zeile' + (r.ohneRhythmus ? ' ampel-zeile-ohne-rhythmus' : '') + '" data-dokument-id="' + escapeHTML(r.id) + '">' +
+        punkt +
         '<div class="ampel-text"><span class="ampel-label">' + escapeHTML(r.name) + '</span>' +
           '<span class="ampel-meta">' + meta + '</span></div>' +
         '<div class="ampel-aktionen">' +
@@ -16291,6 +16461,13 @@ function _wizZieleSatz(namen) {
 // Liest die Daten-Tasche EINES Ziels (read-only) — Sektor- oder Situations-Namespace.
 function wizardTascheLesen(ziel) {
   if (!ziel) return {};
+  // Listen-Ziel: die Zeile SELBST ist die Tasche. Damit lesen Vorbelegung und Wiedereintritt
+  // (wizardHatDaten → „bearbeiten" statt „erstellen") aus genau dem Ort, in den geschrieben wird.
+  // Liefe das auseinander, begaenne die Buergerin nach dem Schliessen wieder bei Schritt 1.
+  if (ziel.liste) {
+    const liste = (data && data.sektoren && data.sektoren[ziel.sektor] && data.sektoren[ziel.sektor][ziel.liste]) || [];
+    return liste.find(r => r && r.typ === ziel.typ) || {};
+  }
   if (ziel.sektor)    return (data && data.sektoren    && data.sektoren[ziel.sektor])       || {};
   if (ziel.situation) return (data && data.situationen && data.situationen[ziel.situation]) || {};
   return {};
@@ -16304,9 +16481,33 @@ function wizardZielLesen(def) {
 function wizardZielSetzen(def, feldId, wert, schritt) {
   const ziel = wizardSchrittZiel(def, schritt);
   if (!ziel) throw new Error('Wizard ohne Ziel: ' + (def && def.id));
+  // U2-ADR-096 Block E: DRITTES Ziel neben sektor und situation — eine LISTEN-ZEILE, adressiert
+  // ueber { sektor, liste, typ }. Das ist die Schreibseite der Adressierung, deren Leseseite der
+  // Selektor `liste:<listeId>:<typwert>:<unterfeldId>` schon war. Vorher konnte ein Wizard nur
+  // flach in einen Sektor schreiben — deshalb schrieb kiwiz seine ki_*-Werte nach `verwaltung`,
+  // waehrend dieselben ids als Unterfelder in `vorsorge` lebten: gespeichert, aber nirgends
+  // darstellbar oder korrigierbar. Ein Ort, nicht zwei.
+  if (ziel.liste)     return wizardListenZeileSetzen(ziel, feldId, wert);
   if (ziel.sektor)    return sektorFeldSetzen(ziel.sektor, feldId, wert);
   if (ziel.situation) return situationFeldSetzen(ziel.situation, feldId, wert);
-  throw new Error('Wizard-Ziel ist weder sektor noch situation: ' + (def && def.id));
+  throw new Error('Wizard-Ziel ist weder liste, sektor noch situation: ' + (def && def.id));
+}
+/* Schreibt EIN Unterfeld in DIE Zeile des Typs — und legt sie beim ersten Wert an.
+   „DIE Zeile" ist nur dann wohldefiniert, wenn der Typ einzigartig ist; fuer mehrfache Typen
+   (z. B. Vollmacht: es kann mehrere geben) waere „welche denn?" unbeantwortbar. Der Aufruf
+   verlangt das deshalb ausdruecklich, statt still die erste zu nehmen — stilles Raten an dieser
+   Stelle waere genau die Klasse Fehler, die dieser Umbau beseitigt. */
+function wizardListenZeileSetzen(ziel, feldId, wert) {
+  if (!_instrumentEinzigartig(ziel.typ)) {
+    throw new Error('Wizard-Listenziel verlangt einen einzigartigen Typ (sonst ist „die Zeile" '
+      + 'nicht bestimmt): ' + ziel.typ);
+  }
+  const liste = _listeOder(ziel.sektor, ziel.liste);
+  const i = liste.findIndex(r => r && r.typ === ziel.typ);
+  if (i < 0) return listenEintragHinzufuegen(ziel.sektor, ziel.liste,
+    Object.assign({ typ: ziel.typ }, { [feldId]: wert }));
+  const neu = Object.assign({}, liste[i], { [feldId]: wert });
+  return listenEintragAktualisieren(ziel.sektor, ziel.liste, i, neu);
 }
 // Fortschritts-Mathematik (reine Funktion): „Schritt X von Y" + Prozent für den Balken.
 function wizardFortschritt(def, index) {
@@ -16499,22 +16700,27 @@ function wizardAbbrechen() {
    oder vorhandenem migration/panel-Datensatz. Verwaiste Verweise/fehlende Felder
    brechen die Registrierung nicht (ADR-014 Konsequenz 8). ════════════════════ */
 const WIZARD_DOKUMENT_MAP = Object.freeze({
-  vvwiz:  { typ: 'vorsorgevollmacht',    sektorId: 'vorsorge' },
+  // U2-ADR-096: vvwiz/bwwiz/erbwiz entfernt — ein Instrument entsteht durch den Listen-Eintrag
+  // selbst, nicht durch einen Wizard. Bleibt: pvwiz.
+  // Die frueher hier fehlende KI-Verfuegung ist mit U2-ADR-096 aufgeloest: `ki-verfuegung` ist
+  // jetzt ein Standard-Dokument in vorsorge, kiwiz kann also registrieren (Carola-Entscheid 22.07.).
   pvwiz:  { typ: 'patientenverfuegung',  sektorId: 'vorsorge' },
-  bwwiz:  { typ: 'betreuungsverfuegung', sektorId: 'vorsorge' },   // U2-ADR-033 (analog VV/PV)
-  erbwiz: { typ: 'testament',            sektorId: 'vorsorge' },
+  kiwiz:  { typ: 'ki-verfuegung',        sektorId: 'vorsorge' },
 });
 
-// Liest das gueltigAb für einen dokument-erzeugenden Wizard. Nur erbwiz führt ein
-// Datum (testament_datum, vorverknüpftes Feld); vvwiz/pvwiz liefern stets null.
-// Defensiv: ein fehlendes/leeres/ungültiges Feld → null (bricht nie, Konsequenz 8).
+// Liest das gueltigAb für einen dokument-erzeugenden Wizard. Frueher kam es aus dem Flachfeld
+// `testament_datum`; das ist mit U2-ADR-096 entfallen. Jetzt: das `datum` der NEUESTEN Zeile des
+// zugehoerigen Typs — der Selektor liefert es, keine eigene Regel noetig. Beide verbleibenden
+// Wizards (pvwiz, kiwiz) stehen an Typen mit Form „neueste"; der mehrdeutige Fall tritt nicht auf.
+// UNDATIERT → leer. Kein Ersatzdatum, kein Ausweichen auf die Anlagereihenfolge: ein Dokument mit
+// erfundenem Gueltigkeitsdatum ist schlechter als eines ohne. Defensiv, wirft nie.
 function _wizardDokumentGueltigAb(wizardId) {
-  if (wizardId !== 'erbwiz') return null;
   try {
-    const b = (data && data.sektoren && data.sektoren.vorsorge) ? data.sektoren.vorsorge : null;
-    const roh = b ? b.testament_datum : null;
+    const e = WIZARD_DOKUMENT_MAP[wizardId];
+    if (!e) return null;
+    const roh = listenUnterfeldRoh(e.sektorId, 'vorsorge_instrumente', e.typ, 'datum')[0];
     if (roh && _erParseIso(roh) != null) return String(roh).slice(0, 10);
-  } catch (e) { /* defensiv: fehlendes Feld darf nicht werfen */ }
+  } catch (err) { /* defensiv: fehlendes Feld darf nicht werfen */ }
   return null;
 }
 
@@ -16577,10 +16783,14 @@ const ERKENNUNG_LEITFELDER = Object.freeze({
   },
   testament: {
     typ: 'testament', sektorId: 'vorsorge',
-    leitfeld: { sektorId: 'vorsorge', feldId: 'testament_vorhanden' },
+    // U2-ADR-096: Gate entfallen — die Existenz einer Testament-Zeile IST die Erkennung.
+    // Literal statt INSTRUMENT_ZEILE_PRAEFIX: die Konstante wird ERST WEITER UNTEN deklariert —
+    // in diesem const-Initialisierer laege sie in der temporalen Totzone und riesse das ganze
+    // Skript mit (belegt: 1392 Fehlschlaege beim ersten Anlauf).
+    leitfeld: { sektorId: 'vorsorge', feldId: 'instrument:testament' },
     erfuellt: (w) => w === 'ja',
-    // gueltigAb beim Annehmen aus testament_datum vorbelegen, FALLS gesetzt (Carola-Tabelle).
-    gueltigAbFeld: { sektorId: 'vorsorge', feldId: 'testament_datum' },
+    // gueltigAb beim Annehmen aus dem `datum` der neuesten Testament-Zeile (frueher testament_datum).
+    gueltigAbFeld: { sektorId: 'vorsorge', feldId: 'liste:vorsorge_instrumente:testament:datum' },
     textKey: 'dokumentErkanntTextTestament',
   },
   schwerbehindertenausweis: {
@@ -16597,6 +16807,18 @@ const ERKENNUNG_LEITFELDER = Object.freeze({
 // wirft nie). data.sektoren[sektorId] hält die Werte direkt nach feldId (vgl. dokumentFelder).
 function _erkennungFeldWert(sektorId, feldId) {
   try {
+    // U2-ADR-096: Leitfelder duerfen auf die Instrument-Zeile zeigen. Zwei Formen:
+    //   instrument:<typ>                        → Existenz ('ja', wenn eine Zeile da ist)
+    //   liste:<listeId>:<typ>:<unterfeldId>     → Unterfeld der gewaehlten Zeile
+    // Die Gates, an denen diese Leitfelder frueher hingen, sind mit dem Umbau entfallen.
+    if (typeof feldId === 'string' && feldId.startsWith(INSTRUMENT_ZEILE_PRAEFIX)) {
+      return _instrumentVorhanden(feldId.slice(INSTRUMENT_ZEILE_PRAEFIX.length)) ? 'ja' : null;
+    }
+    const sel = _listenSelektorZerlegen(feldId);
+    if (sel) {
+      const w = listenUnterfeldRoh(sektorId, sel.listeId, sel.typWert, sel.unterfeldId)[0];
+      return (w == null || w === '') ? null : w;
+    }
     const b = (data && data.sektoren && data.sektoren[sektorId]) ? data.sektoren[sektorId] : null;
     if (!b || !Object.prototype.hasOwnProperty.call(b, feldId)) return null;
     const roh = b[feldId];
@@ -17176,7 +17398,11 @@ const VORSORGE_MODULE = Object.freeze([
   // referenzZiele hier STRUKTURELL deklariert; das per-`art`-/Cross-Sektor-Rendern
   // (Bankvollmacht → Karte in Finanzen) ist die Bild-C-Arbeit (P1/P2-Grenzen, U2-ADR-068).
   { id: 'vorsorgevollmacht', titel: 'Vorsorgevollmacht', mehrfach: true, herkunft: 'amtlich',
-    form: null, sektor: 'vorsorge', wizardId: 'vvwiz', dokumentTyp: 'vorsorgevollmacht',
+    // U2-ADR-096: vvwiz ist entfallen (spiegelte nur Felder) — dieses Modul hat keinen Wizard mehr.
+    // KORREKTUR eines eigenen Fehlers: Beim Wizard-Ausbau hatte ein pauschales vvwiz→pvwiz-Ersetzen
+    // hier die PATIENTENVERFUEGUNG eingetragen. Eine stille Fehlverdrahtung: Die Regal-Karte der
+    // Vollmacht haette in den PV-Wizard gefuehrt.
+    form: null, sektor: 'vorsorge', wizardId: null, dokumentTyp: 'vorsorgevollmacht',
     listeId: 'vorsorge_instrumente', instrumentTyp: 'vorsorgevollmacht', istAnlage: false, generator: null,
     // referenzZiele = STRUKTUR, kein geparster String: die Sichtbarkeits-Bedingung ist ein Schema
     // { feld, wert } (dieselbe Form wie sichtbarWenn) — ein fremdes Modul füllt es, statt eine String-
@@ -17184,19 +17410,21 @@ const VORSORGE_MODULE = Object.freeze([
     referenzZiele: { sichtbarkeit: [{ sektor: 'finanzen', bedingung: { feld: 'art', wert: 'bank' } }],
                      daten: [{ feld: 'bevollmaechtigter', entitaet: 'person' }] } },
   { id: 'betreuungsverfuegung', titel: 'Betreuungsverfügung', mehrfach: false, herkunft: 'amtlich',
-    form: null, sektor: 'vorsorge', wizardId: 'bwwiz', dokumentTyp: 'betreuungsverfuegung',
+    form: null, sektor: 'vorsorge', wizardId: null, dokumentTyp: 'betreuungsverfuegung',   // U2-ADR-096: bwwiz entfallen
     listeId: 'vorsorge_instrumente', instrumentTyp: 'betreuungsverfuegung', istAnlage: false, generator: null },
   { id: 'testament-erbe', titel: 'Testament', mehrfach: false, herkunft: 'amtlich',
-    form: null, sektor: 'vorsorge', wizardId: 'erbwiz', dokumentTyp: 'testament',
+    form: null, sektor: 'vorsorge', wizardId: null, dokumentTyp: 'testament',   // U2-ADR-096: erbwiz entfallen
     listeId: 'vorsorge_instrumente', instrumentTyp: 'testament', istAnlage: false, generator: null },
   { id: 'sorgerechtsverfuegung', titel: 'Sorgerechtsverfügung', mehrfach: false, herkunft: 'amtlich',
-    form: null, sektor: 'vorsorge', wizardId: 'srwiz', dokumentTyp: null,
+    form: null, sektor: 'vorsorge', wizardId: null, dokumentTyp: null,   // U2-ADR-096: srwiz entfallen
     listeId: 'vorsorge_instrumente', instrumentTyp: 'sorgerechtsverfuegung', istAnlage: false, generator: null },
   // KI-Verfügung: volle Instanz, aber Forschungssynthese + Testament-Anlage; Heimat heute Verwaltung
-  // (zieht mit der Gesamt-Migration an ihren Zielort). Erscheint im Bild-C-Regal (CC-Auftrag).
+  // Block H (23.07.2026): Heimat ist jetzt `vorsorge`. Die KI-Verfügung wohnt seit Block E in der
+  // gemeinsamen Instrument-Liste; ihre alte Verwaltung-Sektion trug kein Feld mehr und ist entfallen.
+  // Damit ist sie eine Heimat-Karte wie die übrigen fünf — kein Sonderweg über einen Fremdsektor.
   { id: 'ki-verfuegung', titel: 'Verfügung zur digitalen Nachbildung', mehrfach: false,
     herkunft: { art: 'forschung', beleg: 'Edilife/Cambridge/Zürich', hinweis: 'kein amtlicher Standard' },
-    form: { paragraf: '§ 2247 BGB' }, sektor: 'verwaltung', wizardId: 'kiwiz', dokumentTyp: null,
+    form: { paragraf: '§ 2247 BGB' }, sektor: 'vorsorge', wizardId: 'kiwiz', dokumentTyp: null,
     listeId: 'vorsorge_instrumente', instrumentTyp: 'ki-verfuegung',
     istAnlage: true, anlageZu: 'testament', generator: KI_MODUL,
     referenzZiele: { daten: [{ feld: 'ki_nachlassverwalter', entitaet: 'person' }] } },
@@ -17217,13 +17445,17 @@ function moduleMitGenerator() { return VORSORGE_MODULE.filter(m => !modulIstLeer
 // Karten-Anzeige-Metadaten je Instrument (Status-Gate + Herkunft-Etikett). Rein Anzeige, deshalb
 // in der Render-Schicht (nicht im Modul-Vertrag). „amtlich" = BMJ-Formulare (nur PV); „eigenhändig"
 // = § 2247 / selbst verfasst (Testament, KI und die übrigen tragen kein amtliches BMJ-Formular).
+// U2-ADR-096 / Block H: KEIN `gateFeld` mehr. Alle sechs Gate-Felder sind entfallen; der Pfad
+// las nur noch `undefined` und fiel auf den Record zurueck. Mit ihm entfallen die unerreichbaren
+// Zweige „in Vorbereitung" (`plant`, mit den Gates gestrichen) und `ki_grundentscheidung ===
+// 'erlaubnis'`. Der Status kommt jetzt ausschliesslich aus dem Record.
 const _MODUL_KARTE = Object.freeze({
-  patientenverfuegung:   { gateFeld: 'patientenverf_vorhanden', herkunft: 'amtlich' },
-  vorsorgevollmacht:     { gateFeld: 'vollmacht_vorhanden',     herkunft: 'eigenhändig' },
-  betreuungsverfuegung:  { gateFeld: 'betreuungsverfuegung',    herkunft: 'eigenhändig' },
-  'testament-erbe':      { gateFeld: 'testament_vorhanden',     herkunft: 'eigenhändig' },
-  sorgerechtsverfuegung: { gateFeld: 'sorgerechtsverfuegung',   herkunft: 'eigenhändig' },
-  'ki-verfuegung':       { gateFeld: 'ki_grundentscheidung',    herkunft: 'eigenhändig' },
+  patientenverfuegung:   { herkunft: 'amtlich' },
+  vorsorgevollmacht:     { herkunft: 'eigenhändig' },
+  betreuungsverfuegung:  { herkunft: 'eigenhändig' },
+  'testament-erbe':      { herkunft: 'eigenhändig' },
+  sorgerechtsverfuegung: { herkunft: 'eigenhändig' },
+  'ki-verfuegung':       { herkunft: 'eigenhändig' },
 });
 function modulKarteHerkunft(m) { const km = _MODUL_KARTE[m.id]; return km ? km.herkunft : ''; }
 // Status-Zeile der Regal-Karte: Anzahl (mehrfach) bzw. vorhanden/in Vorbereitung/keine (Gate).
@@ -17237,16 +17469,11 @@ function modulKarteStatus(m) {
     const n = m.instrumentTyp ? liste.filter(r => r && r.typ === m.instrumentTyp).length : liste.length;
     return n > 0 ? (n + ' erteilt') : 'keine';
   }
-  const km = _MODUL_KARTE[m.id];
-  const w = km ? d[km.gateFeld] : null;
-  // U2-ADR-089 Block 2: ein Instrument-Record zählt als „vorhanden", auch wenn das alte Gate nie
-  // gesetzt wurde (Record schlägt Gate — dieselbe Ableitung wie in den Situationsblättern). „in
-  // Vorbereitung" bleibt am Gate, weil ein Record diesen Zwischenzustand nicht ausdrücken kann.
+  // Record-only (U2-ADR-100 §3): Kein Record heisst „keine" — nicht „nein". Die Buergerin hat
+  // nicht gesagt, dass es keines gibt; sie hat nichts gesagt.
   const hatRecord = m.instrumentTyp ? _instrumentVorhanden(m.instrumentTyp) : false;
-  if (m.id === 'ki-verfuegung') return (hatRecord || w === 'erlaubnis') ? 'festgelegt' : (w === 'untersagung' ? 'untersagt' : 'keine');
-  if (hatRecord || w === 'ja') return 'vorhanden';
-  if (w === 'plant') return 'in Vorbereitung';
-  return 'keine';
+  if (m.id === 'ki-verfuegung') return hatRecord ? 'festgelegt' : 'keine';
+  return hatRecord ? 'vorhanden' : 'keine';
 }
 // art-Label eines vorsorge_instrumente-Records aus der Feld-Definition (kein hartkodiertes Duplikat).
 // U2-ADR-089 Teil A Block 1 (17.07.): Pfad umgestellt von der alten `vollmachten`-Liste (Sektion
@@ -17259,6 +17486,34 @@ function _vollmachtArtLabel(wert) {
     const o = uf && (uf.optionen || []).find(x => x.wert === wert);
     return o ? o.label : '';
   } catch (e) { return ''; }
+}
+
+/* Sprungziel einer Regal-Karte — der EINE Ort (Block H).
+
+   Bis zum Umbau sprang jede Karte auf `sek-<modul.id>`: Jedes Instrument hatte eine eigene
+   Sektion. Die sind in `vorsorge_instrumente` aufgegangen, die Anker blieben stehen — fuenf
+   Karten zeigten ins Leere. Antippen tat nichts: kein Fehler, keine Meldung, nur Stillstand.
+
+   Zwei Ziele, je nach Datenlage:
+     · Ein Record des Typs liegt vor → Feinsprung auf SEINE Zeile (`rec-<id>`, der Anker, den
+       feldZeileHTML an Listen-Eintraegen rendert).
+     · Kein Record → die Sektion, in der die Liste WOHNT. Genau dann ist der Sprung am
+       wichtigsten: Die Karte steht auf „keine", und die Buergerin will dorthin, wo man es anlegt.
+
+   Die Sektion wird aus dem Modell gesucht, nicht hingeschrieben: Wandert die Liste, wandert das
+   Ziel mit. Eine hartkodierte Sektions-id waere derselbe Fehler noch einmal, nur juenger. */
+function _listenSektionId(sektorId, listeId) {
+  const s = SEKTOR_BY_ID[sektorId];
+  const sek = s && (s.sektionen || []).find(x => (x.felder || []).some(f => f.id === listeId));
+  return sek ? sek.id : null;
+}
+function modulKarteZiel(m) {
+  const d = (data && data.sektoren && data.sektoren[m.sektor]) || {};
+  const liste = Array.isArray(d[m.listeId]) ? d[m.listeId] : [];
+  const rec = m.instrumentTyp ? liste.find(r => r && r.typ === m.instrumentTyp && r.id) : null;
+  if (rec) return { sektor: m.sektor, anker: 'rec-' + rec.id };
+  const sekId = _listenSektionId(m.sektor, m.listeId) || m.id;
+  return { sektor: m.sektor, anker: 'sek-' + sekId };
 }
 
 // Schritt 1 — das Vorsorge-Regal: je Modul EINE gleichrangige Karte (Titel · Herkunft · Status).
@@ -17278,13 +17533,15 @@ function vorsorgeRegalHTML() {
         '<span class="regal-herkunft">' + escapeHTML(modulKarteHerkunft(m)) + '</span>' +
         '<span class="regal-status">' + escapeHTML(modulKarteStatus(m)) + '</span>' +
       '</div>';
-    if (m.sektor === 'vorsorge') {
-      // Heimat-Karte → Anker-Sprung auf den eigenen Abschnitt (TOC-Funktion).
-      h += '<a class="regal-karte" href="#sek-' + escapeHTML(m.id) + '" data-modul-karte="' + escapeHTML(m.id) + '">' + inner + '</a>';
+    const ziel = modulKarteZiel(m);
+    if (ziel.sektor === 'vorsorge') {
+      // Heimat-Karte → Anker-Sprung im eigenen Sektor (TOC-Funktion).
+      h += '<a class="regal-karte" href="#' + escapeHTML(ziel.anker) + '" data-modul-karte="' + escapeHTML(m.id) + '">' + inner + '</a>';
     } else {
-      // Fremd-Heimat-Karte (KI, Heimat Verwaltung) → Sprung IN den Heimatsektor, mit Rückweg.
+      // Fremd-Heimat-Karte → Sprung IN den Heimatsektor, mit Rückweg. Seit die KI-Verfügung am
+      // gemeinsamen Ort wohnt, wohnt KEIN Modul mehr fremd; der Zweig bleibt für ein künftiges.
       h += '<button type="button" class="regal-karte regal-karte-fremd" data-modul-karte="' + escapeHTML(m.id) + '" ' +
-        'data-regal-sprung-sektor="' + escapeHTML(m.sektor) + '" data-regal-sprung-anker="sek-' + escapeHTML(m.id) + '">' +
+        'data-regal-sprung-sektor="' + escapeHTML(ziel.sektor) + '" data-regal-sprung-anker="' + escapeHTML(ziel.anker) + '">' +
         inner + '</button>';
     }
   }
@@ -17555,6 +17812,106 @@ function angBannerHTML() {
    und Instrument-Typ-Wert. Hier ist der Typ gemeint. */
 const INSTRUMENT_ZEILE_PRAEFIX = 'instrument:';
 
+/* ── U2-ADR-096 · Unterfeld-Adressierung für typisierte Listen ──────────────────
+   `instrument:<typ>` (oben) beantwortet die EXISTENZ-Frage („gibt es ein Testament?").
+   Dieser Selektor beantwortet die FELD-Frage („wo liegt es?"): aus Liste X die Zeile(n)
+   mit Diskriminante=Y, daraus Unterfeld Z. Zwei Fragen, zwei Mechanismen — keiner ersetzt
+   den anderen.
+
+   Bewusst GENERISCH: Liste, Diskriminante, Typwert und Unterfeld sind Parameter. Vivodepot
+   trägt weitere typisierte Listen (Konten über `art`, später die Merkliste); ein vorsorge-
+   spezifischer Selektor müsste dort neu gebaut werden — mit der bekannten Folge, dass die
+   zweite Fassung von der ersten abweicht.
+
+   Selektor-Schreibweise für Querverweise:  liste:<listeId>:<typwert>:<unterfeldId>
+   Die AUSWAHLFORM steht NICHT im Selektor, sondern in der Registry unten — sonst könnte
+   dieselbe Zeile von zwei Aufrufstellen verschieden ausgewählt werden. */
+const LISTEN_AUSWAHLFORM = Object.freeze({
+  // U2-ADR-096: pro Typ EINMAL entschieden, inhaltlich, nicht abgeleitet.
+  // „neueste" = ein neues Dokument löst das vorige rechtlich ab.
+  // „alle"    = mehrere können gleichzeitig gelten. Im Zweifel „alle".
+  vorsorge_instrumente: Object.freeze({
+    testament:              'neueste',   // § 2258 BGB — das jüngere widerruft das frühere
+    patientenverfuegung:    'neueste',   // jüngere Fassung = aktueller Wille
+    'ki-verfuegung':        'neueste',   // wie PV, fortgeschriebene Willensäußerung
+    betreuungsverfuegung:   'neueste',   // Vorschlag ans Gericht, der jüngere gilt
+    vorsorgevollmacht:      'alle',      // Bank-/Gesundheits-/Generalvollmacht gelten NEBENEINANDER
+    sorgerechtsverfuegung:  'alle',      // kann je Kind/Kindergruppe getrennt bestehen
+  }),
+});
+const LISTEN_AUSWAHLFORM_STANDARD = 'alle';   // unbekannter Typ → im Zweifel alle zeigen
+
+// Wählt die Zeilen einer typisierten Liste. Liefert IMMER ein Array (auch `neueste` liefert
+// höchstens ein Element) — so kann der Datums-Rückfall unten den Rückgabetyp nicht verändern
+// und jede Konsumenten-Stelle behandelt einen und mehrere Treffer über denselben Pfad.
+function listenZeilenWaehlen(sektorId, listeId, typWert, opt) {
+  const o = opt || {};
+  const disk = o.diskriminante || 'typ';
+  const alle = ((data && data.sektoren && data.sektoren[sektorId]) || {})[listeId];
+  if (!Array.isArray(alle)) return [];
+  const treffer = alle.filter(r => r && r[disk] === typWert);
+  if (treffer.length <= 1) return treffer;                 // 0 oder 1 → nichts zu wählen
+  // §5a: Der Notfall-Pfad erzwingt GENAU EINE Zeile — unabhaengig von der Registry-Form. Die
+  // Klartext-Menge darf nicht mit der Zahl der Instrument-Zeilen wachsen.
+  const form = o.genauEine ? 'neueste'
+    : (((LISTEN_AUSWAHLFORM[listeId] || {})[typWert]) || LISTEN_AUSWAHLFORM_STANDARD);
+  if (form !== 'neueste') return treffer;
+  // „neueste" hängt am Unterfeld `datum` (ISO). Es ist bewusst KEIN Pflichtfeld — die Auswahl
+  // kann also unentscheidbar sein. Dann fällt sie auf „alle" zurück (U2-ADR-096 §3.2): Die
+  // Anlagereihenfolge wäre verfügbar, aber sie ist eine ERFASSUNGS-Tatsache, die als RECHTS-
+  // Aussage gelesen würde („zuletzt eingetippt = gültig"). Ein sichtbares „hier stimmt etwas
+  // nicht" ist einem unsichtbaren Fehlgriff vorzuziehen.
+  const datumFeld = o.datumFeld || 'datum';
+  const datiert = treffer.filter(r => typeof r[datumFeld] === 'string' && /^\d{4}-\d{2}-\d{2}/.test(r[datumFeld]));
+  // §5a: Im Notfall-Pfad ist der „alle"-Rueckfall GESPERRT (er hoebe die Klartext-Grenze auf).
+  // Dann entscheidet die erste gespeicherte Zeile — deterministisch, stabil ueber die Record-id.
+  // Das ist genau die Anlagereihenfolge, die §3.2 sonst verwirft; hier ist sie zulaessig, weil die
+  // Alternative nicht „mehr zeigen", sondern „die Grenze aufgeben" waere. Nicht wegraeumen.
+  if (!datiert.length) return o.genauEine ? [treffer[0]] : treffer;
+  let best = datiert[0];
+  for (const r of datiert) if (String(r[datumFeld]) > String(best[datumFeld])) best = r;
+  return [best];
+}
+
+// Rohwerte eines Unterfelds über die gewählten Zeilen. Leere Liste, wenn es den Typ nicht gibt
+// oder die gewählte Zeile das Unterfeld nicht trägt — kein Wurf, kein Platzhalter.
+function listenUnterfeldRoh(sektorId, listeId, typWert, unterfeldId, opt) {
+  return listenZeilenWaehlen(sektorId, listeId, typWert, opt)
+    .map(r => r[unterfeldId])
+    .filter(v => v != null && v !== '');
+}
+
+// Zerlegt `liste:<listeId>:<typwert>:<unterfeldId>`. Liefert null, wenn die Form nicht passt.
+const LISTEN_UNTERFELD_PRAEFIX = 'liste:';
+function _listenFeldDef(sektorId, listeId) {
+  return ((SEKTOR_BY_ID[sektorId] || { sektionen: [] }).sektionen || [])
+    .flatMap(s => s.felder || []).find(f => f.id === listeId);
+}
+function _listenUnterfeldDef(sektorId, listeId, unterfeldId) {
+  const l = (SEKTOR_BY_ID[sektorId] || { sektionen: [] }).sektionen
+    .flatMap(s => s.felder || []).find(f => f.id === listeId);
+  return ((l && l.unterFelder) || []).find(u => u.id === unterfeldId);
+}
+/* EINE Auflösung „Feld-Kennung → Felddefinition", die BEIDE Formen kennt: das flache
+   Sektorfeld und den Listen-Unterfeld-Selektor (U2-ADR-096). Vorher stand dieselbe
+   if(sel)/else-Verzweigung an fünf Stellen inline — Notfall-Kern, Situations-Renderer,
+   Lese-App und zwei Tests. Fünf Kopien einer Regel sind fünf Gelegenheiten, dass eine
+   davon den Selektor NICHT kennt; genau das war der Grund, warum vier Konsumenten-Tests
+   nach dem Umbau „Feld existiert nicht" meldeten, obwohl das Feld existierte.
+   Liefert undefined, wenn es die Kennung wirklich nirgends gibt — das bleibt ein Befund. */
+function feldDefFuer(sektorId, feldId) {
+  const sel = _listenSelektorZerlegen(feldId);
+  if (sel) return _listenUnterfeldDef(sektorId, sel.listeId, sel.unterfeldId);
+  const sek = SEKTOR_BY_ID[sektorId];
+  return sek && sek.sektionen.flatMap(s => s.felder || []).find(f => f.id === feldId);
+}
+function _listenSelektorZerlegen(feldId) {
+  if (typeof feldId !== 'string' || !feldId.startsWith(LISTEN_UNTERFELD_PRAEFIX)) return null;
+  const t = feldId.slice(LISTEN_UNTERFELD_PRAEFIX.length).split(':');
+  if (t.length !== 3 || t.some(x => !x)) return null;
+  return { listeId: t[0], typWert: t[1], unterfeldId: t[2] };
+}
+
 function _vorsorgeFeldDef(feldId) {
   const s = SEKTOR_BY_ID['vorsorge'];
   return s && s.sektionen.flatMap(x => x.felder || []).find(f => f.id === feldId);
@@ -17574,19 +17931,31 @@ function _instrumentGateFeldId(typ) {
 // {feld, roh} für eine Instrument-Zeile. Record schlägt Gate: liegt ein Record vor, ist die
 // Antwort „ja", auch wenn das alte Gate nie gepflegt wurde. Ohne Record zählt das Gate weiter
 // — es trägt den Zustand „in Vorbereitung", den ein Record nicht ausdrücken kann.
+/* Die Antwort auf „gibt es dieses Instrument?" kommt AUSSCHLIESSLICH aus dem Record.
+
+   Bis U2-ADR-096 gab es einen zweiten Weg: das alte Flachfeld-Gate. Es trug den Zustand „in
+   Vorbereitung", den ein Record nicht ausdruecken kann. Mit den Gates ist dieser Zustand
+   entfallen (E2, bewusst und dokumentiert) — und mit ihm der Gate-Zweig. Er zeigte sonst
+   weiter auf Felder, die es nicht mehr gibt: eine Anzeige, die an etwas haengt, das die
+   Buergerin nirgends mehr aendern kann.
+
+   Die Optionen kamen frueher aus der Gate-Definition. Ohne Gate waren sie LEER — und ein
+   auswahl-Feld ohne Optionen zeigt seinen Rohwert. Auf dem Situationsblatt stand deshalb
+   schlicht „ja". Technisch richtig, fuer eine Institution nichtssagend; dieselbe Klasse wie
+   ein Optionscode ohne Label. Die Optionen stehen darum jetzt hier, wo die Aussage entsteht. */
+const INSTRUMENT_ZEILE_OPTIONEN = Object.freeze([
+  { wert: 'ja', label: 'vorhanden' },
+]);
 function instrumentZeileModell(typ) {
-  const gateId = _instrumentGateFeldId(typ);
-  const gateDef = gateId ? _vorsorgeFeldDef(gateId) : null;
   const feld = {
     id: INSTRUMENT_ZEILE_PRAEFIX + typ,
     label: _instrumentTypLabel(typ),
     typ: 'auswahl',
-    optionen: (gateDef && gateDef.optionen) || [],
+    optionen: INSTRUMENT_ZEILE_OPTIONEN.slice(),
   };
-  let roh;
-  if (_instrumentVorhanden(typ)) roh = 'ja';
-  else if (gateId) roh = ((data && data.sektoren && data.sektoren.vorsorge) || {})[gateId];
-  return { feld, roh };
+  // Kein Record → KEINE Aussage. Angezeigt wird „nicht hinterlegt", nicht „nein": Die Buergerin
+  // hat nicht gesagt, dass es keines gibt — sie hat nichts gesagt. Der Unterschied zaehlt.
+  return { feld, roh: _instrumentVorhanden(typ) ? 'ja' : undefined };
 }
 // Welche echten Felder eine Instrument-Zeile speist — für den Angehörigen-Cache, der einen
 // data-Subset schneidet und daraus später dieselbe Ableitung rechnen muss.
@@ -17599,6 +17968,22 @@ function crossRefFeldUndRoh(quelle, feldId) {
   // Virtuelle Instrument-Zeile (U2-ADR-089 Block 2) — abgeleitet, kein Sektor-Feld.
   if (quelle === 'vorsorge' && typeof feldId === 'string' && feldId.startsWith(INSTRUMENT_ZEILE_PRAEFIX)) {
     return instrumentZeileModell(feldId.slice(INSTRUMENT_ZEILE_PRAEFIX.length));
+  }
+  // U2-ADR-096: `liste:<listeId>:<typwert>:<unterfeldId>` — Zeile(n) wählen, Unterfeld lesen.
+  {
+    const sel = _listenSelektorZerlegen(feldId);
+    if (sel) {
+      const listeDef = (SEKTOR_BY_ID[quelle] || { sektionen: [] }).sektionen
+        .flatMap(s2 => s2.felder || []).find(f => f.id === sel.listeId);
+      const ufDef = ((listeDef && listeDef.unterFelder) || []).find(u => u.id === sel.unterfeldId);
+      const werte = listenUnterfeldRoh(quelle, sel.listeId, sel.typWert, sel.unterfeldId);
+      if (!werte.length) return { feld: ufDef, roh: undefined };   // Leerverhalten: nichts zeigen
+      if (werte.length === 1) return { feld: ufDef, roh: werte[0] };
+      // Mehrere gültige Zeilen (Form „alle", oder „neueste" ohne jedes Datum): alle zeigen. Die
+      // typisierte Einzel-Darstellung trägt nur EINEN Wert, darum hier als Text zusammengefasst —
+      // sichtbar bleibt, dass es mehrere sind (U2-ADR-096: lieber eins zu viel als still verloren).
+      return { feld: Object.assign({}, ufDef, { typ: 'text' }), roh: werte.map(v => feldWertText(ufDef, v)).join(' · ') };
+    }
   }
   if (quelle === 'meine-menschen' && feldId === 'menschen') {
     return { feld: MENSCHEN_REGISTER_FELD, roh: (data && Array.isArray(data.menschen) ? data.menschen : []) };
@@ -21112,6 +21497,15 @@ function flowPersonRegisterEntfernen(id) {
 function datumKurz(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
   return m ? (m[3] + '.' + m[2] + '.' + m[1].slice(2)) : '';
+}
+const _MONATE_DE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+// „Monat Jahr" für die Prüftermin-Klartextzeile (z. B. „Juli 2027"). Leer, wenn kein ISO-Datum.
+function datumMonatJahr(iso) {
+  const m = /^(\d{4})-(\d{2})/.exec(String(iso || ''));
+  if (!m) return '';
+  const mi = parseInt(m[2], 10) - 1;
+  return (_MONATE_DE[mi] || m[2]) + ' ' + m[1];
 }
 
 // Name des aktuellen Ankers (= Eigentümer*in der gerade gezeigten Daten). Im Sub-Kontext der

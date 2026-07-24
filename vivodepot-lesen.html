@@ -712,11 +712,23 @@ const SEKTOREN = Object.freeze([
       { id: 'haustiere', label: 'Haustiere',
         hint: 'Wer kümmert sich um Ihre Tiere, wenn Sie ausfallen?',
         felder: [
-          { id: 'tier_name',       label: 'Tier — Name & Art',               typ: 'text', beispiel: 'Felix, Katze' },
-          { id: 'tier_betreuung',  label: 'Betreuung im Notfall — Person & Kontakt', typ: 'text', beispiel: 'Nachbarin Sarah, 0151 9876543' },
-          { id: 'tier_tierarzt',   label: 'Tierarzt — Name & Kontakt',       typ: 'text', beispiel: 'Dr. Sommer, Tierarztpraxis Süd' },
-          { id: 'tier_futter',     label: 'Futter / Besonderheiten / Medikamente', typ: 'text', beispiel: 'trocken, 2× täglich; Tabletten gegen Diabetes morgens' },
-          { id: 'tier_sonstiges',  label: 'Weitere Hinweise',                typ: 'text', beispiel: 'scheu vor lauten Geräuschen' },
+          /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
+             Hier standen die Flachfelder: tier_name, tier_betreuung, tier_tierarzt, tier_futter, tier_sonstiges.
+             Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
+             zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
+             hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
+          { id: 'haustiere', label: 'Tiere', typ: 'liste',
+            hint: 'Jedes Tier als eigener Eintrag.',
+            unterFelder: [
+              { id: 'name',      label: 'Tier — Name & Art',                       typ: 'text', beispiel: 'Felix, Katze' },
+              // E2 D1 (15.07.2026): Freitext → ref-Widget (Weiche B — kein Doppel-Register-Modus;
+              // eine anonyme Praxis/Person ohne Register-Eintrag läuft über den Freitext-Override,
+              // der beim ref-Widget bereits existiert).
+              { id: 'betreuung', label: 'Betreuung im Notfall — Person & Kontakt', typ: 'ref', entitaet: 'person' },
+              { id: 'tierarzt',  label: 'Tierarzt — Name & Kontakt',               typ: 'ref', entitaet: 'person' },
+              { id: 'futter',    label: 'Futter / Besonderheiten / Medikamente',   typ: 'text', beispiel: 'trocken, 2× täglich; Tabletten gegen Diabetes morgens' },
+              { id: 'sonstiges', label: 'Weitere Hinweise',                        typ: 'text', beispiel: 'scheu vor lauten Geräuschen' },
+            ] },
         ] },
     ] },
   { id: 'meine-menschen',    label: 'Meine Menschen',       format: SEKTOR_FORMATE.GENERISCH,  icon: 'users',
@@ -724,7 +736,7 @@ const SEKTOREN = Object.freeze([
     exporte: [{ format: 'vcard-menschen', label: STRINGS.exportVcardMenschenLabel }],   // Welle 2 (vCard)
     // Geführter Einstieg: der Sorgerechts-Wizard (srwiz) und – Welle 2/3 – Pflege/Heirat schreiben
     // ihren Bereich-2-Teil hierher; der Startknopf ist datenlage-adaptiv (erstellen/bearbeiten).
-    wizards: ['srwiz', 'pflwiz', 'heirwiz'],
+    wizards: ['pflwiz', 'heirwiz'],
     sektionen: [
       { id: 'menschen-liste', label: 'Menschen',
         hint: 'Menschen, die Ihnen wichtig sind. Manche kennt jeder, manche kennt sonst niemand — alle gehören hierher: auch nicht-verheiratete Partner*innen, beste Freund*innen, wichtige Bezugspersonen. Einmal erfasst, überall im Vivodepot referenzierbar.',
@@ -743,10 +755,15 @@ const SEKTOREN = Object.freeze([
       { id: 'kinder-sek', label: 'Kinder', felder: [
         { id: 'kinder', label: 'Kinder', typ: 'liste',
           unterFelder: [
-            { id: 'vorname',            label: 'Vorname',                     typ: 'text',  beispiel: 'Anna' },
-            { id: 'nachname',           label: 'Nachname',                    typ: 'text',  beispiel: 'Mustermann' },
-            { id: 'geburtsdatum',       label: 'Geburtsdatum',                typ: 'datum' },
-            { id: 'geburtsort',         label: 'Geburtsort',                  typ: 'text',  beispiel: 'München' },
+            /* Paritaets-Nachtrag Klasse (a), 23.07.2026 — FALSCHANZEIGE behoben.
+               Hier standen vier Inline-Felder (vorname/nachname/geburtsdatum/geburtsort), die der
+               Kern seit U2-ADR-036 NICHT MEHR befuellt: Das Kind lebt als Verweis im zentralen
+               Menschen-Register. Ein heutiges Depot zeigte deshalb einen Kind-Eintrag OHNE Namen —
+               und ein beschriftetes leeres Feld liest eine Institution als „nicht hinterlegt".
+               Das ist die schlimmere Haelfte der Luecke: Fehlendes ist sichtbar leer, Falsches
+               sieht richtig aus. Spiegel des Kerns, Feld fuer Feld. */
+            { id: 'kind',               label: 'Kind',                        typ: 'ref',   entitaet: 'person', mitGeburt: true,
+              verweisZweck: 'familiaer' },
             { id: 'kind_beziehung',     label: 'Art der Beziehung',           typ: 'auswahl', optionen: [
               { wert: 'leiblich',  label: 'leiblich' },
               { wert: 'adoptiert', label: 'adoptiert' },
@@ -763,6 +780,11 @@ const SEKTOREN = Object.freeze([
             ] },
             { id: 'sorgerecht_kind_zusatz', label: 'Sorgerecht — Ergänzung (Teilsorge u. Ä.)', typ: 'text' },
             { id: 'betreuungsmodell',   label: 'Betreuungsmodell',            typ: 'text',  beispiel: 'Wechselmodell, 50/50' },
+            { id: 'in_ausbildung',      label: 'In Ausbildung / Studium',     typ: 'auswahl', optionen: [
+              { wert: 'ja',   label: 'ja' },
+              { wert: 'nein', label: 'nein' },
+            ] },
+            { id: 'ausbildung_ende',    label: 'Ausbildung voraussichtlich bis', typ: 'datum' },
             { id: 'geburtsurkunde_ort', label: 'Geburtsurkunde — Ablageort',  typ: 'text',  beispiel: 'Ordner „Wichtiges", Wohnzimmerschrank' },
           ] },
       ] },
@@ -823,12 +845,20 @@ const SEKTOREN = Object.freeze([
     einfuehrungstext: 'Was Sie bewegt — und was Sie brauchen, wenn Sie unterwegs sind oder im Ausland Hilfe nötig wird.',
     sektionen: [
       { id: 'fahrzeuge-fuehrerschein', label: 'Fahrzeuge und Führerschein', felder: [
-        { id: 'auto1',            label: 'Fahrzeug 1 — Marke / Modell / Kennzeichen', typ: 'text', beispiel: 'VW Golf 7, M-AB 1234' },
-        { id: 'auto2',            label: 'Fahrzeug 2',                                  typ: 'text', beispiel: 'Skoda Fabia, M-CD 5678' },
-        { id: 'auto1_ausweis',    label: 'Fahrzeugausweis — Ablageort',                 typ: 'text', beispiel: 'Handschuhfach Fahrzeug 1',
-          hint: 'Wird für Ummeldung oder Verkauf benötigt.' },
-        { id: 'auto2_leasing',    label: 'Leasingvertrag — Ablageort',                  typ: 'text', beispiel: 'Aktenschrank, Fach „Auto"',
-          hint: 'Bei Leasing: Leasinggesellschaft sofort informieren.' },
+        /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
+           Hier standen die Flachfelder: auto1, auto1_ausweis, auto2, auto2_leasing.
+           Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
+           zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
+           hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
+        { id: 'fahrzeuge', label: 'Fahrzeuge', typ: 'liste',
+          hint: 'Jedes Fahrzeug als eigener Eintrag — Marke/Modell/Kennzeichen plus Ablageort von Fahrzeugausweis und ggf. Leasingvertrag.',
+          unterFelder: [
+            { id: 'bezeichnung',        label: 'Marke / Modell / Kennzeichen', typ: 'text', beispiel: 'VW Golf 7, M-AB 1234' },
+            { id: 'fahrzeugausweis_ort',label: 'Fahrzeugausweis — Ablageort',  typ: 'text', beispiel: 'Handschuhfach',
+              hint: 'Wird für Ummeldung oder Verkauf benötigt.' },
+            { id: 'leasing_ort',        label: 'Leasingvertrag — Ablageort',   typ: 'text', beispiel: 'Aktenschrank, Fach „Auto"',
+              hint: 'Bei Leasing: Leasinggesellschaft sofort informieren.' },
+          ] },
         { id: 'fuehrerschein',    label: 'Führerschein',                                typ: 'text', beispiel: 'B, BE — Klasse, Ablageort Geldbeutel' },
         { id: 'kfz_versicherung', label: 'KFZ-Versicherung',                            typ: 'text', beispiel: 'HUK24, Vertrag 4711-0815' },
         { id: 'd_ticket',         label: 'Deutschlandticket / ÖPNV',                    typ: 'text', beispiel: 'D-Ticket Abo bei MVG' },
@@ -846,7 +876,7 @@ const SEKTOREN = Object.freeze([
     exporte: [{ format: 'sd-jwt-vc-finanzen', label: STRINGS.exportFinanzenLabel }],   // Welle 1
     // Geführter Einstieg: der Erbschafts-Wizard (erbwiz) schreibt seinen Bereich-4-Teil
     // (Vermögensübersicht für den Nachlass) hierher. Startknopf datenlage-adaptiv.
-    wizards: ['erbwiz'],
+    wizards: [],
     sektionen: [
       { id: 'konten-steuern-vorsorge', label: 'Konten, Steuern, Vorsorge, Vermögen', felder: [
         { id: 'dt_rentenversicherungsnr', label: 'Rentenversicherungsnummer', typ: 'text', beispiel: '12 345678 A 123',
@@ -859,8 +889,28 @@ const SEKTOREN = Object.freeze([
         { id: 'private_av_institut', label: 'Private Altersvorsorge — Institut', typ: 'text', beispiel: 'Cosmos Direkt',
           hint: 'Private Vorsorge — z. B. Lebens- oder Rentenversicherung, Fondssparplan.' },
         { id: 'private_av_nr',    label: 'Policen- / Vertragsnummer',          typ: 'text', beispiel: 'POL-4711-0815' },
-        { id: 'konto_haupt_bank', label: 'Hauptkonto — Bank',                  typ: 'text', beispiel: 'Sparkasse München' },
-        { id: 'konto_haupt_iban', label: 'Hauptkonto — IBAN',                  typ: 'text', beispiel: 'DE89 3704 0044 0532 0130 00' },
+        /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
+           Hier standen die Flachfelder: konto_haupt_bank, konto_haupt_iban.
+           Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
+           zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
+           hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
+        { id: 'konten', label: 'Konten', typ: 'liste',
+          hint: 'Jedes Konto als eigener Eintrag — welche Konten es gibt, für den Erbfall und die Übersicht. Kein Kontostand, keine Auszüge.',
+          unterFelder: [
+            { id: 'bank', label: 'Bank / Institut', typ: 'text', beispiel: 'Sparkasse München' },
+            { id: 'art',  label: 'Art des Kontos',  typ: 'text', beispiel: 'Girokonto',
+              vorschlaege: ['Girokonto', 'Sparkonto', 'Tagesgeld', 'Festgeld', 'Depot', 'Darlehenskonto', 'Treuhandkonto', 'Bausparvertrag'],
+              hint: 'Vorschläge sind Bequemlichkeit, keine Grenze — Sie können frei schreiben (z. B. Geschäftskonto, Gemeinschaftskonto).' },
+            { id: 'iban', label: 'IBAN', typ: 'text', beispiel: 'DE89 3704 0044 0532 0130 00' },
+            // U2-ADR-074 (Nachtrag, Kardinalität Option B): refMehrfach — ein Konto kann MEHRERE Bankvollmachten
+            // tragen (mehrere Bevollmächtigte, z. B. Geschwister; der Regelfall). Volles n:m über die bestehende
+            // refMehrfach-Speicherform (Array {ref}) — die Gegenrichtung „eine Vollmacht, mehrere Konten" fällt
+            // gratis ab (mehrere Konten zeigen auf dieselbe Record-id). Auswahl = Mehrfach-Ankreuzen der
+            // art:'bank'-Vollmachten (Bank/Person·Ort je Zeile); kein Freitext, keine Neu-Anlage.
+            { id: 'bankvollmacht', label: 'Bankvollmacht(en) (aus Vorsorge)', typ: 'refMehrfach', entitaet: 'bankvollmacht',
+              hint: 'Kreuzen Sie die für dieses Konto geltenden Bankvollmachten an — mehrere möglich. Die bevollmächtigte Person kommt aus Vorsorge (kein Doppel-Eintrag).' },
+            { id: 'notiz', label: 'Notiz', typ: 'text', beispiel: 'Gemeinschaftskonto mit … · besondere Unterlagen im Ordner Finanzen' },
+          ] },
         // Modul (mehr-Block)
         { id: 'steuerberater',     label: 'Steuerberater',                     typ: 'ref',  entitaet: 'person', ebene: 'modul',
           hint: 'Wichtig für die letzte Steuererklärung und die Erbschaftssteuer.' },
@@ -872,10 +922,16 @@ const SEKTOREN = Object.freeze([
         { id: 'schulden',          label: 'Laufende Kredite & Schulden',       typ: 'text', ebene: 'modul', beispiel: 'Baudarlehen bei DKB, 1.200 EUR/Monat' },
         { id: 'wertgegenstaende',  label: 'Wertgegenstände & Ablageorte',      typ: 'text', ebene: 'modul', beispiel: 'Schmuck im Tresor, Münzsammlung im Schrank' },
         { id: 'digitale_guthaben', label: 'Digitale Guthaben',                 typ: 'text', ebene: 'modul', beispiel: 'PayPal-Guthaben, Apple-Geschenkkarten' },
-        { id: 'kreditkarte1',      label: 'Kreditkarte 1',                     typ: 'text', ebene: 'modul', beispiel: 'Visa · …4521',
-          hint: 'Nur Anbieter und die letzten vier Ziffern — nie die volle Nummer.' },
-        { id: 'kreditkarte2',      label: 'Kreditkarte 2',                     typ: 'text', ebene: 'modul', beispiel: 'Mastercard · …8830',
-          hint: 'Nur Anbieter und die letzten vier Ziffern — nie die volle Nummer.' },
+        /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
+           Hier standen die Flachfelder: kreditkarte1, kreditkarte2.
+           Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
+           zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
+           hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
+        { id: 'kreditkarten',      label: 'Kreditkarten',                      typ: 'liste', ebene: 'modul',
+          hint: 'Jede Karte als eigener Eintrag — nur Anbieter und die letzten vier Ziffern, nie die volle Nummer.',
+          unterFelder: [
+            { id: 'karte', label: 'Anbieter · letzte 4 Ziffern', typ: 'text', beispiel: 'Visa · …4521' },
+          ] },
         { id: 'forderungen',       label: 'Offene Forderungen & Bürgschaften', typ: 'text', ebene: 'modul', beispiel: 'Bürgschaft für Tochter (Mietkaution)' },
         // Erbschaftsregelung (erbwiz, B4-Teil): Überblick der Vermögenswerte für den Nachlass.
         { id: 'nachlass_vermoegen', label: 'Vermögenswerte für den Nachlass', typ: 'textarea', ebene: 'modul', beispiel: 'Eigentumswohnung München; Depot ING; Lebensversicherung Allianz; Bausparvertrag',
@@ -897,8 +953,18 @@ const SEKTOREN = Object.freeze([
         hint: 'Allergien, Medikamente, Blutgruppe — im Notfall sofort zur Hand.',
         felder: [
           { id: 'hausarzt',           label: 'Hausärztin / Hausarzt',                       typ: 'ref', entitaet: 'person', rolle: 'arzt' },
-          { id: 'facharzt_1',         label: 'Fachärztin / Facharzt',                       typ: 'ref', entitaet: 'person', rolle: 'facharzt',
-            hint: 'Behandelnde Onkolog*in, Kardiolog*in, Neurolog*in oder andere Fachärzt*innen, die Sie regelmäßig sehen.' },
+          /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
+             Hier standen die Flachfelder: facharzt_1, facharzt_2, facharzt_3.
+             Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
+             zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
+             hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
+          { id: 'fachaerzte',         label: 'Fachärztinnen und Fachärzte',                 typ: 'liste',
+            hint: 'Behandelnde Onkolog*in, Kardiolog*in, Neurolog*in oder andere Fachärzt*innen, die Sie regelmäßig sehen — je eine Person mit ihrem Fachgebiet.',
+            unterFelder: [
+              { id: 'arzt', label: 'Fachärztin / Facharzt', typ: 'ref', entitaet: 'person', rolle: 'facharzt',
+                verweisZweck: 'aerztlich', verweisKontextFeld: 'fach' },
+              { id: 'fach', label: 'Fachgebiet', typ: 'text', beispiel: 'Kardiologie · Onkologie · Neurologie' },
+            ] },
           { id: 'behandlung_aktuell', label: 'Laufende Behandlung / nächste Termine',       typ: 'text', beispiel: 'Reha-Termine bis 15.07., Nachsorge alle 3 Monate' },
           { id: 'blutgruppe',         label: 'Blutgruppe',                                   typ: 'auswahl', optionen: [
             { wert: '0+',  label: '0 +' }, { wert: '0-',  label: '0 −' },
@@ -920,10 +986,8 @@ const SEKTOREN = Object.freeze([
           { id: 'koerpergroesse',     label: 'Körpergröße (cm)',                             typ: 'text', ebene: 'modul', beispiel: '172' },
           { id: 'koerpergewicht',     label: 'Körpergewicht (kg)',                           typ: 'text', ebene: 'modul', beispiel: '68' },
           { id: 'impfbuch_ort',       label: 'Impfbuch — Ablageort',                         typ: 'text', ebene: 'modul', beispiel: 'Schreibtisch oben links' },
-          { id: 'hauptpflegeperson',  label: 'Hauptpflegeperson',                            typ: 'ref', entitaet: 'person', rolle: 'pflegeperson', ebene: 'modul',
+          { id: 'hauptpflegeperson',  label: 'Notfallkontakte',                              typ: 'refMehrfach', entitaet: 'person', rolle: 'pflegeperson', ebene: 'modul',   // Paritaet (a): Kern seit Schema 32→33 refMehrfach — als einzelnes ref lief der Array-Wert ins Leere
             hint: 'Wer kümmert sich im Notfall? Für Arztberichte und Entlassungsplanung.' },
-          { id: 'facharzt_2',         label: 'Spezialist*in 2',                              typ: 'ref', entitaet: 'person', rolle: 'facharzt', ebene: 'modul' },
-          { id: 'facharzt_3',         label: 'Spezialist*in 3',                              typ: 'ref', entitaet: 'person', rolle: 'facharzt', ebene: 'modul' },
           { id: 'kv_versicherter',    label: 'Versichert über',                              typ: 'text', ebene: 'modul', beispiel: 'eigene Versicherung',
             hint: 'Bei Familienversicherung: über wen sind Sie versichert?' },
           { id: 'kv_zusatz',          label: 'Zusatzversicherungen',                         typ: 'text', ebene: 'modul', beispiel: 'Auslandsreisekrankenversicherung bei ADAC' },
@@ -1038,11 +1102,17 @@ const SEKTOREN = Object.freeze([
   { id: 'vorsorge',          label: 'Vorsorge & Recht',     format: SEKTOR_FORMATE.W3C_VC,     icon: 'scale',
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
     einfuehrungstext: 'Vollmacht, Testament, Patientenverfügung — damit Ihr Wille gilt.',
-    // Schnitt 2.3/2.4 — geführter Einstieg in Bereich 8: zwei Wizards füllen denselben Sektor.
-    // Primär die Vorsorgevollmacht (vvwiz), zusätzlich die Patientenverfügung (pvwiz). Beide als
-    // datenlage-adaptive Startknöpfe oben im Bereich; beide schreiben dieselben Felder.
-    wizardId: 'vvwiz',
-    wizards: ['pvwiz', 'bwwiz', 'srwiz', 'erbwiz', 'pflwiz', 'heirwiz'],
+    // Schnitt 2.3/2.4 — geführter Einstieg in Bereich 8. U2-ADR-096: Der Vorsorgevollmacht-Wizard
+    // (vvwiz) ist ersatzlos entfallen; ein Instrument entsteht durch den Listen-Eintrag selbst.
+    // Damit gibt es keinen PRIMÄREN Wizard mehr — `wizardId` steht bewusst auf null, die drei
+    // verbliebenen Einstiege stehen gleichrangig in `wizards`.
+    //
+    // Hier stand bis 23.07. 'pvwiz', aus einem pauschalen vvwiz→pvwiz-Ersetzen. Folgenlos nur durch
+    // Zufall: Der Knopf-Bau entdoppelt, und pvwiz stand ohnehin in `wizards`. Der Kommentar darüber
+    // beschrieb weiter einen Zustand, den es nicht mehr gab — ein Kommentar, der lügt, ist schlechter
+    // als keiner.
+    wizardId: null,
+    wizards: ['pvwiz', 'pflwiz', 'heirwiz'],
     exporte: [{ format: 'ics-vorsorge', label: STRINGS.exportIcsLabel }],   // Welle 2 (ICS-Termine)
     sektionen: [
       { id: 'verfuegungen-vollmachten-testament', label: 'Verfügungen, Vollmachten, Testament', felder: [
@@ -1078,28 +1148,20 @@ const SEKTOREN = Object.freeze([
         // werden, wenn die Instrument-Felder sich ändern.
         { id: 'vorsorge_instrumente', label: 'Vorsorge-Instrumente', typ: 'liste',
           hint: 'Jedes Vorsorge-Instrument als eigener Eintrag — Art wählen, dann erscheinen die passenden Felder.',
-          // Nachbesserung (20.07.2026, Geräte-Befund file://): Positivliste statt Alles-Iteration —
-          // listenEintragZusammenfassung()/_verweisListenEintragZusammenfassung() zeigen NUR diese
-          // Unterfelder (Reihenfolge kommt weiter aus der unterFelder-Deklarationsposition, kein
-          // eigener Sortier-Mechanismus). Fehlt `zusammenfassungFelder` auf einer liste, bleibt das
-          // alte Verhalten (alle gefüllten Unterfelder zeigen) unverändert — reines Opt-in, damit
-          // die anderen neun liste-Felder der App unangetastet bleiben.
-          zusammenfassungFelder: [
-            'typ', 'art', 'zusatz', 'bevollmaechtigter',
-            'betreuung_person', 'betreuung_ersatz',
-            'sorgerechtsverfuegung_person', 'sorgerechtsverfuegung_ersatz',
-            'ki_berechtigte_personen', 'ki_nachlassverwalter',
-          ],
+          /* KEIN `zusammenfassungFelder` — bewusst entfernt (23.07.2026), nicht vergessen.
+             Der Kern führt hier eine Positivliste (seit 20.07., Geräte-Befund: zu lange Zeile).
+             Er kann kürzen, weil daneben die Zeilen-Detailansicht steht. Die Lese-App hat sie
+             nicht — hier ist die Zusammenfassung die EINZIGE Sicht auf den Eintrag.
+             Gemessen: Mit der Positivliste verschwanden sechzehn von dreiundzwanzig
+             Unterfeldern, darunter der Ablageort aller Instrumente und die ZVR-Nummer.
+             Gleiche Mechanik, ungleiche Information — siehe listenEintragZusammenfassung. */
           unterFelder: [
             // ── Diskriminante ─────────────────────────────────────────────────────────
-            // Block-1-Nachtrag (17.07.2026, Geräte-Befund): der Typ-Sammelbegriff (z. B.
-            // „Vorsorgevollmacht") darf nie NEBEN der genaueren `art` in der Listenzeile stehen
-            // („Vorsorgevollmacht · Bankvollmacht" verwirrt) — bei gesetzter `art` führt sie
-            // allein. `unterdrueckeInZusammenfassungWennGesetzt` ist ein generisches Schema-Flag
-            // (listenEintragZusammenfassung/_verweisListenEintragZusammenfassung werten es aus),
-            // keine Sonderbehandlung für dieses Feld im Code.
+            /* KEIN `unterdrueckeInZusammenfassungWennGesetzt` — bewusst entfernt (23.07.2026),
+               aus demselben Grund wie die Positivliste oben. Im Kern lässt das Flag den
+               Sammelbegriff weg, sobald die genauere `art` dasteht. Hier wäre auch das ein
+               Weglassen ohne Detailansicht dahinter. */
             { id: 'typ', label: 'Instrument', typ: 'auswahl', pflicht: true,
-              unterdrueckeInZusammenfassungWennGesetzt: 'art',
               optionen: [
               { wert: 'vorsorgevollmacht',     label: 'Vorsorgevollmacht' },
               { wert: 'patientenverfuegung',   label: 'Patientenverfügung' },
@@ -1182,9 +1244,23 @@ const SEKTOREN = Object.freeze([
                 { wert: 'abweichend', label: 'Mein Testament weicht bewusst davon ab' },
                 { wert: 'unklar',     label: 'Noch unklar — Beratung gewünscht' },
               ] },
-            { id: 'vermaechtnisse', label: 'Besondere Wünsche & Vermächtnisse', typ: 'textarea',
+            /* Testament-Verzicht (Block F): Der Zeilen-Hinweis steht bewusst VOR den
+               Testament-Feldern — er ordnet ein, was hier möglich ist und was nicht. Der hint am
+               Notizfeld unten trägt den vierten Satz, weil er an einen Moment gebunden ist: den
+               des Tippens. Ein Hinweis fünf Felder weiter oben ist dann außer Sicht. */
+            { id: 'testament_verzicht_hinweis', label: 'Zum Testament', typ: 'hinweis',
               sichtbarWenn: { feld: 'typ', wert: 'testament' },
-              beispiel: 'Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein' },
+              hint: 'Hier lässt sich festhalten, dass ein Testament vorhanden ist und wo es liegt. Aufgesetzt wird es nicht in Vivodepot, sondern bei einer Notarin, einem Notar oder in anwaltlicher Beratung.' },
+            /* Label und Platzhalter waren „Besondere Wünsche & Vermächtnisse" und führten mit
+               „Großmutters Ring an Tochter Anna; 5.000 EUR an den Tierschutzverein" testamentarische
+               Sprache VOR. „Vermächtnis" ist ein Rechtsbegriff des BGB — ein Feld, das so heißt und
+               so beispielt, sagt: hier setzt man Vermächtnisse aus. Das untergräbt den Verzicht
+               stärker als ein fehlender Hinweistext, weil es nicht erklärt, sondern vormacht.
+               Die id bleibt `vermaechtnisse` — sie wird an anderer Stelle referenziert. */
+            { id: 'vermaechtnisse', label: 'Persönliche Notizen dazu', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'testament' },
+              hint: 'Was Sie hier notieren, sind Ihre Aufzeichnungen; ein Testament wird daraus nicht.',
+              beispiel: 'Gedanken und offene Fragen, die ich festhalten möchte' },
             // ── Betreuungsverfügung (typ='betreuungsverfuegung') — Feld-IDs bewusst mit Präfix
             // beibehalten (nicht gekürzt): ein gemeinsames unterFelder-Array über alle sechs Typen
             // verlangt global eindeutige IDs, sonst kollidieren z. B. Betreuungs- und Sorgerechts-„person" ──
@@ -1401,37 +1477,14 @@ const SEKTOREN = Object.freeze([
         { id: 'email_haupt',          label: 'Haupt-E-Mail-Adresse',              typ: 'text', ebene: 'modul', beispiel: 'maria.mustermann@example.de' },
         { id: 'email2',               label: 'Weitere E-Mail-Adresse',            typ: 'text', ebene: 'modul', beispiel: 'mariam@gmx.de (alte Adresse)' },
       ] },
-      { id: 'ki-verfuegung', label: 'Mein digitales Weiterleben',
-        hint: 'KI-Systeme können aus Ihren digitalen Spuren eine Version erstellen, die nach Ihrem Tod weiter handelt. Hier legen Sie fest, was Sie dazu wünschen.',
-        felder: [
-          { id: 'ki_verhalten_grundsatz', label: 'Darf eine digitale Version von mir in meinem Namen auftreten und handeln?', typ: 'auswahl', ebene: 'modul', optionen: [
-            { wert: 'ja',      label: 'ja' },
-            { wert: 'nein',    label: 'nein' },
-            { wert: 'familie', label: 'Familie entscheidet' },
-          ] },
-          { id: 'ki_verhalten_fuer_wen', label: 'Für wen darf eine digitale Version von mir handeln?', typ: 'auswahl', ebene: 'modul',
-            sichtbarWenn: { feld: 'ki_verhalten_grundsatz', wert: 'ja' }, optionen: [
-              { wert: 'angehoerige',  label: 'engste Angehörige' },
-              { wert: 'familie',      label: 'die ganze Familie und enge Freunde' },
-              { wert: 'wissenschaft', label: 'wissenschaftliche Zwecke' },
-              { wert: 'offen',        label: 'ohne Einschränkung' },
-            ] },
-          { id: 'ki_verhalten_rahmen', label: 'In welchen Situationen darf sie handeln?', typ: 'auswahl', ebene: 'modul',
-            sichtbarWenn: { feld: 'ki_verhalten_grundsatz', wert: 'ja' }, optionen: [
-              { wert: 'fragen',        label: 'nur Fragen über mein Leben' },
-              { wert: 'gespraech',     label: 'auch Gesprächspartner*in für die Familie' },
-              { wert: 'entscheidungen',label: 'auch bei Entscheidungen mitwirken' },
-              { wert: 'familie',       label: 'die Familie soll das entscheiden' },
-            ] },
-          { id: 'ki_verhalten_dauer', label: 'Wie lange darf eine digitale Version aktiv sein?', typ: 'auswahl', ebene: 'modul',
-            sichtbarWenn: { feld: 'ki_verhalten_grundsatz', wert: 'ja' }, optionen: [
-              { wert: 'kinder',     label: 'solange meine Kinder leben' },
-              { wert: '10jahre',    label: 'max. 10 Jahre nach meinem Tod' },
-              { wert: 'unbegrenzt', label: 'unbegrenzt' },
-              { wert: 'familie',    label: 'die Familie soll das entscheiden' },
-            ] },
-          { id: 'ki_verhalten_notiz', label: 'Eigene Ergänzungen', typ: 'textarea', ebene: 'modul', beispiel: 'Stimme nicht für Werbung verwenden; keine Inhalte über meine Kindheit' },
-        ] },
+      /* Die Sektion „Mein digitales Weiterleben“ ist mit Block H entfallen (23.07.2026).
+         Sie trug die fünf `ki_verhalten_*`-Felder eines Features, das der Kern längst entfernt
+         hatte — unter DERSELBEN Sektions-id `ki-verfuegung`, unter der der Kern die (inzwischen
+         ebenfalls entfallene) Verfügung zur digitalen Nachbildung führte. Gleiche id,
+         verschiedener Inhalt in beiden Apps: keine Restfläche, sondern eine Kollision.
+         Die Werte gehen nicht verloren — alle fünf Felder stehen mit Label, Typ und
+         Optionslabels im ALT_LABEL_REGISTER (geprüft vor dem Entfernen) und warten dort auf
+         die Ansicht „Frühere Angaben“. */
     ] },
   { id: 'persoenliches',     label: 'Persönliches',         format: SEKTOR_FORMATE.GENERISCH,  icon: 'star',
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
@@ -1447,7 +1500,12 @@ const SEKTOREN = Object.freeze([
           { id: 'erinnerungen_sonstiges',   label: 'Weitere Erinnerungsstücke — Ablageort',             typ: 'text', beispiel: 'Tagebücher im Nachttisch; Kinderzeichnungen im Karton' },
           { id: 'gegenstaende_wuensche',    label: 'Persönliche Gegenstände & Wünsche',                 typ: 'textarea', beispiel: 'Großmutters Ring soll an Tochter Anna; Klavier an Enkel Tim' },
           { id: 'haushalt_spenden',         label: 'Haushalt, Kleider, Möbel — Wünsche',                typ: 'textarea', beispiel: 'gut Erhaltenes an Caritas; Bücher an die Stadtbibliothek' },
-          { id: 'abhaengige_personen',      label: 'Personen die auf mich angewiesen sind',             typ: 'text', beispiel: 'Mutter (87) im Pflegeheim; Katze Felix' },
+          { id: 'abhaengige_personen',      label: 'Wer ist auf mich angewiesen?',                       typ: 'liste',
+            // Paritaet (a): Kern seit Schema 35→36 eine Liste — als text erschien sie gar nicht.
+            unterFelder: [
+              { id: 'wer',     label: 'Wer ist auf Sie angewiesen?',      typ: 'text' },
+              { id: 'hinweis', label: 'Situation / was zu beachten ist',  typ: 'text' },
+            ] },
           { id: 'konflikte_hinweise',       label: 'Hinweise zu familiären Besonderheiten',             typ: 'textarea', beispiel: 'mit Bruder seit Jahren kein Kontakt; Halbschwester aus erster Ehe des Vaters' },
           { id: 'religion',                 label: 'Religionszugehörigkeit / Konfession',               typ: 'text', beispiel: 'römisch-katholisch · evangelisch · konfessionslos · jüdisch',
             hint: 'Relevant für Krankenhausseelsorge im Notfall und für die Gestaltung der Trauerfeier.' },
@@ -1459,9 +1517,17 @@ const SEKTOREN = Object.freeze([
           { id: 'brief_pflegeheim',         label: 'Brief für Szenario „Pflegeheim-Aufnahme"',           typ: 'textarea', beispiel: 'Ich mag morgens Kaffee mit Milch, kein Zucker. Mein Lieblingslied: …' },
           { id: 'brief_todesfall',          label: 'Brief für Szenario „Todesfall"',                     typ: 'textarea', beispiel: 'Bitte feiert mein Leben — nicht trauert um den Tod. Folgendes ist mir wichtig …' },
           { id: 'briefe_ablage',            label: 'Handgeschriebene Briefe — Ablageort',                typ: 'text', beispiel: 'Schreibtisch, oberste Schublade rechts' },
-          { id: 'brief_1',                  label: 'Brief / Worte an Person 1',                          typ: 'textarea', beispiel: 'An meine Tochter Anna …' },
-          { id: 'brief_2',                  label: 'Brief / Worte an Person 2',                          typ: 'textarea', beispiel: 'An meinen Sohn Lukas …' },
-          { id: 'brief_3',                  label: 'Brief / Worte an Person 3',                          typ: 'textarea', beispiel: 'An meine Schwester Sarah …' },
+          /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
+             Hier standen die Flachfelder: brief_1, brief_2, brief_3.
+             Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
+             zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
+             hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
+          { id: 'persoenliche_briefe', label: 'Persönliche Briefe / Worte an Menschen', typ: 'liste',
+            hint: 'Worte an einzelne Menschen — je Person ein Eintrag. Die Szenario-Briefe darüber (Notarzt/Krankenhaus/Pflegeheim/Todesfall) bleiben getrennt.',
+            unterFelder: [
+              { id: 'empfaenger', label: 'An wen?',        typ: 'text',     beispiel: 'meine Tochter Anna' },
+              { id: 'text',       label: 'Brief / Worte',  typ: 'textarea', beispiel: 'Liebe Anna, …' },
+            ] },
           { id: 'sonstiges_persoenlich',   label: 'Was ich noch sagen möchte — was noch wichtig ist',  typ: 'textarea', beispiel: 'frei verfasste Worte, Gedanken, Wünsche' },
         ] },
       { id: 'bestattung-abschied', label: 'Bestattung und Abschied', felder: [
@@ -1516,19 +1582,28 @@ const SEKTOREN = Object.freeze([
       { id: 'wohnen-zweit', label: 'Zweitwohnung',
         hint: 'Optional. Eigene Adresse plus dieselben Sachdaten.',
         felder: [
-          { id: 'zw_strasse',         label: 'Straße & Hausnummer',              typ: 'text', beispiel: 'Seestraße 12' },
-          { id: 'zw_plz_ort',         label: 'PLZ & Ort',                        typ: 'text', beispiel: '83209 Prien am Chiemsee' },
-          { id: 'zw_typ',             label: 'Eigentum oder Miete?',             typ: 'auswahl', optionen: [
-            { wert: 'eigentum', label: 'Eigentum' },
-            { wert: 'miete',    label: 'Miete' },
-            { wert: 'sonstige', label: 'andere Wohnform (z. B. Genossenschaft)' },
-          ] },
-          { id: 'zw_vermieter',       label: 'Vermieter / Hausverwaltung',       typ: 'ref', entitaet: 'person', rolle: 'vermieter' },
-          { id: 'zw_vermieter_tel',   label: 'Kontakt Vermieter',                typ: 'text', beispiel: '08051 12345 · vermieter-chiemsee@example.de' },
-          { id: 'zw_miete',           label: 'Monatliche Miete / HV-Kosten',     typ: 'text', beispiel: '650 EUR warm' },
-          { id: 'zw_kaution',         label: 'Mietkaution — Bank & Betrag',      typ: 'text', beispiel: 'Sparkasse Rosenheim, 1.500 EUR' },
-          { id: 'zw_mietvertrag_ort', label: 'Mietvertrag — Ablageort',          typ: 'text', beispiel: 'Ordner „Zweitwohnung", Aktenschrank' },
-          { id: 'zw_wohnsituation_bem', label: 'Besondere Wohnsituation',        typ: 'textarea', beispiel: 'Ferienwohnung; Mai–Oktober selbst genutzt' },
+          /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
+             Hier standen die Flachfelder: zw_strasse, zw_plz_ort, zw_typ, zw_vermieter, zw_vermieter_tel, zw_miete, zw_kaution, zw_mietvertrag_ort, zw_wohnsituation_bem.
+             Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
+             zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
+             hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
+          { id: 'weitere_wohnungen', label: 'Weitere Wohnungen', typ: 'liste',
+            hint: 'Jede weitere Wohnung als eigener Eintrag.',
+            unterFelder: [
+              { id: 'strasse',         label: 'Straße & Hausnummer',          typ: 'text', beispiel: 'Seestraße 12' },
+              { id: 'plz_ort',         label: 'PLZ & Ort',                    typ: 'text', beispiel: '83209 Prien am Chiemsee' },
+              { id: 'typ',             label: 'Eigentum oder Miete?',         typ: 'auswahl', optionen: [
+                { wert: 'eigentum', label: 'Eigentum' },
+                { wert: 'miete',    label: 'Miete' },
+                { wert: 'sonstige', label: 'andere Wohnform (z. B. Genossenschaft)' },
+              ] },
+              { id: 'vermieter',       label: 'Vermieter / Hausverwaltung',   typ: 'ref', entitaet: 'person', rolle: 'vermieter', verweisZweck: 'wohnen' },
+              { id: 'vermieter_tel',   label: 'Kontakt Vermieter',            typ: 'text', beispiel: '08051 12345 · vermieter-chiemsee@example.de' },
+              { id: 'miete',           label: 'Monatliche Miete / HV-Kosten', typ: 'text', beispiel: '650 EUR warm' },
+              { id: 'kaution',         label: 'Mietkaution — Bank & Betrag',  typ: 'text', beispiel: 'Sparkasse Rosenheim, 1.500 EUR' },
+              { id: 'mietvertrag_ort', label: 'Mietvertrag — Ablageort',      typ: 'text', beispiel: 'Ordner „Zweitwohnung", Aktenschrank' },
+              { id: 'wohnsituation_bem', label: 'Besondere Wohnsituation',    typ: 'textarea', beispiel: 'Ferienwohnung; Mai–Oktober selbst genutzt' },
+            ] },
         ] },
     ] },
 ]);
@@ -1624,7 +1699,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'vorsorge', feld: 'instrument:vorsorgevollmacht' },
         { quelle: 'vorsorge', feld: 'vorsorge_instrumente' },
         { quelle: 'vorsorge', feld: 'instrument:testament' },
-        { quelle: 'vorsorge', feld: 'testament_ort' },
+        { quelle: 'vorsorge', feld: 'liste:vorsorge_instrumente:testament:ort' },
         { quelle: 'vorsorge', feld: 'instrument:betreuungsverfuegung' },
         { quelle: 'finanzen', feld: 'konto_haupt_bank' },
       ] },
@@ -1712,7 +1787,7 @@ const SITUATIONEN = Object.freeze([
         { quelle: 'gesundheit', feld: 'implantate' },
         { quelle: 'gesundheit', feld: 'kv_art' },
         { quelle: 'vorsorge',   feld: 'instrument:patientenverfuegung' },
-        { quelle: 'vorsorge',   feld: 'patientenverf_ort' },
+        { quelle: 'vorsorge',   feld: 'liste:vorsorge_instrumente:patientenverfuegung:ort' },
         { quelle: 'vorsorge',   feld: 'vorsorge_instrumente' },
       ] },
       { titel: 'Für den Aufenthalt', eintraege: [
@@ -1762,9 +1837,10 @@ const SITUATIONEN = Object.freeze([
     bloecke: [
       { titel: 'Aus Ihren Bereichen', eintraege: [
         { quelle: 'vorsorge',      feld: 'instrument:testament' },
-        { quelle: 'vorsorge',      feld: 'testament_ort' },
+        { quelle: 'vorsorge',      feld: 'liste:vorsorge_instrumente:testament:ort' },
         { quelle: 'vorsorge',      feld: 'erben' },
-        { quelle: 'vorsorge',      feld: 'zvr_nummer' },
+        // U2-ADR-096: zvr_nummer ist Unterfeld der Vollmacht-Zeile geworden — Selektor statt Flachfeld.
+        { quelle: 'vorsorge',      feld: 'liste:vorsorge_instrumente:vorsorgevollmacht:zvr_nummer' },
         { quelle: 'persoenliches', feld: 'bestattung_art' },
         { quelle: 'persoenliches', feld: 'bestattung_unternehmen' },
         { quelle: 'persoenliches', feld: 'bestattung_ort' },
@@ -1859,6 +1935,104 @@ function _foldBevollLesen(v) {
 // Dateien, aber KEINE Alt-Dateien mehr (Schema 29–38 tragen `vollmachten`) — der stille Ausfall
 // wäre nur verschoben worden. Read-only, additiv, idempotent: `vollmachten` wird angehängt und
 // entfernt, bestehende `vorsorge_instrumente` bleiben unangetastet.
+/* Lese-Spiegel der Bürger-App-Migration 39→40 (U2-ADR-096 Block E): die zwölf `ki_*`-Werte
+   sind aus `verwaltung` in die KI-Zeile der Instrument-Liste gezogen.
+
+   WARUM DIE LESE-APP DAS BRAUCHT: Die Bürger-App migriert beim Öffnen — die Lese-App nicht,
+   sie bekommt die Datei, wie sie ist. Ein Depot, das seit dem Update nie in der Bürger-App
+   geöffnet wurde, trägt die Werte weiterhin flach. Ohne diesen Fold zeigt die Lese-App dort
+   NICHTS: keine Zeile in Vorsorge, und in Verwaltung ist keines dieser Felder deklariert
+   (dort leben die anders benannten `ki_verhalten_*`). Sie verweigert nichts — sie schweigt,
+   und Schweigen ist von „nichts hinterlegt" nicht zu unterscheiden.
+
+   Read-only auf der entschlüsselten Kopie im Speicher, additiv, idempotent. Ohne `ki_*`
+   entsteht KEINE Zeile — eine leere wäre eine Behauptung über die Bürgerin, die sie nie
+   aufgestellt hat. Anders als die Schreib-Migration hebt der Fold KEINE Kollision auf: Er
+   schreibt nichts zurück, also darf er auch nichts anmerken; ein belegtes Zeilenfeld gewinnt
+   schlicht, denn es ist die Angabe, die im Depot steht. */
+function _foldKiOrtLesen(wurzel) {
+  const vw = wurzel && wurzel.sektoren && wurzel.sektoren.verwaltung;
+  if (!vw || typeof vw !== 'object') return;
+  const kiIds = Object.keys(vw).filter(k => k.indexOf('ki_') === 0);
+  if (!kiIds.length) return;
+  // vorsorge bei Bedarf anlegen: Die KI-Zeile wohnt dort, auch wenn die Buergerin in Vorsorge
+  // sonst nichts eingetragen hat. Vorher haing das an einer Wache weiter oben (s. dort).
+  if (!wurzel.sektoren.vorsorge || typeof wurzel.sektoren.vorsorge !== 'object') wurzel.sektoren.vorsorge = {};
+  const v = wurzel.sektoren.vorsorge;
+  const liste = Array.isArray(v.vorsorge_instrumente) ? v.vorsorge_instrumente : [];
+  let z = liste.find(r => r && r.typ === 'ki-verfuegung');
+  if (!z) { z = { id: 'ki-fold', typ: 'ki-verfuegung' }; liste.push(z); }
+  for (const k of kiIds) {
+    if (z[k] === undefined) z[k] = vw[k];
+    delete vw[k];
+  }
+  v.vorsorge_instrumente = liste;
+}
+/* Lese-Spiegel der Slot→Listen-Migrationen (Schema 33→34, 34→35, 36→37).
+
+   WARUM: Die Bürger-App migriert beim Öffnen — die Lese-App nicht, sie bekommt die Datei, wie
+   sie ist. Ein Depot, das seit dem Umbau nie in der Bürger-App war, trägt diese Werte noch flach.
+   Solange die alten Flachfelder hier DEKLARIERT waren, sah man sie trotzdem; mit ihrem Entfernen
+   wäre das ein Datenverlust in der Anzeige geworden. Deshalb: erst der Fold, dann das Entfernen.
+
+   Tabellengetrieben statt siebenmal ausgeschrieben — eine Regel, sieben Anwendungen. Die
+   Zuordnung Flachfeld → Unterfeld ist aus den Kern-Migrationen übernommen, nicht geraten.
+
+   Read-only auf der entschlüsselten Kopie, additiv, idempotent: Ist die Liste schon da (ein in
+   der Bürger-App migriertes Depot), passiert NICHTS — ein fertiger Bestand darf nicht verdoppelt
+   werden. Ohne Alt-Werte entsteht KEINE Zeile; eine leere wäre eine Behauptung über die
+   Bürgerin, die sie nie aufgestellt hat. */
+const _SLOT_LISTEN_LESEN = [
+  { sektor: 'finanzen',      liste: 'konten',
+    zeilen: [{ bank: 'konto_haupt_bank', iban: 'konto_haupt_iban' }] },
+  { sektor: 'finanzen',      liste: 'kreditkarten',
+    zeilen: [{ karte: 'kreditkarte1' }, { karte: 'kreditkarte2' }] },
+  { sektor: 'gesundheit',    liste: 'fachaerzte', refFelder: ['arzt'],
+    zeilen: [{ arzt: 'facharzt_1' }, { arzt: 'facharzt_2' }, { arzt: 'facharzt_3' }] },
+  { sektor: 'identitaet',    liste: 'haustiere',
+    zeilen: [{ name: 'tier_name', betreuung: 'tier_betreuung', tierarzt: 'tier_tierarzt',
+               futter: 'tier_futter', sonstiges: 'tier_sonstiges' }] },
+  { sektor: 'mobilitaet',    liste: 'fahrzeuge',
+    zeilen: [{ bezeichnung: 'auto1', fahrzeugausweis_ort: 'auto1_ausweis' },
+             { bezeichnung: 'auto2', leasing_ort: 'auto2_leasing' }] },
+  { sektor: 'persoenliches', liste: 'persoenliche_briefe',
+    zeilen: [{ text: 'brief_1' }, { text: 'brief_2' }, { text: 'brief_3' }] },
+  { sektor: 'wohnen',        liste: 'weitere_wohnungen',
+    zeilen: [{ strasse: 'zw_strasse', plz_ort: 'zw_plz_ort', typ: 'zw_typ', vermieter: 'zw_vermieter',
+               vermieter_tel: 'zw_vermieter_tel', miete: 'zw_miete', kaution: 'zw_kaution',
+               mietvertrag_ort: 'zw_mietvertrag_ort', wohnsituation_bem: 'zw_wohnsituation_bem' }] },
+];
+function _slotGefuelltLesen(v) {
+  if (typeof v === 'string') return v.trim() !== '';
+  return v != null && typeof v === 'object'
+    && ((typeof v.ref === 'string' && v.ref !== '') || (v.override != null && String(v.override).trim() !== ''));
+}
+function _foldSlotListenLesen(wurzel) {
+  const sekt = wurzel && wurzel.sektoren;
+  if (!sekt || typeof sekt !== 'object') return;
+  for (const def of _SLOT_LISTEN_LESEN) {
+    const s = sekt[def.sektor];
+    if (!s || typeof s !== 'object') continue;
+    if (Array.isArray(s[def.liste])) {                     // schon migriert → nicht anfassen
+      for (const z of def.zeilen) for (const alt of Object.values(z)) delete s[alt];
+      continue;
+    }
+    const eintraege = [];
+    for (const z of def.zeilen) {
+      const e = {};
+      for (const [unter, alt] of Object.entries(z)) {
+        const roh = s[alt];
+        if (!_slotGefuelltLesen(roh)) continue;
+        // ref-Unterfelder tragen ein {ref,override}-Objekt; ein Alt-String wandert in override.
+        e[unter] = (def.refFelder || []).indexOf(unter) >= 0 && typeof roh === 'string'
+          ? { ref: '', override: roh } : roh;
+      }
+      if (Object.keys(e).length) eintraege.push(Object.assign({ id: 'fold-' + def.liste + '-' + eintraege.length }, e));
+    }
+    for (const z of def.zeilen) for (const alt of Object.values(z)) delete s[alt];
+    if (eintraege.length) s[def.liste] = eintraege;
+  }
+}
 function _foldInstrumenteLesen(v) {
   if (!v || !Array.isArray(v.vollmachten)) return;
   const liste = Array.isArray(v.vorsorge_instrumente) ? v.vorsorge_instrumente : [];
@@ -1886,6 +2060,54 @@ function _foldInstrumenteLesen(v) {
    nie eines bekommen. Ein siebtes Instrument erweitert diese Map NICHT — es hätte
    schlicht kein Gate und zeigte record-only. */
 const INSTRUMENT_ZEILE_PRAEFIX = 'instrument:';
+
+/* ── U2-ADR-096 · Unterfeld-Adressierung für typisierte Listen (Spiegel zum Kern) ──
+   Byte-gleiche Logik wie in vivodepot.html. Die Lese-App ist ein EIGENSTÄNDIGER Konsument
+   (U2-ADR-089-Nachtrag): jeder Selektor-Fix muss zweimal gebaut werden, sonst zeigt sie
+   an derselben Stelle nichts. `genauEine` traegt die Notfall-Sonderregel (§5). */
+const LISTEN_AUSWAHLFORM = Object.freeze({
+  vorsorge_instrumente: Object.freeze({
+    testament: 'neueste', patientenverfuegung: 'neueste', 'ki-verfuegung': 'neueste',
+    betreuungsverfuegung: 'neueste', vorsorgevollmacht: 'alle', sorgerechtsverfuegung: 'alle',
+  }),
+});
+const LISTEN_AUSWAHLFORM_STANDARD = 'alle';
+const LISTEN_UNTERFELD_PRAEFIX = 'liste:';
+function listenZeilenWaehlen(sektorId, listeId, typWert, opt) {
+  const o = opt || {};
+  const disk = o.diskriminante || 'typ';
+  const alle = ((data && data.sektoren && data.sektoren[sektorId]) || {})[listeId];
+  if (!Array.isArray(alle)) return [];
+  const treffer = alle.filter(r => r && r[disk] === typWert);
+  if (treffer.length <= 1) return treffer;
+  const form = o.genauEine ? 'neueste'
+    : (((LISTEN_AUSWAHLFORM[listeId] || {})[typWert]) || LISTEN_AUSWAHLFORM_STANDARD);
+  if (form !== 'neueste') return treffer;
+  const datumFeld = o.datumFeld || 'datum';
+  const datiert = treffer.filter(r => typeof r[datumFeld] === 'string' && /^\d{4}-\d{2}-\d{2}/.test(r[datumFeld]));
+  // §5a: Im Notfall-Pfad ist der „alle"-Rueckfall GESPERRT — er hoebe die Klartext-Grenze auf.
+  // Dann entscheidet die erste gespeicherte Zeile (deterministisch, stabil ueber die Record-id).
+  if (!datiert.length) return o.genauEine ? [treffer[0]] : treffer;
+  let best = datiert[0];
+  for (const r of datiert) if (String(r[datumFeld]) > String(best[datumFeld])) best = r;
+  return [best];
+}
+function listenUnterfeldRoh(sektorId, listeId, typWert, unterfeldId, opt) {
+  return listenZeilenWaehlen(sektorId, listeId, typWert, opt)
+    .map(r => r[unterfeldId]).filter(v => v != null && v !== '');
+}
+function _listenSelektorZerlegen(feldId) {
+  if (typeof feldId !== 'string' || !feldId.startsWith(LISTEN_UNTERFELD_PRAEFIX)) return null;
+  const t = feldId.slice(LISTEN_UNTERFELD_PRAEFIX.length).split(':');
+  if (t.length !== 3 || t.some(x => !x)) return null;
+  return { listeId: t[0], typWert: t[1], unterfeldId: t[2] };
+}
+function _listenUnterfeldDef(sektorId, listeId, unterfeldId) {
+  const l = (SEKTOR_BY_ID[sektorId] || { sektionen: [] }).sektionen
+    .flatMap(s => s.felder || []).find(f => f.id === listeId);
+  return ((l && l.unterFelder) || []).find(u => u.id === unterfeldId);
+}
+
 const _INSTRUMENT_GATE_LESEN = Object.freeze({
   vorsorgevollmacht:    'vollmacht_vorhanden',
   patientenverfuegung:  'patientenverf_vorhanden',
@@ -1909,18 +2131,24 @@ function _instrumentVorhandenLesen(typ) {
 }
 // {feld, roh} einer Instrument-Zeile. Record schlägt Gate; ohne Record trägt das Gate
 // weiter „in Vorbereitung" — den Zustand, den ein Record nicht ausdrücken kann.
+/* Wortgleicher Spiegel des Kerns (U2-ADR-096): Record-only, Optionen hier statt am Gate. */
+const INSTRUMENT_ZEILE_OPTIONEN_LESEN = Object.freeze([{ wert: 'ja', label: 'vorhanden' }]);
 function instrumentZeileModellLesen(typ) {
-  const gateId = _INSTRUMENT_GATE_LESEN[typ] || null;
-  const gateDef = gateId ? _vorsorgeFeldDefLesen(gateId) : null;
   const feld = { id: INSTRUMENT_ZEILE_PRAEFIX + typ, label: _instrumentTypLabelLesen(typ),
-    typ: 'auswahl', optionen: (gateDef && gateDef.optionen) || [] };
-  let roh;
-  if (_instrumentVorhandenLesen(typ)) roh = 'ja';
-  else if (gateId) roh = ((data && data.sektoren && data.sektoren.vorsorge) || {})[gateId];
-  return { feld, roh };
+    typ: 'auswahl', optionen: INSTRUMENT_ZEILE_OPTIONEN_LESEN.slice() };
+  return { feld, roh: _instrumentVorhandenLesen(typ) ? 'ja' : undefined };
 }
 
 function _foldVollmachtenLesen(obj) {
+  /* SEKTOR-UNABHAENGIGE Folds ZUERST — vor der vorsorge-Wache unten.
+     Befund 23.07.2026: Diese Funktion ist der Einstieg der GANZEN Fold-Kette, war aber auf den
+     vorsorge-Sektor gewacht („kein vorsorge → sofort raus"). Solange alle Folds vorsorge
+     betrafen, war das folgenlos. Mit dem KI-Ort- und dem Slot→Listen-Fold ist es das nicht mehr:
+     Ein Depot OHNE vorsorge-Sektor — etwa eines, in dem die Buergerin dort nie etwas eingetragen
+     hat — haette gar keinen Fold bekommen, und ihre Konten, Fachaerzte und Fahrzeuge waeren
+     unsichtbar geblieben. Die Wache gehoert zu den vorsorge-Folds, nicht vor die Kette. */
+  _foldSlotListenLesen(obj);
+  _foldKiOrtLesen(obj);
   const v = obj && obj.sektoren && obj.sektoren.vorsorge;
   if (!v || typeof v !== 'object') return obj;
   const hatFlach = v.vollmacht_person != null || v.vollmachtsGrundlage != null ||
@@ -2026,7 +2254,31 @@ function mappeName(refObj) {
   const m = mappeEintrag(refObj.ref);
   return (m && (m.beschriftung || m.dateiname)) || '';
 }
+/* Paritaets-Nachtrag 23.07.2026: Die Lese-App kannte die Entitaet `bankvollmacht` NICHT und fiel
+   still auf personName zurueck — der Verweis erschien als „nicht hinterlegt", obwohl er gesetzt war.
+   Betroffen ist finanzen.konten:bankvollmacht, also ein Unterfeld INNERHALB einer der Listen, die
+   noch nachzuziehen sind: Waeren die Listen zuerst gekommen, waere der Defekt mitgeliefert worden
+   und haette wie ein Fehler der Umstellung ausgesehen. Wortgleicher Spiegel des Kerns. */
+function _bankvollmachtRecordsLesen() {
+  const v = data && data.sektoren && data.sektoren.vorsorge;
+  const liste = (v && Array.isArray(v.vorsorge_instrumente)) ? v.vorsorge_instrumente : [];
+  return liste.filter(r => r && r.typ === 'vorsorgevollmacht' && r.art === 'bank' && r.id);
+}
+function _bankvollmachtLabelLesen(rec) {
+  if (!rec) return '';
+  const personen = (Array.isArray(rec.bevollmaechtigter) ? rec.bevollmaechtigter : [])
+    .map(p => personName(p)).filter(Boolean).join(', ');
+  const teile = [personen, rec.ort].filter(t => t && String(t).trim() !== '');
+  return teile.join(' · ');
+}
+function bankvollmachtAnzeigeLesen(refObj) {
+  if (!refObj) return '';
+  const id = (typeof refObj === 'string') ? refObj : (refObj && refObj.ref) || '';
+  if (!id) return '';
+  return _bankvollmachtLabelLesen(_bankvollmachtRecordsLesen().find(r => r.id === id));
+}
 function entitaetAnzeige(refObj, typ) {
+  if (typ === 'bankvollmacht') return bankvollmachtAnzeigeLesen(refObj);
   if (typ === 'institution') return institutionName(refObj);
   if (typ === 'mappe') return mappeName(refObj);
   return personName(refObj);
@@ -2039,6 +2291,19 @@ function akteurName(personId) {
 /* ── Listen-Eintrag-Zusammenfassung (faithful) ─────────────────────────────── */
 function listenEintragZusammenfassung(feld, eintrag) {
   if (!eintrag || typeof eintrag !== 'object') return '';
+  /* KEINE Positivliste, KEINE Unterdrueckung — bewusst, nicht vergessen (23.07.2026).
+
+     Der Kern kuerzt seine Zusammenfassung ueber `zusammenfassungFelder`. Er kann sich das
+     leisten, weil daneben die Zeilen-Detailansicht steht: Was die Kurzzeile weglaesst, ist
+     einen Klick entfernt. Die Lese-App hat diese Detailansicht NICHT — hier ist die
+     Zusammenfassung die einzige Sicht auf den Eintrag.
+
+     Dieselbe Mechanik haette hier deshalb eine andere Wirkung: Beim Versuch, die Kuerzung zu
+     spiegeln, verschwanden sechzehn von dreiundzwanzig Unterfeldern — darunter der Ablageort
+     ALLER Instrumente und die ZVR-Nummer, ueber die ein Gericht die Vollmacht erst findet.
+     Gleiche Regel, ungleiche Information. Die Lese-App zeigt darum alle gefuellten Felder.
+
+     Wer hier kuerzen will, braucht zuerst eine Detailansicht. */
   const teile = [];
   for (const uf of (feld.unterFelder || [])) {
     const w = eintrag[uf.id];
@@ -2060,6 +2325,29 @@ function listenEintragZusammenfassung(feld, eintrag) {
 }
 
 /* ── feldWertText — read-only Anzeige eines Feldwerts (faithful) ───────────── */
+/* Wortgleicher Spiegel des Kerns (vivodepot.html, _datumDeutsch / _wertTextMenschlich).
+
+   ANLASS 23.07.2026: Die Lese-App kannte BEIDE Funktionen nicht. Jedes Datum erschien roh als
+   ISO — auf dem Notfallblatt, in der Bereichsansicht, in den Situationsblättern. Am schwersten
+   auf dem Notfallblatt: der einen Oberfläche, die unter Zeitdruck von Menschen gelesen wird,
+   die das Produkt nicht kennen.
+
+   WARUM ZWEI FUNKTIONEN UND NICHT EIN ZWEIG IN feldWertText: Der Kern hält `feldWertText`
+   bewusst maschinenlesbar (ISO) — sie ist mit den Export-Mappern geteilt, die ISO brauchen.
+   Die menschliche Aufbereitung liegt als eigene Schicht darüber. Die Lese-App bekommt denselben
+   Aufbau, damit ein späterer Export-Pfad hier nicht still deutsches Datum trägt; das fiele erst
+   beim Empfänger auf.
+
+   Nicht parsbar → roher String, nie stumm leer: Ein Wert, den die Aufbereitung nicht deuten
+   kann, gehört der Bürgerin und darf nicht verschwinden. */
+function _datumDeutsch(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+  return m ? (m[3] + '.' + m[2] + '.' + m[1]) : String(iso || '');
+}
+function _wertTextMenschlich(feld, roh) {
+  if (feld && feld.typ === 'datum' && feldEingetragen(feld, roh)) return _datumDeutsch(roh);
+  return feldWertText(feld, roh);
+}
 function feldWertText(feld, roh) {
   if (!feldEingetragen(feld, roh)) return STRINGS.leerZustand;
   if (istCodierterWert(roh)) return roh.anzeigeName;
@@ -2071,6 +2359,28 @@ function feldWertText(feld, roh) {
     const arr = Array.isArray(roh) ? roh : [];
     const namen = arr.map(c => (c && typeof c.text === 'string') ? c.text : '').filter(Boolean);
     return namen.length ? namen.join(', ') : STRINGS.leerZustand;
+  }
+  if (feld.typ === 'mehrfachauswahl') {
+    /* Paritaets-Nachtrag, typgetriebene Pruefung 23.07.2026 — dieser Zweig FEHLTE. Ein
+       mehrfachauswahl-Wert (Array von Options-Schluesseln) fiel in den String-Zweig und erschien
+       als „trauer" / „schriftverkehr" statt als Klartext-Label. Betroffen sind die KI-Unterfelder
+       ki_zweck und ki_datenarten — die Institution las interne Optionsschluessel.
+       Wortgleicher Spiegel des Kerns: NIE das rohe Array anzeigen. */
+    const werte = Array.isArray(roh) ? roh : [roh];
+    const opts = Array.isArray(feld.optionen) ? feld.optionen : [];
+    return werte.map(w => { const o = opts.find(x => x.wert === w); return (o && o.label) || String(w); })
+      .filter(Boolean).join(', ');
+  }
+  if (feld.typ === 'refMehrfach') {
+    /* Paritaets-Nachtrag Klasse (a), 23.07.2026 — dieser Zweig FEHLTE. Ein refMehrfach-Wert
+       (Array von {ref,override}) lief in den String-Zweig unten und wurde zu „[object Object]";
+       je nach Renderpfad erschien gar nichts. Betroffen waren BEIDE refMehrfach-Felder der
+       Lese-App: hauptpflegeperson (Notfallkontakte) und erben. Die Institution sah an der
+       Stelle, an der die Notfallkontakte stehen sollten, entweder nichts oder Kauderwelsch.
+       Wortgleicher Spiegel des Kerns (U2-ADR-065). */
+    const arr = Array.isArray(roh) ? roh : [];
+    return arr.map(e => entitaetAnzeige(e, feld.entitaet || 'person')).filter(Boolean).join(', ')
+      || STRINGS.leerZustand;
   }
   if (feld.typ === 'ref') {
     if ((feld.entitaet || 'person') === 'mappe') {
@@ -2143,18 +2453,25 @@ function situationModell(sitOrId) {
         const qS = SEKTOR_BY_ID[eintrag.quelle];
         // U2-ADR-089 Block 2: abgeleitete Instrument-Zeile (Record ODER Gate) statt Flachfeld.
         let qF, roh;
+        const _sel = _listenSelektorZerlegen(eintrag.feld);
         if (typeof eintrag.feld === 'string' && eintrag.feld.startsWith(INSTRUMENT_ZEILE_PRAEFIX)) {
           const m = instrumentZeileModellLesen(eintrag.feld.slice(INSTRUMENT_ZEILE_PRAEFIX.length));
           qF = m.feld; roh = m.roh;
+        } else if (_sel) {                                   // U2-ADR-096: Zeile waehlen, Unterfeld lesen
+          const uf = _listenUnterfeldDef(eintrag.quelle, _sel.listeId, _sel.unterfeldId);
+          const werte = listenUnterfeldRoh(eintrag.quelle, _sel.listeId, _sel.typWert, _sel.unterfeldId);
+          qF = werte.length > 1 ? Object.assign({}, uf, { typ: 'text' }) : uf;
+          roh = !werte.length ? undefined
+              : (werte.length === 1 ? werte[0] : werte.map(v => _wertTextMenschlich(uf, v)).join(' · '));
         } else {
           qF = qS && qS.sektionen.flatMap(s2 => s2.felder || []).find(f => f.id === eintrag.feld);
           roh = ((data && data.sektoren[eintrag.quelle]) || {})[eintrag.feld];
         }
-        zeilen.push({ label: (qF && qF.label) || eintrag.feld, wert: feldWertText(qF || { typ: 'text' }, roh), quelle: (qS && qS.label) || eintrag.quelle });
+        zeilen.push({ label: (qF && qF.label) || eintrag.feld, wert: _wertTextMenschlich(qF || { typ: 'text' }, roh), quelle: (qS && qS.label) || eintrag.quelle });
       } else if (eintrag && eintrag.feld && typeof eintrag.feld === 'object') {
         const f = eintrag.feld;
         if (f.sensibel) continue;
-        zeilen.push({ label: f.label || f.id, wert: feldWertText(f, eigeneDaten[f.id]), quelle: '' });
+        zeilen.push({ label: f.label || f.id, wert: _wertTextMenschlich(f, eigeneDaten[f.id]), quelle: '' });
       }
     }
     if (zeilen.length) bloecke.push({ titel: block.titel || '', zeilen });
@@ -2172,18 +2489,27 @@ const NOTFALL_KERN_FELDER = Object.freeze([
   { sektor: 'gesundheit', feld: 'medikamente' },
   { sektor: 'gesundheit', feld: 'krankheiten' },
   { sektor: 'gesundheit', feld: 'hauptpflegeperson' },
-  { sektor: 'vorsorge',   feld: 'organspende' },
-  { sektor: 'vorsorge',   feld: 'patientenverf_ort' },
+  // U2-ADR-096 §5: ueber den Selektor, mit `genauEine` — nie mehr als eine Zeile je Typ im Klartext.
+  { sektor: 'vorsorge',   feld: 'liste:vorsorge_instrumente:patientenverfuegung:organspende' },
+  { sektor: 'vorsorge',   feld: 'liste:vorsorge_instrumente:patientenverfuegung:ort' },
 ]);
 function notfallKernModell() {
   const zeilen = [];
   for (const e of NOTFALL_KERN_FELDER) {
     const sek = SEKTOR_BY_ID[e.sektor];
-    const feld = sek && sek.sektionen.flatMap(s => s.felder || []).find(f => f.id === e.feld);
+    // U2-ADR-096 §5a: Instrument-Felder ueber den Selektor, IMMER mit `genauEine`.
+    const sel = _listenSelektorZerlegen(e.feld);
+    let feld, roh;
+    if (sel) {
+      feld = _listenUnterfeldDef(e.sektor, sel.listeId, sel.unterfeldId);
+      roh = listenUnterfeldRoh(e.sektor, sel.listeId, sel.typWert, sel.unterfeldId, { genauEine: true })[0];
+    } else {
+      feld = sek && sek.sektionen.flatMap(s => s.felder || []).find(f => f.id === e.feld);
+      roh = ((data && data.sektoren[e.sektor]) || {})[e.feld];
+    }
     if (!feld) continue;
-    const roh = ((data && data.sektoren[e.sektor]) || {})[e.feld];
     if (!feldEingetragen(feld, roh)) continue;
-    zeilen.push({ label: feld.label, wert: feldWertText(feld, roh) });
+    zeilen.push({ label: feld.label, wert: _wertTextMenschlich(feld, roh) });
   }
   return zeilen;
 }
@@ -2681,10 +3007,10 @@ function feldZeileHTML(sektorId, feld, roh) {
     if (m && /^image\//.test(m.mime || '') && /^data:/.test(m.inhalt || '')) {
       wertHTML = '<img class="mappe-thumb" alt="' + escapeHTML(m.beschriftung || m.dateiname || '') + '" src="' + escapeHTML(m.inhalt) + '">';
     } else {
-      wertHTML = escapeHTML(feldWertText(feld, roh));
+      wertHTML = escapeHTML(_wertTextMenschlich(feld, roh));
     }
   } else {
-    wertHTML = escapeHTML(feldWertText(feld, roh)).replace(/\n/g, '<br>');
+    wertHTML = escapeHTML(_wertTextMenschlich(feld, roh)).replace(/\n/g, '<br>');
   }
   return '<div class="feld-zeile"><div class="feld-label">' + escapeHTML(feld.label) + '</div>' +
     '<div class="feld-wert">' + wertHTML + '</div></div>' +
