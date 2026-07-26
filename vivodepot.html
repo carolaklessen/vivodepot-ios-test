@@ -777,6 +777,15 @@
   .feld-ref-picker { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
   .feld-ref-picker select, .feld-ref-picker input { font-size: var(--fs-sm); padding: var(--space-1); flex: 1 1 160px; min-width: 0; }
   .feld-ref-picker select { text-overflow: ellipsis; }
+  /* B2-Fix (25.07.2026, iPhone-Befund): das native WebKit-<select> ehrt min-width:0 NICHT und zieht
+     die min-content-Breite seiner längsten Option (gemessen 601px bei einem realen Namen, Container
+     ~358px) → <select> und Freitext überlappen am iPhone. Chromium klemmt via min-width:0 und zeigt es
+     nicht. Defensiv auf schmaler Breite untereinander stapeln (je volle Zeile, wie .refm-combo), statt
+     gegen WebKits min-content anzukämpfen — width:100% wird auch von WebKit geehrt. Ausreichend breit:
+     das heutige Nebeneinander bleibt. Breakpoint 560px = die etablierte Schmal-Schwelle der Datei. */
+  @media (max-width: 560px) {
+    .feld-ref-picker select, .feld-ref-picker input { flex: 1 1 100%; }
+  }
   /* Inline-Anlage einer neuen Person/Institution direkt unter dem Ref-Picker — ohne Modal-Stack.
      Nachbesserung (16.07.2026, Geräte-Abnahme, Restfund zu F5): fünf Elemente (Name, Datum,
      Geburtsjahr, zwei Knöpfe) teilten sich die Zeile mit GLEICHEM flex:1 auf allen Inputs —
@@ -2697,7 +2706,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v75';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v76';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // BUILD_DATUM — Stand der ausgelieferten App (ISO „JJJJ-MM-TT"). Rein lokal genutzt: aus
 // ihm rechnet die App, ob die Version schon älter ist (Schwelle ~6 Monate) und einen ruhigen
 // Hinweis zeigt. KEIN Netz-Zugriff, kein Auto-Update — der Hinweis ist nur ein Lese-Hinweis.
@@ -2706,7 +2715,7 @@ const SCHALEN_STAND = 'v75';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-07-25';
+const BUILD_DATUM = '2026-07-26';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -3328,7 +3337,7 @@ const STRINGS = Object.freeze({
   erinnerungIntervall24: "Alle 2 Jahre",
   erinnerungIntervall36: "Alle 3 Jahre",
   // ── Dokumente pro Bereich (U2-ADR-014, Stufe 2/Einheit 3) — Eingabe-Panel im Bearbeiten-Modus ──
-  dokumentPanelTitel: "Dokumente & Prüftermine (optional)",
+  dokumentPanelTitel: "Dokumente & Prüftermine",
   dokumentPanelHinweis: "Halten Sie hier wichtige Dokumente dieses Bereichs fest — eine Vollmacht, einen Ausweis, einen Vertrag. Es reicht ein Name. Gültig-ab und Prüf-Rhythmus sind freiwillig.",
   dokumentStandardTitel: "Typische Dokumente hier",
   dokumentStandardHinweis: "Aus dieser Liste übernehmen — die Vorschläge bringen einen passenden Namen und Prüf-Rhythmus mit.",
@@ -3342,7 +3351,7 @@ const STRINGS = Object.freeze({
   dokumentDatumLabel: "Gültig ab",
   dokumentDatumHinweis: "Darf in der Vergangenheit liegen — z. B. eine Vollmacht, die schon länger existiert.",
   dokumentRhythmusSummary: "Regelmäßig prüfen (Rhythmus)",
-  dokumentMehrSummary: "Mehr (optional)",
+  dokumentMehrSummary: "Mehr",
   dokumentAnlegenKnopf: "Wo liegt das Dokument?",
   dokumentNameFehlt: "Bitte zuerst einen Namen eintragen.",
   dokumentAngelegtToast: "Dokument angelegt.",
@@ -3620,6 +3629,7 @@ const STRINGS = Object.freeze({
   // Aufklapp-Zeile, die ab ZWEI geführten Einstiegen den Knopf-Stapel bündelt (Knopf-Flut-Inventur
   // 05.07.: Vorsorge trug sieben Startknöpfe untereinander). Ein einzelner Wizard bleibt Direkt-Knopf.
   wizardGruppeTitel: "Geführt ausfüllen",
+  wizardUebergaengeTitel: "Übergänge",                     // Vorsorge-Kategorie der Anlass-Wizards (Website-Sprache „An den Übergängen")
 
   // ── Format-Export (Teil 3) — „herausholen" in offene/maschinenlesbare Formate ──
   // U2-ADR-058 (4a §4): der Einstellungen-Abschnitt trägt nur noch Sichern (JSON) + Wiederherstellen
@@ -4470,7 +4480,7 @@ const SEKTOREN = Object.freeze([
     // beschrieb weiter einen Zustand, den es nicht mehr gab — ein Kommentar, der lügt, ist schlechter
     // als keiner.
     wizardId: null,
-    wizards: ['pvwiz', 'pflwiz', 'heirwiz'],
+    wizards: ['pvwiz', 'kiwiz', 'pflwiz', 'heirwiz'],
     exporte: [{ format: 'ics-vorsorge', label: STRINGS.exportIcsLabel }],   // Welle 2 (ICS-Termine)
     // Standard-Dokument-Liste (U2-ADR-014, Stufe 2/Einheit 2). Additiver Registry-Schlüssel,
     // strukturgleich zu exporte/wizards — Katalog typischer Dokumente dieses Bereichs. KEINE
@@ -4756,24 +4766,24 @@ const SEKTOREN = Object.freeze([
         felder: [
           // Erbe-Inhalt gilt AUCH ohne Testament (gesetzliche Erbfolge, §§ 1924 ff. BGB) → per
           // U2-ADR-067 §3 bewusst NICHT ans Testament gekoppelt und darum vom Abriss ausgenommen.
-          { id: 'erben',                       label: 'Erben — Kurzuebersicht',                          typ: 'refMehrfach', entitaet: 'person', verweisZweck: 'familiaer' },
+          { id: 'erben',                       label: 'Erben — Kurzübersicht',                          typ: 'refMehrfach', entitaet: 'person', verweisZweck: 'familiaer' },
         ] },
-      { id: 'pflegewuensche', label: 'Pflegewuensche',
-        hint: 'Diese Angaben ergaenzen die Patientenverfuegung und helfen Pflegepersonen, Ihren Willen zu kennen.',
+      { id: 'pflegewuensche', label: 'Pflegewünsche',
+        hint: 'Diese Angaben ergänzen die Patientenverfügung und helfen Pflegepersonen, Ihren Willen zu kennen.',
         felder: [
-          { id: 'pflegewuensche_koerper',     label: 'Koerperpflege & Wuerde',            typ: 'textarea', beispiel: 'taegliche Koerperpflege gewohnt; Intimsphaere wahren' },
-          { id: 'pflegewuensche_ernaehrung',  label: 'Ernaehrung & Besonderheiten',       typ: 'textarea', beispiel: 'vegetarisch; keine Tomaten; viel Tee' },
-          { id: 'pflegewuensche_alltag',      label: 'Alltag & Aktivitaeten',             typ: 'textarea', beispiel: 'morgens Radio; nachmittags Gartenspaziergang wenn moeglich' },
-          { id: 'pflegewuensche_sonstiges',   label: 'Sonstige Wuensche & Hinweise',      typ: 'textarea', beispiel: 'religioese Begleitung erwuenscht; meine Brille immer in Reichweite' },
-          { id: 'hilfsmittel',                label: 'Vorhandene Hilfsmittel',            typ: 'text', ebene: 'modul', beispiel: 'Rollator (zuhause), Hoergeraet beidseitig' },
+          { id: 'pflegewuensche_koerper',     label: 'Körperpflege & Würde',            typ: 'textarea', beispiel: 'tägliche Körperpflege gewohnt; Intimsphäre wahren' },
+          { id: 'pflegewuensche_ernaehrung',  label: 'Ernährung & Besonderheiten',       typ: 'textarea', beispiel: 'vegetarisch; keine Tomaten; viel Tee' },
+          { id: 'pflegewuensche_alltag',      label: 'Alltag & Aktivitäten',             typ: 'textarea', beispiel: 'morgens Radio; nachmittags Gartenspaziergang wenn möglich' },
+          { id: 'pflegewuensche_sonstiges',   label: 'Sonstige Wünsche & Hinweise',      typ: 'textarea', beispiel: 'religiöse Begleitung erwünscht; meine Brille immer in Reichweite' },
+          { id: 'hilfsmittel',                label: 'Vorhandene Hilfsmittel',            typ: 'text', ebene: 'modul', beispiel: 'Rollator (zuhause), Hörgerät beidseitig' },
           // Prozess-Marker aus pflwiz (B8), KEIN Instrument-Feld — darum nicht in die Liste migriert,
           // sondern hierher verortet, wo er thematisch hingehoert. pflwiz schreibt ihn weiter.
-          { id: 'pflege_vorsorge_geprueft',   label: 'Vorsorgedokumente bei Pflegebedarf geprueft?',    typ: 'auswahl', ebene: 'modul', optionen: [
+          { id: 'pflege_vorsorge_geprueft',   label: 'Vorsorgedokumente bei Pflegebedarf geprüft?',    typ: 'auswahl', ebene: 'modul', optionen: [
             { wert: 'ja',   label: 'ja, alles aktuell' },
-            { wert: 'teil', label: 'teilweise — muss noch ergaenzt werden' },
-            { wert: 'nein', label: 'noch nicht geprueft' },
+            { wert: 'teil', label: 'teilweise — muss noch ergänzt werden' },
+            { wert: 'nein', label: 'noch nicht geprüft' },
           ],
-            hint: 'Vollmacht, Betreuungsverfuegung und Patientenverfuegung sollten vorliegen, bevor die Pflege uebernommen wird — sonst entscheidet im Ernstfall niemand rechtssicher.' },
+            hint: 'Vollmacht, Betreuungsverfügung und Patientenverfügung sollten vorliegen, bevor die Pflege übernommen wird — sonst entscheidet im Ernstfall niemand rechtssicher.' },
         ] },
       // „Erinnerungen"-Sektion bewusst entfernt (war Wizard-Slot, leer und kollidierte
       // mit „Erinnerungsstücke & Briefe" in Persönliches). Geführte Eingaben (vvwiz, pvwiz)
@@ -4788,10 +4798,10 @@ const SEKTOREN = Object.freeze([
     ],
     // Geführter Einstieg (Welle 3): der Umzug-Wizard (umzwiz) schreibt seinen Bereich-9-Teil
     // (Versorger-Wechsel & Adressänderungen) hierher. Startknopf datenlage-adaptiv.
-    // kiwiz (KI-Verfügung „Verfügung zur digitalen Nachbildung", U2-ADR-069) hat `verwaltung` als
-    // Ziel-/Heimatsektor (MODULE-Registry, sektor:'verwaltung'), stand aber in keiner Startknopf-
-    // Liste — der Wizard war gebaut, aber unerreichbar (totes Versprechen, Kassensturz 22.07.).
-    wizards: ['umzwiz', 'kiwiz'],
+    // kiwiz-Umzug Schritt B (25.07.): der KI-Verfügungs-Startknopf sitzt jetzt in VORSORGE (bei den
+    // Instrument-Wizards) — inhaltlich richtig, da die KI-Verfügung ein Vorsorge-Instrument ist und
+    // kiwiz in die Vorsorge-Instrument-Zeile schreibt/liest. Verwaltung führt nur noch umzwiz.
+    wizards: ['umzwiz'],
 
     sektionen: [
       { id: 'bundid-vorgaenge', label: 'BundID und Vorgänge', felder: [
@@ -17252,13 +17262,21 @@ function pvDokumentOeffnen() {
 }
 
 /* ── KI-Verfügungs-Dokument („Verfügung zur digitalen Nachbildung", U2-ADR-069) ─────────────────────────
-   Zweite Instanz des geteilten Generators. Liest data.sektoren.verwaltung (ki_*-Felder, vom kiwiz
-   geschrieben), Wortlaut-Quelle KI_KORPUS. Ausgabe = Testament-Anlage (kopfseitig gekennzeichnet),
-   Herkunftsanzeige durchgängig, Schluss verweist auf § 2247 BGB. Nachlassverwalter über den Personen-
-   Mechanismus (refMehrfach, wie Erben/Bevollmächtigte). Feld 1 (Grundentscheidung) ist der Eingang:
-   „Untersagung" → die Bedingungs-Bausteine der Felder 2–5 sind gated auf 'erlaubnis' und entfallen. */
+   Zweite Instanz des geteilten Generators. Liest die ki_*-Unterfelder der `vorsorge_instrumente`-Zeile
+   (typ='ki-verfuegung'), in die kiwiz schreibt (ziel, U2-ADR-096 Block E). Wortlaut-Quelle KI_KORPUS.
+   Ausgabe = Testament-Anlage (kopfseitig gekennzeichnet), Herkunftsanzeige durchgängig, Schluss
+   verweist auf § 2247 BGB. Nachlassverwalter über den Personen-Mechanismus (refMehrfach, wie
+   Erben/Bevollmächtigte). Feld 1 (Grundentscheidung) ist der Eingang: „Untersagung" → die Bedingungs-
+   Bausteine der Felder 2–5 sind gated auf 'erlaubnis' und entfallen. */
 function _kiSektorDaten() {
-  return (data && data.sektoren && data.sektoren.verwaltung) ? data.sektoren.verwaltung : {};
+  // kiwiz-Umzug Schritt B (25.07.): der KI-Datensatz wohnt an der Instrument-Zeile, nicht mehr flach
+  // unter verwaltung (Migration 39→40 hat Alt-Bestand verschoben und verwaltung geleert). Der Zeilen-
+  // Eintrag trägt die ki_*-Unterfelder als Schlüssel — dasselbe Rückgabeformat, das _kiHatDaten und
+  // KI_MODUL.datenLesen erwarten. Alte Dateien deckt die Lese-App über ihren Legacy-Fold ab.
+  const liste = (data && data.sektoren && data.sektoren.vorsorge &&
+                 Array.isArray(data.sektoren.vorsorge.vorsorge_instrumente))
+    ? data.sektoren.vorsorge.vorsorge_instrumente : [];
+  return liste.find(r => r && r.typ === 'ki-verfuegung') || {};
 }
 function _kiOptLabel(feldId, wert) {
   const st = KI_KORPUS.steps.find(s => s.feld.id === feldId);
@@ -18850,21 +18868,34 @@ function renderSektor(sektorOrId) {
       // Bereich nur EINEN Startknopf erzeugen. (Unterschiedliche Wizards bleiben erhalten und werden
       // über wizardStartHTML eindeutig beschriftet.)
       const gesehen = new Set();
-      const startHtml = [];
+      const eindeutig = [];
       for (const wid of wizListe) {
         if (gesehen.has(wid) || !WIZARD_BY_ID[wid]) continue;
         gesehen.add(wid);
-        startHtml.push(wizardStartHTML(wid));
+        eindeutig.push(wid);
       }
-      // Knopf-Flut-Inventur 05.07.: ab ZWEI geführten Einstiegen (z. B. Vorsorge mit sieben) die
-      // Startknöpfe hinter einer Aufklapp-Zeile „Geführt ausfüllen" bündeln — ein ruhiger Einstieg
-      // statt eines Knopf-Stapels. Ein einzelner Wizard bleibt als direkter Knopf (kein Klick für nichts).
-      if (startHtml.length >= 2) {
+      // Knopf-Flut-Inventur 05.07.: ab ZWEI geführten Einstiegen die Startknöpfe hinter einer
+      // Aufklapp-Zeile „Geführt ausfüllen" bündeln; ein einzelner Wizard bleibt als direkter Knopf.
+      // Vorsorge-UX (Teil 1, 25.07.): im Vorsorge-Bereich werden Instrument-Wizards (Dokument-Zuordnung
+      // in WIZARD_DOKUMENT_MAP, hier pvwiz) OHNE Sammel-Überschrift als direkte Knöpfe gezeigt — sie
+      // gehören zum jeweiligen Instrument, nicht zu einer parallelen Kategorie; die Anlass-Wizards
+      // (pflwiz, heirwiz — kein Instrument) sind unter der sichtbaren Kategorie „Übergänge" gebündelt.
+      // Nur der Vorsorge-Sektor; alle anderen Sektoren behalten das bisherige „Geführt ausfüllen".
+      if (sektorId === 'vorsorge') {
+        const instr = eindeutig.filter(w => WIZARD_DOKUMENT_MAP[w]);
+        const anlass = eindeutig.filter(w => !WIZARD_DOKUMENT_MAP[w]);
+        for (const w of instr) zusatzInhalt += wizardStartHTML(w);
+        if (anlass.length) {
+          zusatzInhalt += '<details class="wizard-gruppe"><summary>' +
+            svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.wizardUebergaengeTitel) + '</summary>' +
+            anlass.map(wizardStartHTML).join('') + '</details>';
+        }
+      } else if (eindeutig.length >= 2) {
         zusatzInhalt += '<details class="wizard-gruppe"><summary>' +
           svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.wizardGruppeTitel) + '</summary>' +
-          startHtml.join('') + '</details>';
+          eindeutig.map(wizardStartHTML).join('') + '</details>';
       } else {
-        zusatzInhalt += startHtml.join('');
+        zusatzInhalt += eindeutig.map(wizardStartHTML).join('');
       }
     }
     // „Herausgeben"-Knopf pro Bereich (Export-Durchgang): ein Knopf, der einen kleinen Chooser
@@ -18883,9 +18914,11 @@ function renderSektor(sektorOrId) {
         '<button class="btn btn-sek" data-pv-dokument>' +
         svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.pvDokumentKnopf) + '</button></div>';
     }
-    // Verwaltung: die aus den kiwiz-Angaben zusammengestellte KI-Verfügung (Testament-Anlage) auch
-    // AUSSERHALB des Wizard-Abschlusses erreichbar machen — ansehen/drucken, sobald ki_*-Angaben vorliegen.
-    if (sektorId === 'verwaltung' && typeof _kiHatDaten === 'function' && _kiHatDaten()) {
+    // Vorsorge (kiwiz-Umzug Schritt B, 25.07.): die aus den kiwiz-Angaben zusammengestellte
+    // KI-Verfügung (Testament-Anlage) auch AUSSERHALB des Wizard-Abschlusses erreichbar machen —
+    // ansehen/drucken, sobald ki_*-Angaben vorliegen. Wohnt jetzt neben dem PV-Dokument in Vorsorge
+    // (kiwiz schreibt/liest die Instrument-Zeile, nicht mehr flach verwaltung).
+    if (sektorId === 'vorsorge' && typeof _kiHatDaten === 'function' && _kiHatDaten()) {
       zusatzInhalt += '<div class="bereich-aktionen ki-dokument-block">' +
         '<button class="btn btn-sek" data-ki-dokument>' +
         svgIcon(ICONS.fileText) + ' ' + escapeHTML(STRINGS.kiDokumentKnopf) + '</button></div>';
@@ -20318,10 +20351,17 @@ function feldEingetragen(feld, wert) {
 const DATUM_JAHR_MIN_GEBURT = 1900;
 const DATUM_JAHR_MIN_WEIT = 1800;
 function _datumJahrMaxZukunft() { return new Date().getUTCFullYear() + 50; }
+// B1-Fix (25.07.2026, Geräte-Befund): die „heute"-Grenze der Datums-Eingabe-Plausibilität wird in
+// LOKALER Zeit gerechnet, nicht UTC. Zuvor rechnete getUTC* die Grenze in UTC — zwischen lokal 00:00
+// und ~02:00 (CEST) war der lokale Tag dem UTC-Tag voraus, sodass ein heute gewählter Tag als Zukunft
+// galt und `keineZukunft` ihn ablehnte (generischer feldFehlerDatum-Toast meldete fälschlich „Format").
+// Nur die Eingabe-„heute"-Grenze betroffen; gespeicherte Zeitstempel laufen unverändert über
+// new Date().toISOString() (UTC, bewusst). Alle drei Aufrufer (_datumPlausibel keineZukunft, die zwei
+// nativen date-max-Attribute) wollen „heute" so, wie die Nutzerin ihn lokal sieht.
 function _datumHeuteIso() {
   const d = new Date();
   const z = (n) => String(n).padStart(2, '0');
-  return d.getUTCFullYear() + '-' + z(d.getUTCMonth() + 1) + '-' + z(d.getUTCDate());
+  return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate());
 }
 function _datumPlausibel(iso, keineZukunft, jahrMin) {
   const min = jahrMin != null ? jahrMin : DATUM_JAHR_MIN_WEIT;
