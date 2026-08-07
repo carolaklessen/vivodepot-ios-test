@@ -30,7 +30,7 @@
 // v3 (U2-ADR-024): Schalen-Schnitt für U2-ADR-021/022/023 + Sammel-Fix-Cluster. Diese pages/-Kopie
 // ist mit der Wurzel-`sw.js` (Auslieferungsquelle) bewusst byte-logik-gleich zu halten.
 // v4 (2026-07-03): a11y-Schnitt (aria-label-Felder, vertiefter Topbar-Kontrast) + RC-Sammelstand (s. Wurzel-sw.js).
-const CACHE = 'vivodepot-shell-v76';  // v76 (2026-07-26): Harness gehoben auf u2-kanon d466e02 — Vorsorge-Runde: B1 Datum-lokal, B2 ref-Picker schmal, B3 Umlaute, Uebergaenge-Kategorie, optional-Etiketten raus, kiwiz-Lesepfad.
+const CACHE = 'vivodepot-shell-v77';  // v77 (2026-08-07): Harness gehoben auf u2-kanon ca7ce0a — 127 HTML-Commits seit v76, Schema 40->47, u.a. Rechtsraum-Katalog, Uebergabe/Export, Import-Erkennung, Wechselmoment (U2-ADR-102/109/111), Teardown-Garantie (U2-ADR-103).
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT). Pages liefert vivodepot.html aus (U2-ADR-020, Weg 1); './' wird

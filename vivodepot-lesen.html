@@ -752,8 +752,13 @@ const SEKTOREN = Object.freeze([
               { id: 'anmerkung', label: 'Anmerkung',       typ: 'text', beispiel: 'kennt meine Tochter seit der Kindheit' },
             ] },
         ] },
-      { id: 'kinder-sek', label: 'Kinder', felder: [
-        { id: 'kinder', label: 'Kinder', typ: 'liste',
+      // U2-ADR-109: „Kinder und Schutzbefohlene" sind EINE Liste. Spiegel des Kerns, Feld fuer Feld —
+      // ein Feld, das hier fehlt oder anders gebaut ist, erscheint der Vertrauensperson als
+      // „nichts hinterlegt", obwohl Daten da sind (Paritaets-Waechter).
+      { id: 'kinder-sek', label: 'Kinder und Schutzbefohlene',
+        hint: 'Hier tragen Sie alle Menschen ein, für die Sie rechtlich einstehen: Ihre Kinder — eigene, Pflege-, Stief- oder Adoptivkinder —, ein Mündel, und Erwachsene, für die Sie die Betreuung führen, etwa ein Elternteil oder Ehepartner.',
+        felder: [
+        { id: 'kinder', label: 'Kinder und Schutzbefohlene', typ: 'liste',
           unterFelder: [
             /* Paritaets-Nachtrag Klasse (a), 23.07.2026 — FALSCHANZEIGE behoben.
                Hier standen vier Inline-Felder (vorname/nachname/geburtsdatum/geburtsort), die der
@@ -762,30 +767,55 @@ const SEKTOREN = Object.freeze([
                und ein beschriftetes leeres Feld liest eine Institution als „nicht hinterlegt".
                Das ist die schlimmere Haelfte der Luecke: Fehlendes ist sichtbar leer, Falsches
                sieht richtig aus. Spiegel des Kerns, Feld fuer Feld. */
-            { id: 'kind',               label: 'Kind',                        typ: 'ref',   entitaet: 'person', mitGeburt: true,
+            { id: 'person',             label: 'Person',                      typ: 'ref',   entitaet: 'person', mitGeburt: true,
               verweisZweck: 'familiaer' },
-            { id: 'kind_beziehung',     label: 'Art der Beziehung',           typ: 'auswahl', optionen: [
-              { wert: 'leiblich',  label: 'leiblich' },
-              { wert: 'adoptiert', label: 'adoptiert' },
+            { id: 'art',                label: 'Art',                         typ: 'auswahl', optionen: [
+              { wert: 'leiblich',  label: 'leibliches Kind' },
+              { wert: 'adoptiert', label: 'Adoptivkind' },
               { wert: 'pflege',    label: 'Pflegekind' },
               { wert: 'stief',     label: 'Stiefkind' },
               { wert: 'muendel',   label: 'Mündel / Vormundschaft' },
+              { wert: 'betreuter_erwachsener', label: 'betreuter Erwachsener' },
             ] },
-            { id: 'kind_beziehung_zusatz', label: 'Beziehung — Ergänzung',    typ: 'text' },
-            { id: 'sorgerecht_kind',    label: 'Gesetzliche Vertretung (elterliche Sorge)', typ: 'auswahl', optionen: [
+            { id: 'kind_beziehung_zusatz', label: 'Art — Ergänzung',          typ: 'text' },
+            { id: 'anmerkung',          label: 'Anmerkung',                   typ: 'textarea' },
+            { id: 'sorgerecht_kind',    label: 'Gesetzliche Vertretung (elterliche Sorge)', typ: 'auswahl',
+              verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' },
+              optionen: [
               { wert: 'gemeinsam', label: 'gemeinsame elterliche Sorge' },
               { wert: 'allein',    label: 'alleinige elterliche Sorge' },
               { wert: 'vormund',   label: 'Vormundschaft / Pflegschaft' },
               { wert: 'andere',    label: 'andere Regelung' },
             ] },
-            { id: 'sorgerecht_kind_zusatz', label: 'Sorgerecht — Ergänzung (Teilsorge u. Ä.)', typ: 'text' },
-            { id: 'betreuungsmodell',   label: 'Betreuungsmodell',            typ: 'text',  beispiel: 'Wechselmodell, 50/50' },
-            { id: 'in_ausbildung',      label: 'In Ausbildung / Studium',     typ: 'auswahl', optionen: [
+            { id: 'sorgerecht_kind_zusatz', label: 'Sorgerecht — Ergänzung (Teilsorge u. Ä.)', typ: 'text',
+              verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' } },
+            { id: 'betreuungsmodell',   label: 'Betreuungsmodell',            typ: 'text',  beispiel: 'Wechselmodell, 50/50',
+              verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' } },
+            { id: 'in_ausbildung',      label: 'In Ausbildung / Studium',     typ: 'auswahl',
+              verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' },
+              optionen: [
               { wert: 'ja',   label: 'ja' },
               { wert: 'nein', label: 'nein' },
             ] },
-            { id: 'ausbildung_ende',    label: 'Ausbildung voraussichtlich bis', typ: 'datum' },
-            { id: 'geburtsurkunde_ort', label: 'Geburtsurkunde — Ablageort',  typ: 'text',  beispiel: 'Ordner „Wichtiges", Wohnzimmerschrank' },
+            { id: 'ausbildung_ende',    label: 'Ausbildung voraussichtlich bis', typ: 'datum',
+              verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' } },
+            { id: 'geburtsurkunde_ort', label: 'Geburtsurkunde — Ablageort',  typ: 'text',  beispiel: 'Ordner „Wichtiges", Wohnzimmerschrank',
+              verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' } },
+            { id: 'vertretung_art',     label: 'Grundlage der Vertretung',    typ: 'auswahl',
+              verborgenWenn: { feld: 'art', wert: ['leiblich', 'adoptiert', 'pflege', 'stief', 'muendel'] },
+              optionen: [
+              { wert: 'betreuung',        label: 'gesetzliche Betreuung (§ 1814 BGB)' },
+              { wert: 'vorsorgevollmacht', label: 'Vorsorgevollmacht (§ 1814 Abs. 3 BGB)' },
+              { wert: 'ehegattennotvertretung', label: 'Ehegattennotvertretung (§ 1358 BGB)' },
+            ] },
+            { id: 'aufgabenbereiche',   label: 'Aufgabenbereiche',            typ: 'textarea',
+              verborgenWenn: { feld: 'art', wert: ['leiblich', 'adoptiert', 'pflege', 'stief', 'muendel'] } },
+            { id: 'betreuungsgericht',  label: 'Betreuungsgericht',           typ: 'text',
+              verborgenWenn: { feld: 'art', wert: ['leiblich', 'adoptiert', 'pflege', 'stief', 'muendel'] } },
+            { id: 'aktenzeichen',       label: 'Aktenzeichen',                typ: 'text',
+              verborgenWenn: { feld: 'art', wert: ['leiblich', 'adoptiert', 'pflege', 'stief', 'muendel'] } },
+            { id: 'bestellt_seit',      label: 'Bestellt / gültig seit',      typ: 'datum',
+              verborgenWenn: { feld: 'art', wert: ['leiblich', 'adoptiert', 'pflege', 'stief', 'muendel'] } },
           ] },
       ] },
       { id: 'erwachsene-kinder-sek', label: 'Erwachsene Kinder', felder: [
@@ -814,14 +844,8 @@ const SEKTOREN = Object.freeze([
       // gesetzliche Vertretungsbefugnis ist die Grundlage einer späteren Sub-Depot-Anlage — sie ist
       // bewusst KEINE erteilte Vollmacht und steht NICHT in den Bereich-8-Vollmacht-Feldern (beide
       // Orte werden nicht gekoppelt). Die eigentliche Sorgerechtsverfügung liegt in Bereich 8.
-      { id: 'schutzbefohlene-sek', label: 'Schutzbefohlene',
-        hint: 'Minderjährige Kinder oder andere Menschen, für die Sie gesetzlich sorgen. Die einzelnen Personen erfassen Sie in der Kinder-Liste oben.',
-        felder: [
-          { id: 'schutzbefohlene',             label: 'Minderjährige Kinder / Schutzbefohlene', typ: 'textarea', beispiel: 'Anna (12) und Lukas (9); Pflegekind Mia (7)',
-            hint: 'Für wen tragen Sie die rechtliche Verantwortung? Verweis auf die Kinder-Liste oben genügt.' },
-          // U2-ADR-036: globales schutzbefohlene_vertretung-Enum entfiel — gesetzliche Vertretung lebt
-          // pro Kind in der Kinder-Liste (sorgerecht_kind). Lese-Spiegel hier entsprechend bereinigt.
-        ] },
+      // U2-ADR-109: `schutzbefohlene-sek` ist ENTFALLEN — Kinder und Schutzbefohlene stehen in EINER
+      // Liste oben. Der Alt-Freitext wandert per Migration 41→42 als eigene Zeile dorthin.
       // Pflege — Bereich-2-Teil des Pflege-Übernahme-Wizards (pflwiz): wer pflegt, und die
       // arbeitsrechtliche Freistellung (Pflegezeit/Familienpflegezeit) der pflegenden Person.
       { id: 'pflege-sek', label: 'Pflege',
@@ -860,7 +884,9 @@ const SEKTOREN = Object.freeze([
               hint: 'Bei Leasing: Leasinggesellschaft sofort informieren.' },
           ] },
         { id: 'fuehrerschein',    label: 'Führerschein',                                typ: 'text', beispiel: 'B, BE — Klasse, Ablageort Geldbeutel' },
-        { id: 'kfz_versicherung', label: 'KFZ-Versicherung',                            typ: 'text', beispiel: 'HUK24, Vertrag 4711-0815' },
+        { id: 'kfz_versicherung', label: 'KFZ-Versicherung',                            typ: 'ref', entitaet: 'institution', verweisZweck: 'geschaeftlich', beispiel: 'HUK24' },
+        { id: 'kfz_versicherung_nr', label: 'Versicherungsschein-Nummer',               typ: 'text', beispiel: '4711-0815-X',
+          hint: 'Steht auf der Versicherungskarte oder dem letzten Beitragsbescheid. Bei mehreren Fahrzeugen: ein Eintrag je Vertrag.' },
         { id: 'd_ticket',         label: 'Deutschlandticket / ÖPNV',                    typ: 'text', beispiel: 'D-Ticket Abo bei MVG' },
         { id: 'reisepass_nr',     label: 'Reisepass-Nr.',                               typ: 'text', beispiel: 'C123456789' },
         { id: 'elefand_nr',       label: 'ELEFAND-Registrierungsnr.',                   typ: 'text', beispiel: 'ELE-2024-12345',
@@ -897,7 +923,7 @@ const SEKTOREN = Object.freeze([
         { id: 'konten', label: 'Konten', typ: 'liste',
           hint: 'Jedes Konto als eigener Eintrag — welche Konten es gibt, für den Erbfall und die Übersicht. Kein Kontostand, keine Auszüge.',
           unterFelder: [
-            { id: 'bank', label: 'Bank / Institut', typ: 'text', beispiel: 'Sparkasse München' },
+            { id: 'bank', label: 'Bank / Institut', typ: 'ref', entitaet: 'institution', verweisZweck: 'geschaeftlich', beispiel: 'Sparkasse München' },
             { id: 'art',  label: 'Art des Kontos',  typ: 'text', beispiel: 'Girokonto',
               vorschlaege: ['Girokonto', 'Sparkonto', 'Tagesgeld', 'Festgeld', 'Depot', 'Darlehenskonto', 'Treuhandkonto', 'Bausparvertrag'],
               hint: 'Vorschläge sind Bequemlichkeit, keine Grenze — Sie können frei schreiben (z. B. Geschäftskonto, Gemeinschaftskonto).' },
@@ -934,8 +960,13 @@ const SEKTOREN = Object.freeze([
           ] },
         { id: 'forderungen',       label: 'Offene Forderungen & Bürgschaften', typ: 'text', ebene: 'modul', beispiel: 'Bürgschaft für Tochter (Mietkaution)' },
         // Erbschaftsregelung (erbwiz, B4-Teil): Überblick der Vermögenswerte für den Nachlass.
-        { id: 'nachlass_vermoegen', label: 'Vermögenswerte für den Nachlass', typ: 'textarea', ebene: 'modul', beispiel: 'Eigentumswohnung München; Depot ING; Lebensversicherung Allianz; Bausparvertrag',
-          hint: 'Ein Überblick, was im Erbfall vorhanden ist — die Zugänge selbst stehen in den Konto- und Vorsorge-Feldern.' },
+        // U2-ADR-104: Liste, spiegelbildlich zum Kern (Paritäts-Wächter).
+        { id: 'nachlass_vermoegen', label: 'Vermögenswerte für den Nachlass', typ: 'liste', ebene: 'modul',
+          hint: 'Jeder Vermögenswert als eigener Eintrag. Ein Überblick, was im Erbfall vorhanden ist — die Zugänge selbst stehen in den Konto- und Vorsorge-Feldern.',
+          unterFelder: [
+            { id: 'wert', label: 'Vermögenswert', typ: 'text', beispiel: 'Eigentumswohnung' },
+            { id: 'ort',  label: 'Wo / bei wem',  typ: 'text', beispiel: 'München, Schwanthalerstraße' },
+          ] },
       ] },
     ] },
   { id: 'gesundheit',        label: 'Gesundheit',           format: SEKTOR_FORMATE.FHIR_IPS,   icon: 'heartPulse',
@@ -975,7 +1006,7 @@ const SEKTOREN = Object.freeze([
           ] },
           { id: 'allergien',          label: 'Allergien (Medikamente, Nahrung, Sonstiges)', typ: 'text', beispiel: 'Penicillin, Haselnuss', codeListe: 'snomedAllergen' },
           { id: 'krankheiten',        label: 'Chronische Erkrankungen / Diagnosen',         typ: 'text', beispiel: 'Diabetes mellitus Typ 2, Bluthochdruck', codeListe: 'icd10' },
-          { id: 'kv_art',             label: 'Krankenversicherung',                          typ: 'text', beispiel: 'AOK Bayern',
+          { id: 'kv_art',             label: 'Krankenversicherung',                          typ: 'ref', entitaet: 'institution', verweisZweck: 'aerztlich', beispiel: 'AOK Bayern',
             hint: 'Welche Krankenkasse? Nummer steht auf der Karte.' },
           { id: 'medikamente',        label: 'Medikamente (laufend)',                        typ: 'text', beispiel: 'Ramipril 5 mg morgens, Metformin 1000 mg 2× täglich', codeListe: 'atc' },
           { id: 'kv_nummer',          label: 'Versichertennummer',                           typ: 'text', beispiel: 'A123456789',
@@ -1016,9 +1047,22 @@ const SEKTOREN = Object.freeze([
           // Kreditkarten leben in Finanzen (kreditkarte1/2) — kk-id war v1-Fehlbenennung, aufgelöst 30.05.
           { id: 'ehic_nr',            label: 'EHIC-Karte (Europäische Krankenversicherungskarte)', typ: 'text', ebene: 'modul', beispiel: 'EHIC-Nr. auf Rückseite KK-Karte' },
           // Anamnese (anamwiz): Operationen & Familienanamnese — ergänzen die codierten Felder oben.
-          { id: 'voroperationen',     label: 'Operationen / Eingriffe',                      typ: 'text', ebene: 'modul', beispiel: 'Blinddarm 2008; Hüft-TEP rechts 2019' },
-          { id: 'familienanamnese',   label: 'Familienanamnese',                             typ: 'textarea', ebene: 'modul', beispiel: 'Vater Herzinfarkt mit 60; Mutter Diabetes Typ 2',
-            hint: 'Erkrankungen in der nahen Familie — wichtig für Vorsorge und ärztliche Einschätzung.' },
+          // U2-ADR-104: beide Kern-Felder sind Listen. Die Lese-App MUSS denselben Bau tragen — ein
+          // Feld, das hier als `text` steht und im Kern eine Liste ist, erschiene der Vertrauensperson
+          // als „nichts hinterlegt", obwohl Daten da sind. (Genau das hat der Paritäts-Wächter gemeldet.)
+          { id: 'voroperationen',     label: 'Operationen / Eingriffe',                      typ: 'liste', ebene: 'modul',
+            hint: 'Jeder Eingriff als eigener Eintrag.',
+            unterFelder: [
+              { id: 'eingriff', label: 'Eingriff',      typ: 'text', beispiel: 'Blinddarm-Entfernung' },
+              { id: 'jahr',     label: 'Jahr',          typ: 'text', beispiel: '2008' },
+            ] },
+          { id: 'familienanamnese',   label: 'Familienanamnese',                             typ: 'liste', ebene: 'modul',
+            hint: 'Jede Erkrankung in der nahen Familie als eigener Eintrag — wichtig für Vorsorge und ärztliche Einschätzung.',
+            unterFelder: [
+              { id: 'person',      label: 'Angehörige / Angehöriger', typ: 'text', beispiel: 'Vater' },
+              { id: 'erkrankung',  label: 'Erkrankung',               typ: 'text', beispiel: 'Herzinfarkt' },
+              { id: 'alter_bei_erkrankung', label: 'Alter bei Erkrankung', typ: 'text', beispiel: '60' },
+            ] },
         ] },
       // Sektion 'pflegegrad-sek' aufgelöst (U2-ADR-019) — synchron zum Kern; Pflegedienst & Pflegegeld
       // leben jetzt in sozialversicherung/renten-pflege-soz, neben Pflegegrad/Pflegekasse.
@@ -1065,7 +1109,7 @@ const SEKTOREN = Object.freeze([
     sektionen: [
       { id: 'renten-pflege-soz', label: 'Renten-, Pflege-, Sozialversicherung', felder: [
         { id: 'rentenversicherungsnummer', label: 'Rentenversicherungsnummer', typ: 'text', beispiel: '12 345678 A 123' },
-        { id: 'pflegekasse',               label: 'Pflegekasse',                typ: 'text', beispiel: 'AOK Bayern — Pflegekasse',
+        { id: 'pflegekasse',               label: 'Pflegekasse',                typ: 'ref', entitaet: 'institution', verweisZweck: 'pflege', beispiel: 'AOK Bayern — Pflegekasse',
           hint: 'Die Pflegekasse ist meist an die Krankenkasse gekoppelt. Bei Pflegebedarf muss dort der Antrag auf Pflegegradermittlung gestellt werden.' },
         { id: 'pflegekasse_nr',            label: 'Pflegekasse-Nummer',         typ: 'text', beispiel: 'A123456789' },
         { id: 'pflegekasse_tel',           label: 'Pflegekasse — Telefon',      typ: 'text', beispiel: '089 12345-678' },
@@ -1079,8 +1123,10 @@ const SEKTOREN = Object.freeze([
         { id: 'pflegegrad_seit', label: 'Pflegegrad seit (Jahr)', typ: 'text', beispiel: '2019' },
         { id: 'pflegegrad_befristet_bis', label: 'Pflegegrad befristet bis', typ: 'datum' },   // Katalog-Sync zum Kern
         // Pflegedienst & Pflegegeld zogen aus Gesundheit hierher (U2-ADR-019) — synchron zum Kern.
-        { id: 'pflegedienst_kontakt', label: 'Pflegedienst — Name & Kontakt', typ: 'ref', entitaet: 'institution', art: 'pflegedienst',
-          hint: 'Welcher ambulante Pflegedienst betreut die Pflege? Über „Neue Institution anlegen" direkt erfassen.' },
+        // `pflegedienst_kontakt` stand hier und ist am 29.07.2026 entfallen (U2-ADR-116 §7) —
+        // `pflegedienst` im Abschnitt „Schwerbehinderung und Pflege" bleibt und trägt jetzt
+        // dessen `art` und Hint. Das Label lebt im ALT_LABEL_REGISTER weiter.
+
         { id: 'pflegegeld',      label: 'Pflegegeld / Pflegeleistungen', typ: 'text', beispiel: 'Pflegegeld Pflegegrad 3, 599 EUR/Monat; Kombinationsleistung' },
       ] },
       { id: 'schwerbehinderung-pflege', label: 'Schwerbehinderung und Pflege', felder: [
@@ -1093,7 +1139,9 @@ const SEKTOREN = Object.freeze([
         { id: 'schwerbehindertenausweis_gueltig', label: 'Ausweis gültig bis',                   typ: 'datum',
           hint: 'Schwerbehindertenausweise sind oft befristet (5 Jahre). Frühzeitig erneuern — Antrag beim Versorgungsamt 3 Monate vor Ablauf.' },
         // Modul
-        { id: 'pflegedienst',     label: 'Ambulanter Pflegedienst — Name & Kontakt', typ: 'ref',  entitaet: 'institution', ebene: 'modul' },
+        // U2-ADR-116 §7: `art` von `pflegedienst_kontakt` übernommen, synchron zum Kern.
+        // A57: `ebene:'modul'` entfernt, synchron zum Kern.
+        { id: 'pflegedienst',     label: 'Ambulanter Pflegedienst — Name & Kontakt', typ: 'ref',  entitaet: 'institution', art: 'pflegedienst' },
         { id: 'pflegeheim',       label: 'Pflegeheim / Betreutes Wohnen',            typ: 'text', ebene: 'modul', beispiel: 'Caritas-Seniorenheim, München-Schwabing',
           hint: 'Falls bereits ein Pflegeheim oder Betreutes Wohnen gewählt wurde oder geplant ist.' },
         { id: 'pflegevertrag_ort',label: 'Pflegevertrag — Ablageort',                typ: 'text', ebene: 'modul', beispiel: 'Ordner „Pflege", Wohnzimmerschrank' },
@@ -1215,11 +1263,95 @@ const SEKTOREN = Object.freeze([
                 { wert: 'nacheinander', label: 'nacheinander — in der genannten Reihenfolge (Ersatz)' },
               ],
               hint: 'Gleichwertig: jede bevollmächtigte Person darf einzeln handeln. Nacheinander: die erste ist zuständig, die nächste nur als Ersatz — die Reihenfolge oben bestimmt die Vertretung.' },
+            // Vollmacht-Detailfelder (CC-Auftrag Lese-App-Paritaet, 01.08.2026, Zug 1) — wörtliche
+            // Übernahme aus vivodepot.html, Vollmacht-Generator (CC-Auftrag Vollmacht_Betreuung_
+            // Generatoren_2026-08-01): 22 vm_*-Unterfelder fehlten hier vollständig, obwohl der Kern
+            // sie seit dem Vollmacht-Zug führt (Paritätstest, Freistellung UNTERFELD_ABWEICHUNG).
+            { id: 'vm_gesundheit_entscheiden', label: 'Gesundheitssorge — allgemein entscheiden', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_gesundheit_eingriffe', label: 'Gesundheitssorge — ärztliche Eingriffe, auch mit Lebensgefahr (§ 1829 BGB)', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_gesundheit_schweigepflicht', label: 'Gesundheitssorge — Krankenunterlagen, Schweigepflichtentbindung', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_gesundheit_freiheitsentzug', label: 'Gesundheitssorge — freiheitsentziehende Maßnahmen', typ: 'mehrfachauswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [
+                { wert: 'unterbringung', label: 'über meine freiheitsentziehende Unterbringung (§ 1831 Absatz 1 BGB)' },
+                { wert: 'massnahmen', label: 'über freiheitsentziehende Maßnahmen (z.B. Bettgitter, Medikamente u. ä.) in einem Heim oder in einer sonstigen Einrichtung (§ 1831 Absatz 4 BGB)' },
+                { wert: 'zwangsmassnahmen', label: 'über ärztliche Zwangsmaßnahmen (§ 1832 Absatz 1 BGB)' },
+                { wert: 'krankenhaus', label: 'über meine Verbringung zu einem stationären Aufenthalt in einem Krankenhaus, wenn eine ärztliche Zwangsmaßnahme in Betracht kommt (§ 1832 Absatz 4 BGB)' },
+              ] },
+            { id: 'vm_aufenthalt_bestimmen', label: 'Aufenthalt bestimmen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_wohnung_mietvertrag', label: 'Bestehenden Mietvertrag wahrnehmen, Haushalt auflösen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_wohnung_neuer_mietvertrag', label: 'Neuen Mietvertrag abschließen und kündigen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_wohnung_betreuungsvertrag', label: 'Wohn- und Betreuungsvertrag abschließen und kündigen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_behoerden', label: 'Vertretung bei Behörden, Versicherungen, Sozialleistungsträgern', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_vermoegen_verwalten', label: 'Vermögensverwaltung — allgemein', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_vermoegen_verfuegen', label: 'Über Vermögensgegenstände verfügen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_vermoegen_zahlungen', label: 'Zahlungen und Wertgegenstände annehmen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_vermoegen_verbindlichkeiten', label: 'Verbindlichkeiten eingehen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_vermoegen_konten', label: 'Konten, Depots, Safes — Geschäftsverkehr mit Kreditinstituten', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_vermoegen_schenkungen', label: 'Übliche Schenkungen im betreuungsrechtlich zulässigen Rahmen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_vermoegen_ausschluss', label: 'Ausdrücklich ausgeschlossene Geschäfte', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              beispiel: 'z. B. kein Verkauf der selbstbewohnten Immobilie' },
+            { id: 'vm_post_fernmeldeverkehr', label: 'Post und Fernmeldeverkehr (auch elektronisch)', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_gericht', label: 'Vertretung vor Gericht', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_untervollmacht', label: 'Untervollmacht erteilen dürfen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_betreuungsverfuegung_verweis', label: 'Bevollmächtigte Person auch als Betreuer/in vorschlagen', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_tod_hinaus', label: 'Geltung über den Tod hinaus', typ: 'auswahl',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+            { id: 'vm_weitere_regelungen', label: 'Weitere Regelungen', typ: 'textarea',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' } },
             // ADR-089 Entscheidung 5 — statischer Hinweis, kein Mechanismus: nur die drei Arten, die
             // sich inhaltlich mit anderen überschneiden können. Reine Anzeige, keine Prüfung.
             { id: 'ueberlappung_hinweis', label: 'Hinweis', typ: 'hinweis',
               sichtbarWenn: { feld: 'art', wert: ['general', 'gesundheit', 'bank'] },
               hint: 'Diese Vollmacht kann sich mit anderen überschneiden — achten Sie darauf, dass Ihre Vollmachten zueinander passen.' },
+            // Zentrales Vorsorgeregister + ärztliche Begleitung (CC-Auftrag Lese-App-Paritaet,
+            // 01.08.2026, Zug 1) — wörtliche Übernahme aus vivodepot.html: beide standen bereits vor
+            // dem Vollmacht-Zug im Kern, aber nie hier (Freistellungs-Kommentar in
+            // UNTERFELD_ABWEICHUNG nannte sie, ohne dass sie tatsächlich gezählt/gebaut waren).
+            { id: 'zvr_nummer', label: 'Zentrales Vorsorgeregister — Eintragungsnummer', typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: 'vorsorgevollmacht' },
+              beispiel: 'ZVR-2024-987654' },
+            { id: 'patientenverf_arzt', label: 'Ärztlich begleitet durch', typ: 'ref', entitaet: 'person',
+              rolle: 'arzt', verweisZweck: 'aerztlich',
+              sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' } },
             // ── Patientenverfügung (typ='patientenverfuegung') ───────────────────────────
             // „Grundhaltung" bewusst NICHT gebaut: kein lebendes Quellfeld (historische Kandidaten
             // patientenverf_haltung/_wunsch/palliativ_wunsch sind verwaist, s. u.), und die BMJ-
@@ -1294,6 +1426,7 @@ const SEKTOREN = Object.freeze([
               ] },
             { id: 'ki_zweck', label: 'Zweck', typ: 'mehrfachauswahl',
               sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' },
               optionen: [
                 { wert: 'trauer',     label: 'zur persönlichen Trauerbegleitung im engsten Kreis' },
                 { wert: 'erinnerung', label: 'zur Bewahrung von Erinnerungen und Familiengeschichte' },
@@ -1301,20 +1434,24 @@ const SEKTOREN = Object.freeze([
               ] },
             { id: 'ki_berechtigte', label: 'Berechtigte', typ: 'auswahl',
               sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' },
               optionen: [
                 { wert: 'benannte',    label: 'ausschließlich namentlich benannte Personen' },
                 { wert: 'angehoerige', label: 'meine engsten Angehörigen' },
               ] },
             { id: 'ki_berechtigte_personen', label: 'Namentlich benannte Personen', typ: 'refMehrfach', entitaet: 'person',
-              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' } },
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' } },
             { id: 'ki_raum', label: 'Raum', typ: 'auswahl',
               sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' },
               optionen: [
                 { wert: 'privat',      label: 'nur privater Raum' },
                 { wert: 'oeffentlich', label: 'auch öffentlich zugängliche Räume (z. B. Gedenkseiten)' },
               ] },
             { id: 'ki_datenarten', label: 'Zulässige Datenarten', typ: 'mehrfachauswahl',
               sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' },
               optionen: [
                 { wert: 'schriftverkehr', label: 'Schriftverkehr und Textnachrichten' },
                 { wert: 'sprache',        label: 'Sprachaufnahmen' },
@@ -1323,29 +1460,35 @@ const SEKTOREN = Object.freeze([
               ] },
             { id: 'ki_befristung', label: 'Befristung', typ: 'auswahl',
               sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' },
               optionen: [
                 { wert: 'jahre',         label: 'Löschung nach einer bestimmten Anzahl Jahre' },
                 { wert: 'letzte_person',  label: 'Löschung mit dem Tod der letzten zugangsberechtigten Person' },
                 { wert: 'zeitpunkt',     label: 'Löschung zu einem bestimmten Zeitpunkt' },
               ] },
             { id: 'ki_befristung_jahre', label: 'Anzahl Jahre', typ: 'text',
-              sichtbarWenn: { feld: 'ki_befristung', wert: 'jahre' }, beispiel: 'zehn' },
+              sichtbarWenn: { feld: 'ki_befristung', wert: 'jahre' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' }, beispiel: 'zehn' },
             { id: 'ki_befristung_zeitpunkt', label: 'Zeitpunkt', typ: 'text',
-              sichtbarWenn: { feld: 'ki_befristung', wert: 'zeitpunkt' }, beispiel: '31.12.2040' },
+              sichtbarWenn: { feld: 'ki_befristung', wert: 'zeitpunkt' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' }, beispiel: '31.12.2040' },
             { id: 'ki_verhaltensgrenze', label: 'Verhaltensgrenze', typ: 'auswahl',
               sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' },
               optionen: [
                 { wert: 'belegt', label: 'nur belegtes Material, keine darüber hinausgehenden Aussagen' },
                 { wert: 'frei',   label: 'frei im Rahmen des dokumentierten Charakters, keine Politik/Religion/Finanzen/Rechtsgeschäfte' },
               ] },
             { id: 'ki_nachlassverwaltung', label: 'Digitale Nachlassverwaltung', typ: 'auswahl',
               sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' },
               optionen: [
                 { wert: 'benannt',     label: 'benannte Person, bevollmächtigt zum Pausieren/Löschen' },
                 { wert: 'angehoerige', label: 'gemeinsam meine benannten Angehörigen' },
               ] },
             { id: 'ki_nachlassverwalter', label: 'Digitale Nachlassverwaltung — Person', typ: 'refMehrfach', entitaet: 'person',
-              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' } },
+              sichtbarWenn: { feld: 'typ', wert: 'ki-verfuegung' },
+              verborgenWenn: { feld: 'ki_grundentscheidung', wert: 'untersagung' } },
           ] },
         { id: 'betreuungsverfuegung',        label: 'Betreuungsverfügung vorhanden?',                  typ: 'auswahl', optionen: [
           { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' },
@@ -1443,6 +1586,19 @@ const SEKTOREN = Object.freeze([
         { id: 'bundid_ort',         label: 'BundID — Unterlagen (Ablageort)',   typ: 'text', beispiel: 'Ordner „Digitale Zugänge", Schreibtisch',
           hint: 'Angehörige brauchen ggf. Zugang zu Ihrer BundID — z. B. um Sterbeurkunde digital zu beantragen.' },
         { id: 'bundid_status',      label: 'BundID — Verifizierungsstufe',      typ: 'text', beispiel: 'Niveau hoch (mit eID-Funktion)' },
+        // Verwaltungsvorgänge-Tracker — spiegelbildlich zum Kern (Paritäts-Wächter).
+        { id: 'verwaltung_vorgaenge', label: 'Laufende Verwaltungsvorgänge', typ: 'liste',
+          hint: 'Jeder laufende Vorgang bei einer Behörde als eigener Eintrag — z. B. Rentenantrag, Elterngeld, Ummeldung.',
+          unterFelder: [
+            { id: 'behoerde',     label: 'Behörde',                typ: 'text', beispiel: 'Deutsche Rentenversicherung' },
+            { id: 'vorgangstyp',  label: 'Art des Vorgangs',       typ: 'text', beispiel: 'Rentenantrag' },
+            { id: 'aktenzeichen', label: 'Aktenzeichen',           typ: 'text', beispiel: 'RV-2026-00417' },
+            { id: 'datum',        label: 'Datum (Antrag/Beginn)',  typ: 'datum' },
+            { id: 'gueltig_bis',  label: 'Gültig bis / Frist',     typ: 'datum' },
+            { id: 'betrag',       label: 'Betrag',                 typ: 'text', beispiel: '1.240 EUR monatlich' },
+            { id: 'referenz',     label: 'Referenz / Kontaktperson', typ: 'text', beispiel: 'Sachbearbeiterin Frau Meyer' },
+            { id: 'notiz',        label: 'Notiz',                  typ: 'textarea', beispiel: 'Unterlagen eingereicht am 12.03., Rückmeldung ausstehend' },
+          ] },
         { id: 'pw_manager',         label: 'Passwort-Manager',                  typ: 'text', beispiel: 'Bitwarden · 1Password · KeePass' },
         { id: 'pw_masterkey_ort',   label: 'Master-Passwort (Ablageort)',       typ: 'text', beispiel: 'Küchenschrank',
           hint: 'Nicht das Passwort selbst — nur wo es zu finden ist.' },
@@ -1472,10 +1628,51 @@ const SEKTOREN = Object.freeze([
         { id: 'schliessf_ort',        label: 'Bankschließfach — Bank & Filiale',  typ: 'text', ebene: 'modul', beispiel: 'Sparkasse München, Filiale Sendling',
           hint: 'Ein Bankschließfach ist ein gemietetes Fach in der Bank, wo wichtige Dokumente sicher aufbewahrt werden.' },
         { id: 'schliessf_schluessel', label: 'Schlüssel — Ablageort',             typ: 'text', ebene: 'modul', beispiel: 'Schublade im Flur' },
-        { id: 'wohnungsschluessel_ort', label: 'Wohnungsschlüssel — wer hat einen?', typ: 'text', ebene: 'modul', beispiel: 'Nachbarin Sarah; Tochter Anna',
-          hint: 'Wer hat einen Ersatzschlüssel? Das ist im Notfall die schnellste Möglichkeit, Zugang zur Wohnung zu bekommen.' },
+        // U2-ADR-104: Liste, spiegelbildlich zum Kern (Paritäts-Wächter).
+        { id: 'wohnungsschluessel_ort', label: 'Wohnungsschlüssel — wer hat einen?', typ: 'liste', ebene: 'modul',
+          hint: 'Jede Person mit Ersatzschlüssel als eigener Eintrag. Im Notfall die schnellste Möglichkeit, Zugang zur Wohnung zu bekommen.',
+          unterFelder: [
+            { id: 'person',    label: 'Wer',        typ: 'ref', entitaet: 'person', verweisZweck: 'wohnen' },
+            { id: 'anmerkung', label: 'Anmerkung',  typ: 'text', beispiel: 'Nachbarin, 2. Stock links' },
+          ] },
         { id: 'email_haupt',          label: 'Haupt-E-Mail-Adresse',              typ: 'text', ebene: 'modul', beispiel: 'maria.mustermann@example.de' },
         { id: 'email2',               label: 'Weitere E-Mail-Adresse',            typ: 'text', ebene: 'modul', beispiel: 'mariam@gmx.de (alte Adresse)' },
+        // Krypto-Wallets — spiegelbildlich zum Kern (Paritäts-Wächter).
+        { id: 'krypto',           label: 'Krypto-Wallets — Übersicht',    typ: 'textarea', ebene: 'modul',
+          beispiel: 'Bitcoin (Hardware-Wallet), Ethereum (Kraken-Konto)',
+          hint: 'Welche Kryptowährungen/Wallets es gibt — eine Übersicht, keine Zugangsdaten.' },
+        { id: 'krypto_seed_ort',  label: 'Seed-Phrase — Ablageort',       typ: 'text', ebene: 'modul', beispiel: 'Tresor, auf Papier notiert',
+          hint: 'Die Seed-Phrase (Wiederherstellungswörter) niemals hier eintragen — nur wo sie aufbewahrt wird.' },
+        { id: 'krypto_hardware',  label: 'Hardware-Wallet',               typ: 'text', ebene: 'modul', beispiel: 'Ledger Nano X, Schreibtischschublade' },
+        { id: 'krypto_legacy',    label: 'Ältere/geerbte Krypto-Zugänge', typ: 'text', ebene: 'modul', beispiel: 'Altes Wallet von 2017, Zugang bei Tochter Anna' },
+      ] },
+      // Krisenvorsorge — spiegelbildlich zum Kern (Paritäts-Wächter).
+      { id: 'krisenvorsorge', label: 'Krisenvorsorge', felder: [
+        { id: 'ks_wasser_liter',      label: 'Trinkwasser-Vorrat — Menge',        typ: 'text', beispiel: '20 Liter' },
+        { id: 'ks_wasser_ort',        label: 'Trinkwasser-Vorrat — Ablageort',    typ: 'text', beispiel: 'Keller, Regal links' },
+        { id: 'ks_wasser_haltbar',    label: 'Trinkwasser-Vorrat — Haltbarkeit',  typ: 'text', beispiel: 'wird alle 6 Monate erneuert' },
+        { id: 'ks_lebensmittel_was',  label: 'Vorräte — was ist eingelagert',     typ: 'textarea', beispiel: 'Reis, Nudeln, Konserven, Trockenobst' },
+        { id: 'ks_lebensmittel_ort',  label: 'Vorräte — Ablageort',               typ: 'text', beispiel: 'Speisekammer' },
+        { id: 'ks_lebensmittel_haltbar', label: 'Vorräte — Haltbarkeit',          typ: 'text', beispiel: 'wird jährlich geprüft' },
+        { id: 'ks_taschenlampe',      label: 'Taschenlampe',                     typ: 'text', beispiel: 'vorhanden, Flur-Schrank' },
+        { id: 'ks_kerzen',            label: 'Kerzen',                           typ: 'text', beispiel: 'vorhanden, Küchenschublade' },
+        { id: 'ks_batterien',         label: 'Batterien (Vorrat)',               typ: 'text', beispiel: 'AA/AAA, Werkzeugkiste' },
+        { id: 'ks_radio',             label: 'Kurbelradio / Batterieradio',      typ: 'text', beispiel: 'Kurbelradio, Abstellkammer' },
+        { id: 'ks_powerbank',         label: 'Powerbank',                        typ: 'text', beispiel: 'geladen, Schreibtischschublade' },
+        { id: 'ks_heizung_notfall',   label: 'Heizmöglichkeit im Notfall',       typ: 'text', beispiel: 'Campingkocher + Gaskartuschen, Balkonschrank' },
+        { id: 'ks_erstehilfe_ort',    label: 'Erste-Hilfe-Set — Ablageort',       typ: 'text', beispiel: 'Bad, Spiegelschrank' },
+        { id: 'ks_erstehilfe_datum',  label: 'Erste-Hilfe-Set — zuletzt geprüft', typ: 'datum' },
+        { id: 'ks_medikamente_vorrat', label: 'Medikamenten-Vorrat',             typ: 'textarea', beispiel: 'Schmerzmittel, Fieberzäpfchen, Blutdruckmittel für 2 Wochen' },
+        { id: 'ks_rucksack_vorhanden', label: 'Notfallrucksack vorhanden?',      typ: 'auswahl', optionen: [
+          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+        { id: 'ks_rucksack_ort',      label: 'Notfallrucksack — Ablageort',      typ: 'text', beispiel: 'Flur, neben der Wohnungstür' },
+        { id: 'ks_rucksack_liste',    label: 'Notfallrucksack — Inhalt',         typ: 'textarea', beispiel: 'Ausweise-Kopien, Bargeld, Powerbank, Erste-Hilfe, Medikamente' },
+        { id: 'ks_sammelplatz',       label: 'Sammelplatz (Familie/Nachbarschaft)', typ: 'text', beispiel: 'Spielplatz Ecke Bergstraße' },
+        { id: 'ks_fluchtweg',         label: 'Fluchtweg aus der Wohnung',        typ: 'textarea', beispiel: 'Treppenhaus, Notausgang Hinterhof bei Blockade' },
+        { id: 'ks_ausweichort_2',     label: 'Ausweichort (2. Stufe)',           typ: 'text', beispiel: 'Wohnung der Schwester, Musterstraße 5' },
+        { id: 'ks_nachbar',           label: 'Nachbar für den Notfall',          typ: 'ref', entitaet: 'person', verweisZweck: 'krisenvorsorge' },
+        { id: 'ks_besondere_situation', label: 'Besondere Situation',            typ: 'textarea', beispiel: 'Rollstuhlfahrer, 3. Stock ohne Aufzug' },
+        { id: 'ks_feuerwehr_notiz',   label: 'Hinweis für Rettungskräfte',       typ: 'textarea', beispiel: 'Gasflasche im Keller, Haustier im Schlafzimmer' },
       ] },
       /* Die Sektion „Mein digitales Weiterleben“ ist mit Block H entfallen (23.07.2026).
          Sie trug die fünf `ki_verhalten_*`-Felder eines Features, das der Kern längst entfernt
@@ -1568,7 +1765,9 @@ const SEKTOREN = Object.freeze([
           ] },
           { id: 'vermieter',        label: 'Vermieter / Hausverwaltung',       typ: 'ref', entitaet: 'person', rolle: 'vermieter',
             hint: 'Auch bei Familienangehörigen als Vermieter*in: Namen und Kontakt eintragen. Bei Tod des/der Vermieter*in übernehmen die Erben — die müssen dann informiert werden.' },
-          { id: 'vermieter_tel',    label: 'Kontakt Vermieter',                typ: 'text', beispiel: '089 12345-678 · vermieter@example.de' },
+          // U2-ADR-104: Split Telefon / E-Mail, spiegelbildlich zum Kern (Paritäts-Wächter).
+          { id: 'vermieter_tel',    label: 'Vermieter — Telefon',              typ: 'text', eingabeTyp: 'tel',   beispiel: '089 12345-678' },
+          { id: 'vermieter_email',  label: 'Vermieter — E-Mail',               typ: 'text', eingabeTyp: 'email', beispiel: 'vermieter@example.de' },
           { id: 'miete',            label: 'Monatliche Miete / HV-Kosten',     typ: 'text', beispiel: '1.250 EUR warm' },
           { id: 'kaution',          label: 'Mietkaution — Bank & Betrag',      typ: 'text', beispiel: 'Sparkasse München, 3.000 EUR auf Sperrkonto',
             hint: 'Die Kaution liegt oft auf einem separaten Sperrkonto bei einer Bank. Nach Kündigung muss sie aktiv zurückgefordert werden.' },
@@ -1598,7 +1797,8 @@ const SEKTOREN = Object.freeze([
                 { wert: 'sonstige', label: 'andere Wohnform (z. B. Genossenschaft)' },
               ] },
               { id: 'vermieter',       label: 'Vermieter / Hausverwaltung',   typ: 'ref', entitaet: 'person', rolle: 'vermieter', verweisZweck: 'wohnen' },
-              { id: 'vermieter_tel',   label: 'Kontakt Vermieter',            typ: 'text', beispiel: '08051 12345 · vermieter-chiemsee@example.de' },
+              { id: 'vermieter_tel',   label: 'Vermieter — Telefon',          typ: 'text', eingabeTyp: 'tel',   beispiel: '08051 12345' },
+              { id: 'vermieter_email', label: 'Vermieter — E-Mail',           typ: 'text', eingabeTyp: 'email', beispiel: 'vermieter-chiemsee@example.de' },
               { id: 'miete',           label: 'Monatliche Miete / HV-Kosten', typ: 'text', beispiel: '650 EUR warm' },
               { id: 'kaution',         label: 'Mietkaution — Bank & Betrag',  typ: 'text', beispiel: 'Sparkasse Rosenheim, 1.500 EUR' },
               { id: 'mietvertrag_ort', label: 'Mietvertrag — Ablageort',      typ: 'text', beispiel: 'Ordner „Zweitwohnung", Aktenschrank' },
@@ -2192,8 +2392,34 @@ function escapeHTML(s) {
 }
 function tiefKopie(o) { return o == null ? o : JSON.parse(JSON.stringify(o)); }
 function datumKurz(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
-  return m ? (m[3] + '.' + m[2] + '.' + m[1].slice(2)) : '';
+  const s = String(iso || '');
+  // Ein GESPEICHERTER Kalendertag bleibt unveraendert. Ihn durch new Date() zu
+  // schicken waere der Fehler: westlich von Greenwich schoebe das den Tag zurueck.
+  const nurTag = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (nurTag) return nurTag[3] + '.' + nurTag[2] + '.' + nurTag[1].slice(2);
+  // Voller Zeitstempel: PARSEN und lokal formatieren, nie schneiden. Geschnitten
+  // ergaebe 2026-07-27T22:30Z den 27., lokal ist es in Berlin bereits der 28.
+  // Nur bei echter Zeitstempel-Form — sonst parst JS auch '19990-07-20' als Jahr 19990.
+  if (!/^\d{4}-\d{2}-\d{2}[T ]/.test(s)) return '';
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2);
+}
+
+// standKurz — nur fuer das Stand-Feld der Notfall-Sicht: Datum UND Uhrzeit.
+// Der Cache wird mehrmals taeglich geschrieben; die Vertrauensperson liest das Feld
+// fuer genau eine Frage — wie frisch ist das hier. Ein Tagesdatum beantwortet sie
+// nicht. Bewusst ABSOLUT, keine relative Angabe („vor 2 Stunden"): die wird falsch,
+// sobald die Seite liegen bleibt, und verlangt eine Rechnung im unguenstigsten Moment.
+function standKurz(iso) {
+  const s = String(iso || '');
+  // Ein reiner Kalendertag traegt keine Uhrzeit — dann auch keine erfinden.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return datumKurz(s);
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return datumKurz(s);
+  const p = (n) => String(n).padStart(2, '0');
+  return datumKurz(s) + ', ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ' Uhr';
 }
 
 /* ── feldEingetragen — generische Leer-Prüfung (faithful) ──────────────────── */
@@ -2289,6 +2515,26 @@ function akteurName(personId) {
 }
 
 /* ── Listen-Eintrag-Zusammenfassung (faithful) ─────────────────────────────── */
+/* U2-ADR-102 — „Was untersagt ist, erscheint auf keinem Anzeige- oder Ausgabepfad als
+   Bedingung." Der Gate ist NEGATIV und das ist tragend, keine Geschmacksfrage:
+
+   `verborgenWenn: { feld, wert }` unterdrueckt NUR, wenn der Datensatz aktiv WIDERSPRICHT
+   — nicht, solange eine Erlaubnis fehlt. Ein Positiv-Gate (`nur zeigen wenn erlaubnis`)
+   waere der Fehler aus U2-ADR-100 §6 noch einmal: dort verschwanden beim Spiegeln der
+   Kern-Kuerzung sechzehn von dreiundzwanzig Unterfeldern, darunter der Ablageort ALLER
+   Instrumente. Felder duerfen nicht aus MANGEL AN INFORMATION verschwinden, nur aus
+   ausdruecklicher Ruecknahme. Gemessen: die Zusicherung [ZusVoll] speist Zeilen mit genau
+   EINEM gesetzten Feld ein — ohne Grundentscheidung; ein Positiv-Gate haette sie rot gemacht.
+
+   Der Generator behaelt sein Positiv-Gate auf 'erlaubnis' (U2-ADR-102 §3): eine Anzeige
+   zeigt, was da ist, eine Urkunde behauptet, was gilt. */
+function feldVerborgen(feld, eintrag) {
+  const b = feld && feld.verborgenWenn;
+  if (!b || typeof b !== 'object') return false;
+  const ist = eintrag ? eintrag[b.feld] : undefined;
+  return Array.isArray(b.wert) ? b.wert.includes(ist) : ist === b.wert;
+}
+
 function listenEintragZusammenfassung(feld, eintrag) {
   if (!eintrag || typeof eintrag !== 'object') return '';
   /* KEINE Positivliste, KEINE Unterdrueckung — bewusst, nicht vergessen (23.07.2026).
@@ -2308,6 +2554,7 @@ function listenEintragZusammenfassung(feld, eintrag) {
   for (const uf of (feld.unterFelder || [])) {
     const w = eintrag[uf.id];
     if (!feldEingetragen(uf, w)) continue;
+    if (feldVerborgen(uf, eintrag)) continue;   // U2-ADR-102: zurueckgenommene Bedingung
     if (uf.typ === 'ref') {
       const n = entitaetAnzeige(w, uf.entitaet || 'person');
       if (n) teile.push(n);
@@ -2341,8 +2588,20 @@ function listenEintragZusammenfassung(feld, eintrag) {
    Nicht parsbar → roher String, nie stumm leer: Ein Wert, den die Aufbereitung nicht deuten
    kann, gehört der Bürgerin und darf nicht verschwinden. */
 function _datumDeutsch(iso) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
-  return m ? (m[3] + '.' + m[2] + '.' + m[1]) : String(iso || '');
+  const s = String(iso || '');
+  // Gespeicherter Kalendertag: unveraendert. Ihn durch new Date() zu schicken waere
+  // der Fehler — westlich von Greenwich schoebe das den Tag zurueck.
+  const nurTag = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (nurTag) return nurTag[3] + '.' + nurTag[2] + '.' + nurTag[1];
+  // Voller Zeitstempel: PARSEN und lokal formatieren, nie schneiden (Posten 21).
+  // Der Parse-Zweig greift NUR bei echter Zeitstempel-Form. Sonst schluckte er auch
+  // Unfug wie '19990-07-20' (JS liest daraus das Jahr 19990) — bisher gab die Funktion
+  // solche Eingaben unveraendert zurueck, und ein Test haelt das fest.
+  if (!/^\d{4}-\d{2}-\d{2}[T ]/.test(s)) return s;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return s;
+  const p = (n) => String(n).padStart(2, '0');
+  return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear();
 }
 function _wertTextMenschlich(feld, roh) {
   if (feld && feld.typ === 'datum' && feldEingetragen(feld, roh)) return _datumDeutsch(roh);
@@ -2815,8 +3074,10 @@ function renderQrBereich(obj) {
     '<div class="shell-body shell-einzel"><main class="content"><div class="bereich notfall-rahmen">' +
     '<div class="bereich-kopf"><h2>' + escapeHTML(titel) + '</h2></div>' +
     '<p class="gesperrt">' + escapeHTML(STRINGS.qrSelbstauskunftHinweis) + '</p>';
-  // obj.stand (Schreibseite: d.toISOString().slice(0,10)) ist echtes ISO-Datum.
-  if (obj.stand) html += '<p class="notfall-stand">' + escapeHTML(STRINGS.notfallStand) + ': ' + escapeHTML(datumKurz(obj.stand)) + '</p>';
+  // obj.stand traegt einen VOLLEN ISO-Zeitstempel (Schreibseite vivodepot.html: `new Date().toISOString()`,
+  // NICHT geschnitten — der frueher hier behauptete `.slice(0,10)` stand dort nie). standKurz liest ihn
+  // lokal und zeigt Datum UND Uhrzeit; geschnitten waere er nachts 0–2 Uhr einen Tag alt.
+  if (obj.stand) html += '<p class="notfall-stand">' + escapeHTML(STRINGS.notfallStand) + ': ' + escapeHTML(standKurz(obj.stand)) + '</p>';
   const felder = Array.isArray(obj.felder) ? obj.felder : [];
   if (!felder.length) {
     html += '<div class="hinweis-box">' + escapeHTML(STRINGS.notfallLeer) + '</div>';
@@ -3059,7 +3320,7 @@ function renderNotfall() {
     '<div class="bereich-kopf"><h2>' + escapeHTML(STRINGS.notfallTitel) + '</h2></div>' +
     '<p class="gesperrt">' + escapeHTML(STRINGS.notfallHinweis) + '</p>' +
     '<p class="bereich-intro">' + escapeHTML(STRINGS.notfallUnterzeile) + '</p>';
-  if (cache && cache.stand) html += '<p class="notfall-stand">' + escapeHTML(STRINGS.notfallStand) + ': ' + escapeHTML(datumKurz(cache.stand)) + '</p>';
+  if (cache && cache.stand) html += '<p class="notfall-stand">' + escapeHTML(STRINGS.notfallStand) + ': ' + escapeHTML(standKurz(cache.stand)) + '</p>';
   if (!zeilen.length) {
     html += '<div class="hinweis-box">' + escapeHTML(STRINGS.notfallLeer) + '</div>';
   } else {
