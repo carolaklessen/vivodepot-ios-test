@@ -352,10 +352,17 @@
      `#overlay-inhalt input[type="text"]` (:329) und damit aus JEDER Rand-/Radius-/Innenabstand-
      Regel: kein neuer Stil, sondern ein durch den Umzug verlorener. Eigene Regel unten mit
      denselben Tokens wie dort statt eines neuen Musters. */
-  .suche-feld { position: relative; margin: 0 0 var(--space-5); }
+  /* Nachtrag (Gesamtumbau 08.08.2026, Zug 5, Carola-Testprotokoll 08.08.): das Suchfeld lief über
+     die GESAMTE Navigationsbreite (kein horizontaler Rand, anders als jeder .nav-item mit seinem
+     eigenen Innenabstand) und wirkte dadurch wie ein Balken statt wie ein Bedienelement unter
+     anderen. Form jetzt wie die „Mein Depot"-Pille (.depot-pille): eingerückt wie die Nav-Einträge
+     (derselbe --space-5), voll gerundet (--radius-pill statt --radius-sm). Bleibt ein echtes,
+     ausreichend breites Eingabefeld (keine Content-Breite wie bei der reinen Anzeige-Pille) — nur
+     die Silhouette gleicht sich an, die Funktion (Autocomplete-Liste darunter) bleibt unverändert. */
+  .suche-feld { position: relative; margin: 0 var(--space-5) var(--space-5); }
   .suche-feld input {
-    padding: var(--space-2) var(--space-3); border: 1px solid var(--line);
-    border-radius: var(--radius-sm); background: var(--white); color: var(--ink);
+    padding: var(--space-2) var(--space-4); border: 1px solid var(--line);
+    border-radius: var(--radius-pill); background: var(--white); color: var(--ink);
   }
   /* A104 Teil 1, Klasse B (05.08.2026) — WCAG 2.5.5 AAA Touch-Ziel. Gemessen: 268×36, in
      sieben Ansichten dasselbe globale Element (EIN Suchfeld, oben in der Sidebar). Unbedingt,
@@ -692,13 +699,18 @@
   .ang-banner-text { font-weight: 600; }
   .ang-banner .btn { background: rgba(0,0,0,0.12); color: var(--ink); border: 1px solid rgba(0,0,0,0.2); }
   .ang-banner .btn:hover { background: rgba(0,0,0,0.2); }
-  /* 1F/b1: Ablauf-Vorwarn-Banner — fixiert unten (greift NICHT ins #app-Grid ein), nur in den letzten
-     Tagen vor Cert-Ablauf sichtbar, dismissbar. */
-  .basis-ablauf-banner { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-    display: flex; align-items: center; justify-content: center; gap: var(--space-3); flex-wrap: wrap;
-    background: var(--gold-soft); color: var(--ink); padding: var(--space-2) var(--space-4);
-    font-size: var(--fs-sm); font-weight: 600; border-top: 1px solid rgba(0,0,0,0.15);
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.12); }
+  /* Nachtrag 08.08.2026 (Carola-Einwand): die drei Banner darunter lagen bislang UNABHÄNGIG
+     voneinander auf position:fixed;bottom:0 — stehen zwei gleichzeitig an, überdecken sie sich
+     exakt (jeder ist eine volle Breite auf derselben Kante). Dieser Stapel-Container ist jetzt
+     der EINZIGE fixierte Rahmen; die Banner selbst sind normale Flex-Kinder darin (position:
+     static) und legen sich übereinander statt sich zu überlagern, in jeder Kombination. */
+  .banner-stapel { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    display: flex; flex-direction: column; }
+  /* 1F/b1: Ablauf-Vorwarn-Banner — nur in den letzten Tagen vor Cert-Ablauf sichtbar, dismissbar. */
+  .basis-ablauf-banner { display: flex; align-items: center; justify-content: center;
+    gap: var(--space-3); flex-wrap: wrap; background: var(--gold-soft); color: var(--ink);
+    padding: var(--space-2) var(--space-4); font-size: var(--fs-sm); font-weight: 600;
+    border-top: 1px solid rgba(0,0,0,0.15); box-shadow: 0 -2px 8px rgba(0,0,0,0.12); }
   .basis-ablauf-banner[hidden] { display: none; }
   .basis-ablauf-banner .bab-x { background: rgba(0,0,0,0.10); color: var(--ink); border: 1px solid rgba(0,0,0,0.2);
     border-radius: var(--radius-sm); width: 1.6rem; height: 1.6rem; line-height: 1; cursor: pointer; }
@@ -706,16 +718,32 @@
   /* CC-Bauauftrag Service-Worker-Update (16.07.2026), Stufe 2: neuer Worker hat übernommen —
      Hinweis statt Zwangs-Reload (offenes, ungespeichertes Depot darf nicht mitten in der Sitzung
      umschalten). Gleiche Bühne wie der Ablauf-Banner, eigene Farbfamilie (neutral, kein Alarm). */
-  .sw-update-banner { position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-    display: flex; align-items: center; justify-content: center; gap: var(--space-3); flex-wrap: wrap;
-    background: var(--ink); color: var(--white); padding: var(--space-2) var(--space-4);
-    font-size: var(--fs-sm); font-weight: 600; box-shadow: 0 -2px 8px rgba(0,0,0,0.2); }
+  .sw-update-banner { display: flex; align-items: center; justify-content: center;
+    gap: var(--space-3); flex-wrap: wrap; background: var(--ink); color: var(--white);
+    padding: var(--space-2) var(--space-4); font-size: var(--fs-sm); font-weight: 600;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.2); }
   .sw-update-banner[hidden] { display: none; }
   .sw-update-banner .swb-neu { background: var(--white); color: var(--ink); border: none;
     border-radius: var(--radius-sm); padding: var(--space-1) var(--space-3); font-weight: 700; cursor: pointer; }
   .sw-update-banner .swb-x { background: rgba(255,255,255,0.15); color: var(--white); border: 1px solid rgba(255,255,255,0.3);
     border-radius: var(--radius-sm); width: 1.6rem; height: 1.6rem; line-height: 1; cursor: pointer; }
   .sw-update-banner .swb-x:hover { background: rgba(255,255,255,0.25); }
+  /* Nachtrag 08.08.2026 (Carola-Einwand): der Toast für 'interner-wiedereinstieg' war FLÜCHTIG —
+     nach Sekunden weg, ohne Fokus-Management per Tastatur nicht erreichbar, als Live-Region statt
+     fokussiert angesagt, auf Mobil leicht übersehen/weggewischt. Ein Toast darf Beschleuniger sein,
+     nicht der einzige Träger eines Wiedereinstiegswegs. Gleiche Bühne wie sw-update-banner (jetzt:
+     derselbe Stapel-Container), eigene Farbfamilie: Warnung, kein neutraler Hinweis — das Depot ist
+     wirklich nicht offen, nicht bloß eine verfügbare Neuerung. */
+  .wiedereinstieg-banner { display: flex; align-items: center; justify-content: center;
+    gap: var(--space-3); flex-wrap: wrap; background: var(--warning); color: var(--ink);
+    padding: var(--space-2) var(--space-4); font-size: var(--fs-sm); font-weight: 600;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.2); }
+  .wiedereinstieg-banner[hidden] { display: none; }
+  .wiedereinstieg-banner .wb-oeffnen { background: var(--ink); color: var(--white); border: none;
+    border-radius: var(--radius-sm); padding: var(--space-1) var(--space-3); font-weight: 700; cursor: pointer; }
+  .wiedereinstieg-banner .wb-x { background: rgba(0,0,0,0.10); color: var(--ink); border: 1px solid rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm); width: 1.6rem; height: 1.6rem; line-height: 1; cursor: pointer; }
+  .wiedereinstieg-banner .wb-x:hover { background: rgba(0,0,0,0.2); }
   /* Vollmacht-Banner (Durchbau T1) — Dauer-Hinweis im Sub-Kontext, Schieferblau-Familie. */
   .vollmacht-banner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
     flex-wrap: wrap; background: var(--vm-chrome); color: #fff;
@@ -1254,6 +1282,15 @@
      helle Pille, damit der aktive --ink-Knopf auf dem dunklen Topbar-Grund lesbar ist. Nur bestehende Tokens. */
   .tb-save-status.ist-keine-datei { color: var(--ink); background: var(--salbei-light);
     border: 1px solid var(--line); border-radius: var(--radius-pill); padding: var(--space-1) var(--space-3); }
+  /* Persistenz Stück 5 (U2-ADR-031-Nachtrag, 08.08.2026) — vierter Zustand, deutlich vor
+     „ungespeichert" markiert (--error statt --warning): ein Fehlschlag ist eine andere Kategorie
+     Information als offene Edits, nicht nur eine Steigerung derselben. Nur bestehende Tokens. */
+  .tb-save-status.ist-fehlgeschlagen { color: var(--white); background: var(--error);
+    border: 1px solid var(--error); border-radius: var(--radius-pill); padding: var(--space-1) var(--space-3); }
+  .tb-save-status.ist-fehlgeschlagen .ico { color: var(--white); }
+  /* Der Knopf sitzt IM roten Pillenhintergrund (eigener Hintergrund transparent) — --ink-Text
+     bliebe dort unlesbar. Andere Zustände brauchen das nicht (helle Pillen, --ink passt). */
+  .tb-save-status.ist-fehlgeschlagen .tb-save-knopf { color: var(--white); }
   .tb-save-status .tb-save-text { overflow: hidden; text-overflow: ellipsis; }
   /* B16 (29.07.2026) — `min-height: 24px` gehört in die BASISREGEL, nicht in eine Media-Query.
      GEMESSEN ⟦M⟧ (Ebene 4b, sechs Breiten × drei Themes × drei Skalen): 90 Funde, ausnahmslos
@@ -2692,11 +2729,29 @@
 
 <!-- ═══════════════ App-Hülle: Topbar + Sidebar + Content ═══════════════ -->
 <div id="app">
-  <!-- 1F/b1: persistenter Ablauf-Vorwarn-Banner — gefüllt/gezeigt von _basisAblaufBannerVielleicht (Boot). -->
-  <div id="basis-ablauf-banner" class="basis-ablauf-banner" role="status" hidden><span class="bab-text"></span><button type="button" class="bab-x" id="basis-ablauf-x">×</button></div>
-  <!-- CC-Bauauftrag Service-Worker-Update (16.07.2026), Stufe 2: Hinweis statt Zwangs-Reload —
-       gefüllt/gezeigt von _swUpdateHinweisZeigen() bei erkanntem Worker-Wechsel (controllerchange). -->
-  <div id="sw-update-banner" class="sw-update-banner" role="status" hidden><span class="swb-text"></span><button type="button" class="swb-neu" id="sw-update-neu">Neu laden</button><button type="button" class="swb-x" id="sw-update-x">×</button></div>
+  <!-- Nachtrag 08.08.2026 (Carola-Einwand): alle drei fixierten Unten-Banner lagen bislang
+       UNABHÄNGIG auf position:fixed;bottom:0 — stehen zwei gleichzeitig an, überdecken sie sich
+       exakt (volle Breite, gleiche Kante). Dieser Stapel-Container macht sie zu normalen Flex-
+       Kindern EINES fixierten Rahmens: sie legen sich übereinander statt sich zu überlagern, egal
+       welche Kombination gerade sichtbar ist. Reihenfolge im DOM = Reihenfolge im Stapel (unten
+       zuerst) — der Wiedereinstiegs-Weg steht als letztes/unterstes, am nächsten zum Daumen. -->
+  <div class="banner-stapel">
+    <!-- 1F/b1: persistenter Ablauf-Vorwarn-Banner — gefüllt/gezeigt von _basisAblaufBannerVielleicht (Boot). -->
+    <div id="basis-ablauf-banner" class="basis-ablauf-banner" role="status" hidden><span class="bab-text"></span><button type="button" class="bab-x" id="basis-ablauf-x">×</button></div>
+    <!-- CC-Bauauftrag Service-Worker-Update (16.07.2026), Stufe 2: Hinweis statt Zwangs-Reload —
+         gefüllt/gezeigt von _swUpdateHinweisZeigen() bei erkanntem Worker-Wechsel (controllerchange). -->
+    <div id="sw-update-banner" class="sw-update-banner" role="status" hidden><span class="swb-text"></span><button type="button" class="swb-neu" id="sw-update-neu">Neu laden</button><button type="button" class="swb-x" id="sw-update-x">×</button></div>
+    <!-- Nachtrag 08.08.2026: persistenter Wiedereinstiegs-Weg für die Marke 'interner-wiedereinstieg'
+         (kein Datei-Weg im Spiel) — gefüllt/gezeigt von zeigeInternerWiedereinstiegBanner(). Ersetzt
+         NICHT den Fehler-Toast (bleibt als schnellerer Beschleuniger daneben bestehen), sondern trägt
+         den Weg selbst: bleibt sichtbar, bis die Nutzerin ihn nutzt oder bewusst schließt.
+         role="region" statt "status" (Carola-Einwand): ein Live-Region-Status wird zwar angesagt,
+         ist aber KEIN navigierbares Landmark — wer die Ansage verpasst, findet das Banner per
+         Landmark-Navigation nicht wieder. Die Ansage übernimmt jetzt der Toast (#toast-host, s. dort).
+         aria-labelledby zeigt auf den Text-Span statt auf ein separates aria-label: der Name bleibt
+         automatisch aktuell, auch wenn sich der Wortlaut künftig ändert. -->
+    <div id="wiedereinstieg-banner" class="wiedereinstieg-banner" role="region" aria-labelledby="wiedereinstieg-text" hidden><span class="wb-text" id="wiedereinstieg-text"></span><button type="button" class="wb-oeffnen" id="wiedereinstieg-oeffnen"></button><button type="button" class="wb-x" id="wiedereinstieg-x">×</button></div>
+  </div>
   <header class="topbar">
     <button type="button" class="a11y-btn tb-menue" id="tb-menue" aria-label="Menü öffnen" aria-expanded="false" aria-controls="sidebar"><span class="ico" data-icon="menu"></span></button>
     <button type="button" class="marke" id="tb-marke">
@@ -2765,7 +2820,11 @@
      unerreichbar ist. Es gibt hier weder Fokusfalle noch `inert` — die Zusage wäre
      unwahr, und eine unwahre Zusage ist schlimmer als keine. -->
 <div id="modal-rueck"><div class="modal" id="modal-inhalt" role="dialog" aria-labelledby="modal-titel"></div></div>
-<div id="toast-host"></div>
+<!-- Nachtrag 08.08.2026 (Carola-Einwand): Toasts waren bislang NIE angesagt — kein aria-live auf
+     diesem Host. Trägt jetzt die Ansage-Rolle, die #wiedereinstieg-banner (persistenter, navigierbarer
+     Träger) nicht mehr übernimmt (role="region" statt "status" dort). aria-atomic="false": nur der
+     NEU angehängte Toast wird angesagt, nicht der gesamte, ggf. mehrere Toasts haltende Container. -->
+<div id="toast-host" role="status" aria-atomic="false"></div>
 <!-- Sektor-Feld-Autosave-Ansage (CC-Auftrag Sektorfeld-Autosave-Rückmeldung, 03.08.2026):
      entprellt in _autoSaveWennFeld, NICHT dieselbe Region wie die Passwort-Stärke-Anzeigen
      (#id-pw-staerke u. a. — die sind sichtbar, diese hier ist rein akustisch, sr-only). -->
@@ -3064,7 +3123,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v77';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
+const SCHALEN_STAND = 'v97';   // ⚠ mit sw.js CACHE gemeinsam hochzählen
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -3099,7 +3158,7 @@ function heuteLokal(d = new Date()) {
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-08-07';
+const BUILD_DATUM = '2026-08-08';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -3338,7 +3397,7 @@ async function verifiziereProviderCredential(jwsCompact, opts) {
 /* ── STRINGS — zentrale Sprach-Schicht (4.6): kein sichtbarer UI-String inline ── */
 const STRINGS = Object.freeze({
   appTagline: "Ihr digitales Depot — offline, verschlüsselt, in Ihrer Hand.",
-  welcomeWeiter: "Was steht bei Ihnen an?",
+  welcomeWeiter: "Was möchten Sie erledigen?",   // Nachtrag (Gesamtumbau 08.08.2026, Zug 5) — Carola-Wortlaut
   // CC-Auftrag wBestand-Label-und-Startseite-Text (03.08.2026), Zug 1: übernimmt den einzigen
   // nicht-redundanten Inhalt des gestrichenen Einführungs-Kastens (was gespeichert wird, warum
   // Abrufbarkeit zählt) — vormals "Kein Konto, kein Server, keine Cloud. Die Depot-Datei bleibt
@@ -3395,9 +3454,9 @@ const STRINGS = Object.freeze({
   // A70 (31.07.2026, Carola-Microcopy) — proaktive Stale-Cache-Warnung im Fuß. Erscheint nur, wenn
   // die zuletzt (bei bestehender Netzverbindung) geprüfte Service-Worker-Schale neuer ist als die
   // geladene (SCHALEN_STAND) — bewusst NICHT als Dauerüberwachung formuliert.
-  fussStaleCacheWarnung: "Bei der letzten Verbindung wurde eine neuere Version gefunden. Ein Neuladen der Seite bringt Sie auf den aktuellen Stand.",
-  anlassFrage: "Was steht bei Ihnen an?",
-  anlassFrageHerausholen: "Für welchen Anlass möchten Sie etwas parat haben?",  // in-App (Herausholen-Weg), Struktur-Spec §1/§4
+  fussStaleCacheWarnung: "Bei der letzten Verbindung wurde eine neuere Version gefunden. Sichern Sie zuerst Ihre Eingaben und laden Sie die Seite erst danach neu — sonst gehen sie verloren.",
+  anlassFrage: "Was möchten Sie erledigen?",   // Nachtrag (Gesamtumbau 08.08.2026, Zug 5) — Carola-Wortlaut, Testprotokoll 08.08.
+  anlassFrageHerausholen: "Welchen Anlass möchten Sie vorbereiten?",  // Nachtrag 08.08.2026 (Zug 5), in-App (Herausholen-Weg), Struktur-Spec §1/§4
   klasse1: "Lebensereignisse",
   klasse2: "Gesundheit & Pflege",
   klasse3: "Tod, Erbe & Offenes",
@@ -3425,6 +3484,23 @@ const STRINGS = Object.freeze({
   // Generischer Modal-Fehler-Toast (Sicherheitsnetz, U2-ADR-031-Folge): macht einen in onPrimaer
   // geworfenen Fehler sichtbar, statt ihn still zu schlucken. Bewusst aktions-neutral (jeder Dialog).
   aktionFehlgeschlagen: "Das hat nicht geklappt. Bitte versuchen Sie es noch einmal.",
+  // Nachtrag-Auftrag 08.08.2026 (nach e81e306): der ursprüngliche EINE Wortlaut hier empfahl
+  // „Seite neu laden" als ersten Handgriff — genau der gemessene Totalverlust-Weg, wenn noch
+  // nichts gesichert war — und nannte die Sicherungsdatei nicht.
+  // Einstiegsmarken-Nachtrag 08.08.2026 (nach b32a9b9): aus zwei Wortlauten (echt/Vorschau) wurden
+  // fünf, je Einstiegsweg einer (s. _EINSTIEGSMARKE_MELDUNG bei fehlermeldungFuer) — ein Zwei-Fassungen-
+  // Modell ließ dem Vertrauenspersonen-Weg nur die Vorschau-Fassung übrig ("kein Passwort gesetzt …
+  // beginnen Sie neu"), falsch UND nicht ausführbar für jemanden, dem der Zugang von einer anderen
+  // Person übergeben wurde. Die beiden bestehenden Wortlaute (Anker/Vorschau) bleiben unverändert —
+  // bereits freigegeben, treffen weiterhin genau zu. Zwei NEUE Wortlaute als Vorschlag, gebündelt.
+  keinOffenesDepotFehlerMitDatei: "Ihr Depot ist gerade nicht geöffnet. Falls Sie eine Sicherungsdatei haben, öffnen Sie diese erneut. Laden Sie die Seite nur neu, wenn Sie bereits gesichert haben — sonst gehen Eingaben verloren.",
+  keinOffenesDepotFehlerInternerWiedereinstieg: "Ihr Depot ist gerade nicht geöffnet. Bitte geben Sie Ihr Passwort erneut ein, um es zu öffnen.",
+  keinOffenesDepotFehlerVertrauensperson: "Der Vertrauens-Zugang ist gerade nicht geöffnet. Öffnen Sie die Depot-Datei erneut und geben Sie das Vertrauens-Passwort ein, das die Eigentümerin für Sie hinterlegt hat.",
+  keinOffenesDepotFehlerVorschau: "Ihr Depot ist gerade nicht geöffnet. Da Sie noch kein Passwort gesetzt hatten, waren Ihre Eingaben nur vorübergehend — bitte beginnen Sie neu und legen Sie diesmal ein Passwort fest.",
+  // Reine Absicherung (Zug 3 des Einstiegsmarken-Auftrags): sollte nach diesem Bau nie im Betrieb
+  // erscheinen — jeder reale Weg trägt jetzt seine eigene Marke. Vorschlagstext aus dem Auftrag
+  // selbst, Freigabe Carola ausstehend.
+  keinOffenesDepotFehlerUnbekannt: "Das Depot ist gerade nicht geöffnet. Wenn es Ihr eigenes ist, öffnen Sie Ihre Sicherungsdatei und geben Sie Ihr Passwort ein. Wenn Sie einen Vertrauens-Zugang haben, öffnen Sie die Depot-Datei und geben Sie das Vertrauens-Passwort ein.",
   btnOeffnen: "Öffnen",
   btnBearbeiten: "Bearbeiten",
   btnPdf: "Als PDF",
@@ -3538,6 +3614,12 @@ const STRINGS = Object.freeze({
   // Persistenz Stück 1 (U2-ADR-031) — Status ≠ Aktion; „gesichert" nur für die Datei.
   saveStatusKeineDatei: "Gespeichert — keine Sicherungsdatei",   // im Gerät zwischengespeichert, KEINE aktuelle Datei
   saveStatusAlsDatei: "Als Sicherungsdatei gespeichert ✓",       // Häkchen nur, solange die Datei aktuell ist
+  // Persistenz Stück 5 (U2-ADR-031-Nachtrag, 08.08.2026) — vierter Zustand, Vorrang vor den anderen
+  // dreien: der letzte Schreibversuch (intern ODER Datei) ist gescheitert. Wortlaut Carolas Wahl.
+  saveStatusFehlgeschlagen: "Speichern fehlgeschlagen — bitte speichern Sie noch einmal.",
+  // Nachtrag (Gesamtumbau 08.08.2026) — TODO Wortlaut: Vorschlag an Carola, noch nicht final.
+  saveStatusFehlgeschlagenWiederholt: "Speichern erneut fehlgeschlagen — bitte nutzen Sie ‚Als Datei sichern'.",
+  internSpeicherProbeFehlgeschlagen: "Automatisches Speichern ist auf diesem Gerät nicht verfügbar — sichern Sie Ihr Depot stattdessen selbst als Datei.",
   saveStatusJetztSichern: "Jetzt als Datei sichern",             // Knopf-Aktion (führt zum .vivodepot-Export)
   saveStatusInternToast: "Gespeichert. Für eine Sicherung gelegentlich als Datei speichern.",   // interner IDB-Save
   // CC-Auftrag Sektorfeld-Autosave-Rückmeldung (03.08.2026): entprellte aria-live-Ansage nach
@@ -3612,7 +3694,7 @@ const STRINGS = Object.freeze({
   // fhirLab*-Strings (self-erzeugter Laborbericht-Export) entfernt — E3, Datenmodell-Konzept v1.2 §3.
   depotAktiv: "aktiv",                                    // Marker für das gerade geöffnete Depot
   gruppeEintragen: "Eintragen",                           // Sidebar-Gruppe (Struktur-Spec §4, Achse Eintragen) — die elf Bereiche
-  navFuerEinenAnlass: "Was steht bei Ihnen an?",           // Eintrag unter Herausholen → Anlass-Auswahl → Kachel → Situationsblatt — Wortarbeit 04.08.: dieselbe Frage wie auf der Startseite, keine zwei Fassungen mehr
+  navFuerEinenAnlass: "Was möchten Sie erledigen?",           // Nachtrag (Gesamtumbau 08.08.2026, Zug 5) — Eintrag unter Herausholen → Anlass-Auswahl → Kachel → Situationsblatt — Wortarbeit 04.08.: dieselbe Frage wie auf der Startseite, keine zwei Fassungen mehr (Rule weiterhin gültig, hier mitgezogen)
   // ── FINDEN — Dokumenten-Mappe (U2-ADR-013, dritte Achse) ──
   gruppeFinden: "Auf einen Blick",                        // Sidebar-Gruppe (Achse Finden) — Wortarbeit 04.08.
   navMappe: "Meine Dokumente",                            // Eintrag unter Finden → Mappen-Übersicht — Wortarbeit 04.08.: vorher „Meine Mappe"
@@ -4246,7 +4328,11 @@ const STRINGS = Object.freeze({
   // ── Nutzer-gewählte Sensibilität (Schema 21) — Schloss-Markierung pro Feld ──
   sensibelMarkiertMarker: "sensibel",                       // dezenter Marker am Feld in der Ansicht
   sensibelMarkierenAria: "Als sensibel markieren — wird beim Herausgeben standardmäßig zurückgehalten",
-  sensibelEntfernenAria: "Sensibel-Markierung entfernen",
+  // Nachtrag (Gesamtumbau 08.08.2026, Zug 5) — Carola-Wortlaut: erklärt, WAS die Markierung bewirkt
+  // (zurückgehalten beim Herausgeben) und WIE man sie wieder aufhebt (genau dieser Knopf, hier).
+  // Kein zentraler Überblick über alle sensibel markierten Felder vorhanden (Befund, s. Bericht) —
+  // „hier erneut antippen" ist der EINZIGE Freigabe-Weg, deshalb wortwörtlich genannt.
+  sensibelEntfernenAria: "Zurückgehalten beim Herausgeben — hier erneut antippen, um es wieder freizugeben.",
   sensibelMarkiertToast: "Feld als sensibel markiert — wird beim Herausgeben standardmäßig zurückgehalten.",
   sensibelEntferntToast: "Sensibel-Markierung entfernt.",
 
@@ -7603,6 +7689,7 @@ function imVorschau() { return !!(data && data._vorschau); }
 function vorschauDepotErzeugen() {
   data = leeresDepot();
   data._vorschau = true;                  // Marker — von leeresDepot() bewusst NICHT gesetzt
+  _einstiegsmarke = 'vorschau';            // Nachtrag 08.08.2026 — s. Definition bei fehlermeldungFuer()
   // Keine Session: Master-/Depot-Schlüssel und Salts bleiben leer. Speichern/Export sind
   // gegated (führen zum „Jetzt Depot anlegen"-Schritt), depotSerialisieren() wird nie erreicht.
   aktuelleSalt = null; aktuelleDepotSalt = null; aktuelleDepotUUID = null;
@@ -7872,6 +7959,7 @@ async function depotAnlegen(password) {
   aktuelleDepotSalt = crypto.getRandomValues(new Uint8Array(32));  // 32 Byte HKDF-Salt
   data = leeresDepot();
   dateiBindungZuruecksetzen();   // Stück 3: neues Depot → keine Datei-Bindung aus einer früheren Sitzung
+  _einstiegsmarke = 'anker-angelegt';   // Nachtrag 08.08.2026 — s. Definition bei fehlermeldungFuer()
 }
 
 // Erzeugt den verschlüsselten Umschlag (genau sechs Felder). Schreibt NIE Klartext.
@@ -8013,6 +8101,9 @@ async function depotLaden(umschlag, password) {
   // säubert nur, was sie neu schreibt — Kopien/Backups/iOS-Exportduplikate am Ruheort erreicht sie
   // nicht (siehe ADR). Best-Effort-Anstoß, keine Garantie.
   try { if (umschlag && umschlag.notfallCache) markiereUngespeichert(1); } catch (_) {}
+  // Einstiegsmarke NICHT hier gesetzt (Nachtrag 08.08.2026): depotLaden() ist die GETEILTE Funktion
+  // hinter drei verschiedenen Wegen (Datei öffnen, interner Wiedereinstieg, Konflikt-Dialog „Aus
+  // der Datei") — nur die Aufrufer wissen, welcher Weg es war. Jeder setzt seine eigene Marke.
   return obj;
 }
 
@@ -8287,8 +8378,15 @@ async function passwortWechselDurchfuehren(pwAlt, pwNeu) {
     await _passwortSessionZurueckdrehen(altNfc, altSalt, altDepotSalt);
     return 'abgebrochen';
   }
-  if (internerSpeicherModus()) { try { await depotInIdbSichern(); } catch (_) { /* Datei ist geschrieben */ } }
+  // Reihenfolge ist tragend: ERST markiereGespeichert() für die geschriebene Datei (räumt einen
+  // etwaigen alten Fehlschlag ab), DANACH der IDB-Mirror-Versuch — ein Fehlschlag DORT darf nicht
+  // vom unmittelbar vorangehenden Erfolg überschrieben werden.
   try { markiereGespeichert(); } catch (_) {}
+  // Persistenz Stück 5 (Nachtrag 08.08.2026): „Datei ist geschrieben" reicht als Begründung NICHT —
+  // scheitert dieser Mirror-Schreibversuch, bleibt im internen Speicher ein Stand unter dem ALTEN
+  // Passwort zurück, während die Datei schon das neue trägt. Ein späterer Boot-Wiedereinstieg böte
+  // dann den falschen Stand an. Sichtbar machen statt stillschweigend hinnehmen.
+  if (internerSpeicherModus()) { try { await depotInIdbSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(); } }
   return 'gewechselt';
 }
 
@@ -8327,11 +8425,78 @@ function _istDateiHerkunft() {
     return !!loc && loc.protocol === 'file:';
   } catch (_) { return false; }
 }
-// Modus-Weiche: interner verschlüsselter Speicher nur, wenn IndexedDB nutzbar
-// UND nicht file://. Der Desktop-Datei-Modus bleibt der voll arbeitsfähige
-// Erstklass-Pfad OHNE internen Speicher und OHNE Service Worker (ADR-Auflage 5).
+// Nachtrag (Gesamtumbau 08.08.2026, Zug 2) — echte Funktionsprobe statt reiner Existenzprüfung.
+// `hatIndexedDB()` prüft nur, ob das Objekt existiert — nicht, ob ein Schreibversuch tatsächlich
+// gelingt (die Safari-förmige Lücke aus dem Nachtrag-Bericht 08.08.: IndexedDB vorhanden,
+// `open()` scheitert trotzdem). Der Knoten synchron↔asynchron wird NICHT durch einen Umbau von
+// `internerSpeicherModus()` selbst gelöst (das bliebe synchron, jeder bestehende Aufrufer
+// unverändert), sondern dadurch, dass die Probe EINMAL im Hintergrund läuft und ihr Ergebnis in
+// dieser Variable ablegt. `internerSpeicherModus()` liest sie synchron mit — null (noch keine
+// Rückmeldung) ändert nichts am heutigen Verhalten; erst ein bestätigtes `false` kippt die Weiche.
+let _internSpeicherProbeErgebnis = null;   // null=ausstehend · true=funktionsfähig · false=bestätigt kaputt
+let _internSpeicherProbeGelaufen = false;  // Einmal pro Sitzung (Memoisierung wie persistAnfragen)
+// Modus-Weiche: interner verschlüsselter Speicher nur, wenn IndexedDB nutzbar, nicht file:// UND
+// die Funktionsprobe (falls schon zurück) keinen bestätigten Fehlschlag meldet.
 function internerSpeicherModus() {
+  if (_internSpeicherProbeErgebnis === false) return false;
   return hatIndexedDB() && !_istDateiHerkunft();
+}
+// Der Probe-Testrecord trägt eine Sentinel-ID, die nie mit einer echten depotUUID (v4) kollidiert.
+const _INTERN_PROBE_ID = '__funktionsprobe__';
+// Öffnen, schreiben, zurücklesen, löschen — über dieselbe VdStore-Abstraktion, die auch ein echter
+// Depot-Save nutzt (kein separater Prüfpfad, der etwas anderes misst als den echten). Best-effort:
+// wirft nie, räumt sich selbst auf (auch im Fehlerfall, damit kein Test-Record liegen bleibt).
+// Test-Zugriff: Boot ruft die Probe unbedingt an (internSpeicherProbeStarten aus booteEingang) —
+// ein Test, der die Probe gezielt gegen eine ANDERE Senke erneut stellen will, muss die Memoisierung
+// zurücksetzen können, sonst gewinnt der Boot-Aufruf immer (er lief zuerst, synchron vor jedem Await).
+function _internSpeicherProbeZuruecksetzen() { _internSpeicherProbeGelaufen = false; _internSpeicherProbeErgebnis = null; }
+// Gemessen (Nachtrag 08.08.2026, während des Baus): die Probe darf NICHT über VdStore/VDSTORE_DB
+// laufen. `internerStandMeta()`/`VdStore.liste()` lesen densel­ben Object Store 'depots' und sortieren
+// nach `gespeichert_am` — läuft die Probe (schreiben → lesen → löschen) NEBENHER, während ein
+// Boot-Vorgang genau diese Liste abfragt, kann er auf den Probe-Datensatz treffen, bevor er wieder
+// gelöscht ist: `cipherBlob: 'probe'` ist kein gültiger v3-Umschlag → „Interner Stand beschädigt".
+// Das ist kein Test-Artefakt, sondern dieselbe Race auch in einer echten Sitzung denkbar. Die Probe
+// bekommt darum eine EIGENE, von VDSTORE_DB komplett getrennte Datenbank — sie prüft damit weiterhin
+// ehrlich, ob dieser Browser IndexedDB tatsächlich öffnen/schreiben/lesen/löschen kann (dieselbe
+// Fähigkeit, dasselbe Backend-Verhalten), nur ohne jede Berührung des echten Depot-Bestands.
+var _PROBE_DB = 'vivodepot-funktionsprobe';
+function _probeOeffnen() {
+  return new Promise(function (resolve, reject) {
+    var req;
+    try { req = indexedDB.open(_PROBE_DB, 1); } catch (e) { reject(e); return; }
+    req.onupgradeneeded = function () {
+      var db = req.result;
+      if (!db.objectStoreNames.contains('probe')) db.createObjectStore('probe', { keyPath: 'id' });
+    };
+    req.onsuccess = function () { resolve(req.result); };
+    req.onerror = function () { reject(req.error || new Error('Funktionsprobe: open fehlgeschlagen.')); };
+    req.onblocked = function () { reject(new Error('Funktionsprobe: blockiert.')); };
+  });
+}
+async function internSpeicherFunktionsprobe() {
+  if (_internSpeicherProbeGelaufen) return _internSpeicherProbeErgebnis;
+  _internSpeicherProbeGelaufen = true;
+  if (!hatIndexedDB() || _istDateiHerkunft()) { _internSpeicherProbeErgebnis = false; return false; }
+  let db;
+  try {
+    db = await _probeOeffnen();
+    const gelesen = await new Promise(function (resolve, reject) {
+      var tx = db.transaction('probe', 'readwrite');
+      tx.onabort = function () { reject(tx.error || new Error('Funktionsprobe: Transaktion abgebrochen.')); };
+      tx.onerror = function () { reject(tx.error || new Error('Funktionsprobe: Transaktion fehlgeschlagen.')); };
+      var store = tx.objectStore('probe');
+      store.put({ id: _INTERN_PROBE_ID, stempel: Date.now() });
+      var rq = store.get(_INTERN_PROBE_ID);
+      rq.onsuccess = function () { store.delete(_INTERN_PROBE_ID); resolve(rq.result); };
+      rq.onerror = function () { reject(rq.error || new Error('Funktionsprobe: Lesen fehlgeschlagen.')); };
+    });
+    _internSpeicherProbeErgebnis = !!(gelesen && gelesen.id === _INTERN_PROBE_ID);
+  } catch (_) {
+    _internSpeicherProbeErgebnis = false;
+  } finally {
+    try { if (db && db.close) db.close(); } catch (_) {}
+  }
+  return _internSpeicherProbeErgebnis;
 }
 
 /* ── VdStore — schmale Speicher-Senke (ein Object Store 'depots') ───────────
@@ -8508,6 +8673,7 @@ async function depotAusIdbLaden(password) {
     throw new Error('Interner Stand: nur kryptoVersion ' + KRYPTO_VERSION_ALLOWLIST.join('/') + ' (v3-only, kein Bestand-Fallback).');
   }
   await depotLaden(umschlag, password);                     // setzt data + Session-Globals
+  _einstiegsmarke = 'interner-wiedereinstieg';   // Nachtrag 08.08.2026 — s. Definition bei fehlermeldungFuer()
   _aktuellerStandGespeichertAm = record.gespeichert_am || null;   // Etappe 5: interne Marke aus dem Record
   return umschlag;
 }
@@ -8532,21 +8698,31 @@ async function depotInternSichern(optionen) {
     if (kmI.konflikt) {
       if (typeof ui !== 'undefined' && ui.modal) {
         flowSpeicherKonfliktDialog(kmI, false, function (wahl) {
+          // Synchroner Dialog-Callback, kein await möglich — .catch() statt eines schwebenden,
+          // ungefangenen Promise (Regel: kein Schreibpfad ohne sichtbaren Fehlschlag).
           if (wahl === 'ueberschreiben') depotInternSichern({ ueberschreiben: true });
-          else depotInDateiSichern();                       // „Erst als Datei sichern"
+          else depotInDateiSichern().catch(markiereSpeichernFehlgeschlagen);   // „Erst als Datei sichern"
         });
       }
       return 'konflikt';
     }
   }
+  // Persistenz Stück 5 (Nachtrag 08.08.2026, Zug 2): dies ist im internen Modus der EINZIGE
+  // Schreibversuch — anders als bei depotInDateiSichern() gibt es hier keine Datei als Rückfall.
+  // Ein Fehlschlag markiert sich (vierter Zustand) und beendet die Funktion mit einem eigenen
+  // Rückgabewert statt einer geworfenen Exception — kein Aufrufer braucht mehr ein eigenes
+  // catch(_){}, um das sichtbar zu machen (Regel: kein bare catch auf einem Schreibpfad).
   if (imSubKontext()) {
     await subDepotNeuVersiegeln(aktiverSubKontext);         // Sub-Edits (Sub-Key) → Anker-Umschlag
     const _subData = data;
     data = _ankerData;                                       // Anker-Daten + Anker-Globals
-    try { await depotInIdbSichern(); }
-    finally { data = _subData; }                             // Sicht bleibt im Sub
+    try {
+      try { await depotInIdbSichern(); }
+      catch (_) { markiereSpeichernFehlgeschlagen(); return 'fehlgeschlagen'; }
+    } finally { data = _subData; }                           // Sicht bleibt im Sub
   } else {
-    await depotInIdbSichern();
+    try { await depotInIdbSichern(); }
+    catch (_) { markiereSpeichernFehlgeschlagen(); return 'fehlgeschlagen'; }
   }
   markiereGespeichert();
   if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.saveStatusInternToast, 'ok');   // ehrlich: NICHT „gesichert" für reinen Cache
@@ -8709,7 +8885,11 @@ async function konfliktWaehleGeraet(password) {
 // Die Datei selbst wird NUR gelesen, nie verändert (kein stilles Überschreiben der Datei).
 async function konfliktWaehleDatei(dateiUmschlag, password) {
   await depotLaden(dateiUmschlag, password);   // Datei → data + Session
-  await depotInIdbSichern();                    // Datei-Inhalt wird neuer interner Stand
+  _einstiegsmarke = 'anker-datei-geoeffnet';   // Nachtrag 08.08.2026 — s. Definition bei fehlermeldungFuer()
+  // Persistenz Stück 5 (Nachtrag 08.08.2026): scheitert der interne Schreibversuch, bleibt `data`
+  // trotzdem korrekt (aus der Datei geladen) — sichtbar machen statt die Bürgerin vor einem
+  // reglosen Dialog stehen zu lassen (ungefangen hätte dies den ganzen Konflikt-Flow abgebrochen).
+  try { await depotInIdbSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(); }   // Datei-Inhalt wird neuer interner Stand
   return true;
 }
 
@@ -8734,7 +8914,9 @@ function flowStandKonfliktDialog(dateiUmschlag, password, km, nachWahl) {
     zweitAktion: {
       label: STRINGS.konfliktKnopfDatei,
       handler: async function (schliessen) {
-        await depotInIdbSichern();                        // data ist bereits die Datei → interner Stand
+        // Persistenz Stück 5 (Nachtrag 08.08.2026): wie oben — ein Fehlschlag hier darf den Dialog
+        // nicht regungslos stehen lassen, `data` ist unabhängig davon korrekt.
+        try { await depotInIdbSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(); }   // data ist bereits die Datei → interner Stand
         schliessen(); if (typeof betreteApp === 'function') betreteApp();
         if (nachWahl) nachWahl('datei');
       },
@@ -13644,7 +13826,9 @@ async function depotInDateiSichern(optionen) {
       if (typeof ui !== 'undefined' && ui.modal) {
         flowSpeicherKonfliktDialog(kmD, true, function (wahl) {
           if (wahl !== 'ueberschreiben') dateiBindungZuruecksetzen();   // neuer Name → der Picker fragt erneut
-          depotInDateiSichern({ ueberschreiben: true });
+          // Synchroner Dialog-Callback, kein await möglich — .catch() statt eines schwebenden,
+          // ungefangenen Promise (Regel: kein Schreibpfad ohne sichtbaren Fehlschlag).
+          depotInDateiSichern({ ueberschreiben: true }).catch(markiereSpeichernFehlgeschlagen);
         });
       }
       return 'konflikt';
@@ -13660,17 +13844,22 @@ async function depotInDateiSichern(optionen) {
   // Stück 1: im internen Modus VOR der Datei den IDB-Cache aktuell schreiben (still, kein eigener Toast),
   // damit ein Datei-Save den Komfort-Cache nicht veralten lässt (sonst lädt ein Reload den alten Stand).
   // Im Datei-Modus ist internerSpeicherModus() false → übersprungen.
+  // Persistenz Stück 5 (Nachtrag 08.08.2026, Zug 3): dieser Cache-Schreibversuch ist jetzt geschützt
+  // — scheitert er, markiert er sich als Fehlschlag (vierter Zustand), blockiert aber NICHT die
+  // Datei, die gleich folgt (IDB ist Komfort-Cache, die Datei ist der Verlass, s. o.). Vorher warf
+  // ein Fehlschlag hier die ganze Funktion, BEVOR der Download versucht wurde — sichtbar nichts
+  // geschah, obwohl genau dieser Knopf laut U2-ADR-031 die ehrliche Datei-Aktion sein soll.
   let weg;
   if (imSubKontext()) {
     await subDepotNeuVersiegeln(aktiverSubKontext);   // Sub-Edits (sess.inhalt, Sub-Key) → Anker-Umschlag
     const _subData = data;
     data = _ankerData;                                // Anker-Daten + Anker-Globals → korrekte Anker-Datei
     try {
-      if (internerSpeicherModus()) await depotInIdbSichern();
+      if (internerSpeicherModus()) { try { await depotInIdbSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(); } }
       weg = await depotHerunterladen();
     } finally { data = _subData; }                    // Sicht bleibt im Sub
   } else {
-    if (internerSpeicherModus()) await depotInIdbSichern();
+    if (internerSpeicherModus()) { try { await depotInIdbSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(); } }
     weg = await depotHerunterladen();
   }
   if (weg === 'abgebrochen' || weg === 'vorschau') {         // Teilen abgebrochen / Vorschau → kein „gespeichert"
@@ -13722,7 +13911,7 @@ async function flowSubKontextBetreten(depotUUID) {
   // D40: Moduswechsel-Save. NOCH im Anker-Kontext (aktiverSubKontext null) → offene Anker-Edits
   // falten und, falls ungespeichert, die Anker-Datei sichern, BEVOR data auf den Sub zeigt.
   bearbeitungSpeichern();
-  if (istUngespeichert() && !imSubKontext()) { try { await kernAPI.speichern(); } catch (_) {} }
+  if (istUngespeichert() && !imSubKontext()) { await speichernOderFehlschlagMarkieren(); }
   subKontextBetreten(depotUUID);
 }
 
@@ -13731,7 +13920,7 @@ async function flowSubKontextVerlassen() {
   await subKontextVerlassen();   // re-versiegelt Sub in den Anker-Umschlag, data → Anker (Anker-Kontext)
   // D40: Moduswechsel-Save. Jetzt wieder im Anker-Kontext → ungespeicherte (Sub-)Änderungen in
   // die Anker-Datei sichern. Nur bei tatsächlich ungespeicherten Edits (kein Teilen-Blatt fürs Nur-Ansehen).
-  if (istUngespeichert()) { try { await kernAPI.speichern(); } catch (_) {} }
+  if (istUngespeichert()) { await speichernOderFehlschlagMarkieren(); }
   if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.subKontextVerlassen, 'ok');
 }
 
@@ -15519,6 +15708,95 @@ let _dynamischeAnlaesse = [];               // von kernAPI.registriereAnlass() g
 
 function tiefKopie(o) { return o == null ? o : JSON.parse(JSON.stringify(o)); }
 
+// Nachtrag (Einstiegsmarken-Auftrag 08.08.2026, nach b32a9b9) — ERSETZT die vorherige Zwei-Flag-
+// Fassung (`_hatteEchteSitzung`/`_hatteVorschauSitzung`) vollständig: ein boolesches „war es echt
+// oder Vorschau" musste einen unbekannten Rest übriglassen (der Vertrauenspersonen-Weg fiel dort
+// hinein und bekam eine unpassende Meldung). Jeder der fünf Wege, auf denen `data` einen echten
+// Wert bekommt (gemessen — genau fünf Zuweisungsstellen im ganzen Kern), setzt jetzt beim Eintritt
+// SEINE EIGENE Marke. Sub-Depot-Eintritt (`subKontextBetreten`, `data = sess.inhalt`) setzt bewusst
+// KEINE eigene Marke — er läuft nur innerhalb einer bereits laufenden Anker-Sitzung, die Marke des
+// Ankers bleibt richtig. `_depotSpeicherZuruecksetzen()` löscht diese Marke bewusst NICHT, aus
+// demselben Grund wie bei der vorherigen Fassung: sie wird erst gebraucht, NACHDEM `data` schon
+// weg ist — ein Reset genau dann wäre Selbstsabotage.
+//   'anker-angelegt'         — depotAnlegen(): neues Depot, evtl. noch nie gesichert
+//   'anker-datei-geoeffnet'  — depotLaden() über eine Datei (cryptoOverlayOeffnen, konfliktWaehleDatei)
+//   'interner-wiedereinstieg'— depotLaden() über den internen Stand (depotAusIdbLaden), keine Datei nötig
+//   'vertrauensperson'       — angehoerigenAusUmschlag(): fremdes Depot, Einladung/Datei einer anderen Person
+//   'vorschau'               — vorschauDepotErzeugen(): nie ein Passwort, nie eine Datei
+//   null                     — sollte nach diesem Bau nie mehr vorkommen; reine Absicherung (Zug 3)
+let _einstiegsmarke = null;
+// Nachtrag (Gesamtumbau 08.08.2026, Zug 3): 26 Schreibschutz-Wächter im Kern werfen wortgleich
+// `new Error('Kein offenes Depot.')`, wenn `data` null ist. Diese EINE Stelle erkennt genau diese
+// Fehlerklasse wieder und liefert den zur Einstiegsmarke passenden Wortlaut; jeder andere Fehler
+// bleibt bei der bestehenden Generalmeldung. Regel statt Einzelfall-Reparatur — künftige Aufrufer
+// desselben Wächters (Modal-Sicherheitsnetz, direkte Knopf-Handler wie sensibelFeldUmschalten)
+// nutzen diese Funktion statt eigener Fallunterscheidung.
+const _EINSTIEGSMARKE_MELDUNG = {
+  'anker-angelegt': 'keinOffenesDepotFehlerMitDatei',
+  'anker-datei-geoeffnet': 'keinOffenesDepotFehlerMitDatei',
+  'interner-wiedereinstieg': 'keinOffenesDepotFehlerInternerWiedereinstieg',
+  'vertrauensperson': 'keinOffenesDepotFehlerVertrauensperson',
+  'vorschau': 'keinOffenesDepotFehlerVorschau',
+};
+function fehlermeldungFuer(e) {
+  if (e && e.message === 'Kein offenes Depot.') {
+    const schluessel = _EINSTIEGSMARKE_MELDUNG[_einstiegsmarke];
+    return STRINGS[schluessel] || STRINGS.keinOffenesDepotFehlerUnbekannt;   // Zug 3: reine Absicherung
+  }
+  return STRINGS.aktionFehlgeschlagen;
+}
+
+// Arbeitsregel Wortlaute (08.08.2026): „wer zum Passwort auffordert, sorgt dafür, dass ein
+// Passwortfeld sichtbar oder einen Klick entfernt ist — ist es das nicht, wird der Weg gebaut,
+// nicht der Text weichgespült." Bei 'interner-wiedereinstieg' feuert die Meldung, während die
+// Nutzerin irgendwo im Content steht (Modal-Sicherheitsnetz oder ein Knopf-Handler wie
+// sensibelFeldUmschalten) — das Passwortfeld des internen Eintritts (#co-pw im crypto-overlay)
+// ist von dort NICHT sichtbar. Diese Funktion räumt die Sicht frei und zeigt es. `data` ist an
+// dieser Stelle bereits null (genau deshalb feuert die Meldung) — bewusst KEIN geheZuZuhause():
+// das prüft auf eine noch laufende Sitzung (Speichern, Warnungen), die es hier nicht mehr gibt.
+function zeigeInternenWiedereintritt() {
+  try { const banner = document.getElementById('wiedereinstieg-banner'); if (banner) banner.hidden = true; } catch (_) {}
+  try { const appEl = document.getElementById('app'); if (appEl) appEl.classList.remove('an'); } catch (_) {}
+  overlayModalOeffnen();
+  renderCryptoOverlay(null, true);
+}
+
+// Nachtrag 08.08.2026 (Carola-Einwand gegen den reinen Toast-Knopf): ein Toast ist FLÜCHTIG — nach
+// Sekunden weg, ohne Fokus-Management per Tastatur nicht erreichbar, als Live-Region statt fokussiert
+// angesagt, auf Mobil leicht übersehen/weggewischt. Für 'interner-wiedereinstieg' ist er der EINZIGE
+// Weg zurück — ein flüchtiger Träger dafür verdeckt die Erreichbarkeits-Lücke, statt sie zu schließen.
+// Dieses Banner ist der TRÄGER (bleibt stehen, bis genutzt oder bewusst geschlossen); der Toast bleibt
+// als schnellerer Beschleuniger daneben bestehen (Klick auf eine der beiden Stellen tut dasselbe).
+function zeigeInternerWiedereinstiegBanner() {
+  try {
+    const el = document.getElementById('wiedereinstieg-banner'); if (!el) return;
+    const t = document.getElementById('wiedereinstieg-text'); if (t) t.textContent = STRINGS.keinOffenesDepotFehlerInternerWiedereinstieg;
+    const btn = document.getElementById('wiedereinstieg-oeffnen');
+    if (btn) { btn.textContent = STRINGS.btnDepotOeffnen; btn.onclick = () => zeigeInternenWiedereintritt(); }
+    const x = document.getElementById('wiedereinstieg-x');
+    if (x) { x.setAttribute('aria-label', STRINGS.d37NamenlosWeg); x.onclick = () => { el.hidden = true; }; }
+    el.hidden = false;
+  } catch (_) {}
+}
+
+// Zentrale Fehler-Anzeige für den 26-fachen Schreibschutz-Wächter („Kein offenes Depot."). Ersetzt
+// die vier gleichlautenden `ui.toast(fehlermeldungFuer(e), 'fehler')`-Aufrufe — Regel statt
+// Wiederholung. `vorherSchliessen` (optional): ein bereits offenes Modal muss VOR dem Wechsel zum
+// crypto-overlay weg (sonst läge es blockierend über der neuen Sicht) — nur der Modal-Aufrufer hat
+// diese Funktion, Knopf-Handler außerhalb eines Modals übergeben nichts.
+function zeigeKernFehler(e, vorherSchliessen) {
+  const meldung = fehlermeldungFuer(e);
+  let aktion = null;
+  if (e && e.message === 'Kein offenes Depot.' && _einstiegsmarke === 'interner-wiedereinstieg') {
+    aktion = { label: STRINGS.btnDepotOeffnen, handler: () => {
+      if (typeof vorherSchliessen === 'function') { try { vorherSchliessen(); } catch (_) {} }
+      zeigeInternenWiedereintritt();
+    } };
+    zeigeInternerWiedereinstiegBanner();   // der TRÄGER — der Toast (unten) ist nur der Beschleuniger
+  }
+  try { if (ui && ui.toast) ui.toast(meldung, 'fehler', aktion); } catch (_) {}
+}
+
 /* ── UI-Bausteine (werden als kernAPI.ui durchgereicht) ─────────────────── */
 const ui = {
   icon,
@@ -15528,13 +15806,30 @@ const ui = {
     span.textContent = STRINGS.leerZustand;     // „Nicht hinterlegt" — überall dieselbe Phrase
     return span;
   },
-  toast(text, art) {
+  // `aktion` (optional, additiv, Nachtrag 08.08.2026): { label, handler() } — ein Knopf im Toast
+  // für Fehler, deren Weg zurück eine erreichbare Handlung braucht (Arbeitsregel Wortlaute:
+  // „wer zum Passwort auffordert, sorgt dafür, dass ein Passwortfeld sichtbar oder einen Klick
+  // entfernt ist"). Wiederverwendet die vorhandenen .toast-tipp/.toast-tipp-btn-Klassen (bisher
+  // nur vom Erst-Eintrag-Toast genutzt, s. zeigeErstEintragToast — dessen Kommentar diese Lücke
+  // in ui.toast schon benannte: „fix 3,2 s / kein CTA"). Ohne Angabe unverändert.
+  toast(text, art, aktion) {
     const host = document.getElementById('toast-host');
     const el = document.createElement('div');
-    el.className = 'toast' + (art ? ' ' + art : '');
-    el.textContent = text;
+    el.className = 'toast' + (art ? ' ' + art : '') + (aktion ? ' toast-tipp' : '');
+    const textEl = document.createElement('span');
+    if (aktion) textEl.className = 'toast-tipp-text';
+    textEl.textContent = text;
+    el.appendChild(textEl);
+    let timer = setTimeout(() => el.remove(), aktion ? 8000 : 3200);   // Knopf braucht mehr Lesezeit
+    if (aktion && typeof aktion.handler === 'function') {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'toast-tipp-btn';
+      btn.textContent = aktion.label;
+      btn.onclick = () => { clearTimeout(timer); el.remove(); aktion.handler(); };
+      el.appendChild(btn);
+    }
     host.appendChild(el);
-    setTimeout(() => el.remove(), 3200);
   },
   // `zweitAktion` (optional, additiv): eine ZWEITE Aktion neben Primär/Abbrechen — { label, handler(schliessen) }.
   // Genutzt z. B. von der D2-Schließen-Warnung ([Passwort setzen] [Trotzdem schließen]). Ohne Angabe
@@ -15595,7 +15890,7 @@ const ui = {
         // Sicherheitsnetz: ein in onPrimaer geworfener Fehler darf NIE still verschwinden (sonst
         // sieht die Nutzerin einen toten Knopf ohne Konsolen-Spur, wie beim Rückkehrer-Akteur-Bug).
         try { console.error('Modal-Aktion fehlgeschlagen:', e); } catch (_) {}
-        try { ui.toast(STRINGS.aktionFehlgeschlagen, 'fehler'); } catch (_) {}
+        zeigeKernFehler(e, schliessen);
         if (ok) {
           ok.disabled = false;
           if (ok.removeAttribute) ok.removeAttribute('aria-busy');
@@ -16160,6 +16455,7 @@ async function cryptoOverlayOeffnen() {
         return;
       }
     }
+    _einstiegsmarke = 'anker-datei-geoeffnet';   // Nachtrag 08.08.2026 — s. Definition bei fehlermeldungFuer()
     betreteApp();
     _cryptoDatei = null;
     ui.toast(STRINGS.geoeffnet, 'ok');
@@ -16196,6 +16492,7 @@ async function angehoerigenAusUmschlag(umschlag, vertrauensPasswort) {
   sessionKey = null; sessionHkdfKey = null;                         // KEIN Master-Schlüssel/Session
   aktuelleSalt = null; aktuelleDepotSalt = null; aktuelleDepotUUID = null;
   aktiveAkutId = null;                                              // frisch bei der Blatt-Auswahl starten
+  _einstiegsmarke = 'vertrauensperson';   // Nachtrag 08.08.2026 — s. Definition bei fehlermeldungFuer()
   betreteApp();
   Modus._setzeIntern('angehoerigen');                              // Gold-soft read-only Vollbild
   return true;
@@ -16765,9 +17062,12 @@ function flowPasswortSetzen(nachErfolg) {
       try { renderTopbar(); } catch (_) {}
       // Verschlüsselt schreiben (bestehender Pfad; jetzt KEINE Vorschau mehr → kernAPI.speichern führt
       // zur Sicherung statt zu einem erneuten Sicher-Gate). Re-rendert die Status-Pille (pw-hinweis ist schon weg).
-      try { await kernAPI.speichern(); } catch (_) {}
+      // Persistenz Stück 5 (Nachtrag 08.08.2026): der Erfolgs-Toast behauptet „…verschlüsselt
+      // gespeichert" — das darf er nur sagen, wenn das Schreiben tatsächlich gelang. Vorher lief
+      // dieser Toast unbedingt, auch nach einem still verschluckten Speicherfehler.
+      const _pwSetzenOk = await speichernOderFehlschlagMarkieren();
       try { renderContent(); } catch (_) {}
-      try { ui.toast(STRINGS.pwSetzenFertig, 'ok'); } catch (_) {}
+      if (_pwSetzenOk) { try { ui.toast(STRINGS.pwSetzenFertig, 'ok'); } catch (_) {} }
       notfallblattAnbieten();   // U2-ADR-095 B: zweiter Erstellungs-Eintritt (Vorschau → echtes Depot)
       // D35 Commit 2: Continuation nur, wenn der Eintritt sie mitgegeben hat (Sub-Wunsch-Pfad).
       if (typeof nachErfolg === 'function') { try { nachErfolg(); } catch (_) {} }
@@ -17007,7 +17307,7 @@ function flowEigenesDepotAusSubWunsch() {
       const vorschauUebernommen = await _ankerAusIdentitaetFinalisieren(vorname, nachname, passwort);
       if (vorschauUebernommen) ui.toast(STRINGS.vorschauUebernahmeHinweis, 'ok');
       // Auto-Save wie der bisherige flowPasswortSetzen-Weg (verschlüsselte Datei auf den Stick).
-      try { await kernAPI.speichern(); } catch (_) {}
+      await speichernOderFehlschlagMarkieren();
     },
     nachher: () => {
       try { renderTopbar(); } catch (_) {}
@@ -17089,6 +17389,12 @@ function _depotSpeicherZuruecksetzen() {
 function _hintergrundWipeVielleicht() {
   if (!data && sessionSubKeys.size === 0) return;    // nichts offen — nichts zu tun
   if (_ungespeicherteAenderungen > 0) return;        // Politik A: kein Datenverlust
+  // Nachtrag (Gesamtumbau 08.08.2026, Zug 4): ein Zähler von 0 heißt „keine offene Änderung",
+  // NICHT „nichts riskiert" — ein Mirror-Fehlschlag (z. B. beim Passwort-Wechsel) rührt den Zähler
+  // bewusst nicht an, hinterlässt aber einen Stand, der noch nicht wirklich gesichert ist. Dieselbe
+  // Bedingung wie schliessenWarnungNoetig(), kein neuer Mechanismus: ein Fehlschlag ist kein
+  // sicherer Moment zum stillen Wegräumen.
+  if (_letzterSpeicherFehlgeschlagen) return;
   _depotSpeicherZuruecksetzen();
   // renderWelcome räumt zusätzlich den DOM (_eingangsschirmDomAufraeumen) — sonst bliebe
   // Klartext im Markup stehen, für den es keinen Schlüssel mehr gibt.
@@ -17181,8 +17487,8 @@ function flowSchliessenWarnungEchteSitzung(weiter) {
     primaerLabel: dirty ? STRINGS.d40SichernUndSchliessen : STRINGS.saveStatusJetztSichern,
     onPrimaer: async (schliessen) => {
       if (typeof schliessen === 'function') schliessen();
-      if (dirty) { try { await kernAPI.speichern(); } catch (_) {} }
-      else { if (!(await _dateiNameSicherstellen())) return; try { await depotInDateiSichern(); } catch (_) {} }
+      if (dirty) { await speichernOderFehlschlagMarkieren(); }
+      else { if (!(await _dateiNameSicherstellen())) return; try { await depotInDateiSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(); } }
       // Nur fortfahren, wenn wirklich gesichert wurde (Teilen-/Datei-Dialog nicht abgebrochen) — sonst
       // bliebe es still verloren. Bei Abbruch: zurück in die App, Status unverändert.
       const gesichert = dirty ? !istUngespeichert() : _aktuelleDateiSicherung;
@@ -19115,6 +19421,20 @@ let _aktuelleDateiSicherung = false;
 // Sicherungsdatei schon bewusst quittiert („Trotzdem schließen")? Dann nicht erneut nerven — bis eine
 // neue Änderung kommt (markiereUngespeichert setzt es zurück) oder eine Datei gesichert wird.
 let _dateiVerlustQuittiert = false;
+// Persistenz Stück 5 (U2-ADR-031-Nachtrag, 08.08.2026): der letzte Schreibversuch ist
+// FEHLGESCHLAGEN — gesetzt von markiereSpeichernFehlgeschlagen(), gelöscht nur von einem
+// tatsächlich ERFOLGREICHEN markiereGespeichert()/markiereAlsDateiGesichert(). Eine neue Änderung
+// (markiereUngespeichert) löscht ihn NICHT — sonst verdeckte bloßes Weitertippen einen Fehlschlag,
+// den die Nutzerin noch nicht behoben hat. Vorrang vor den drei bestehenden Zuständen: ein
+// Fehlschlag ist die einzige Information, die in diesem Moment zählt (Auftrag, Zug 1).
+let _letzterSpeicherFehlgeschlagen = false;
+// Nachtrag (Gesamtumbau 08.08.2026, Zug 1) — zählt aufeinanderfolgende Fehlschläge OHNE
+// dazwischenliegenden Erfolg. Ab SCHWELLE zeigt die Pille den Ausweg (Datei-Sicherung) statt der
+// bloßen Aufforderung, denselben Weg noch einmal zu versuchen — ein einzelner Fehlschlag kann ein
+// selbstheilender Aussetzer sein (Speicherdruck, ein kurzer Hänger), erst Wiederholung rechtfertigt
+// die stärkere Ansage. Schwelle = 2 (der ZWEITE Fehlschlag in Folge): eigener Vorschlag, s. Bericht.
+const SPEICHER_FEHLSCHLAG_SCHWELLE_WIEDERHOLT = 2;
+let _speicherFehlschlagAnzahlInFolge = 0;
 function istUngespeichert() { return _ungespeicherteAenderungen > 0; }
 function ungespeichertAnzahl() { return _ungespeicherteAenderungen; }
 function markiereUngespeichert(n) {
@@ -19125,6 +19445,8 @@ function markiereUngespeichert(n) {
 }
 function markiereGespeichert() {
   _ungespeicherteAenderungen = 0;                          // interner Stand gesichert; Datei-Signal UNBERÜHRT
+  _letzterSpeicherFehlgeschlagen = false;                  // ein Erfolg räumt einen vorherigen Fehlschlag ab
+  _speicherFehlschlagAnzahlInFolge = 0;                    // Erfolg unterbricht die Fehlschlags-Folge
   try { renderSaveStatus(); } catch (_) {}
 }
 // Eine aktuelle Datei-Sicherung wurde erstellt: Zähler 0 UND Datei-Signal gesetzt. Aufgerufen vom
@@ -19132,12 +19454,50 @@ function markiereGespeichert() {
 function markiereAlsDateiGesichert() {
   _ungespeicherteAenderungen = 0;
   _aktuelleDateiSicherung = true;
+  _letzterSpeicherFehlgeschlagen = false;                  // ein Erfolg räumt einen vorherigen Fehlschlag ab
+  _speicherFehlschlagAnzahlInFolge = 0;                    // Erfolg unterbricht die Fehlschlags-Folge
   try { renderSaveStatus(); } catch (_) {}
 }
-// Reines, testbares Status-Modell (drei Zustände): kein Sektor-/DOM-Bezug.
+// Persistenz Stück 5: EIN Schreibversuch ist gescheitert (Exception aus depotInIdbSichern/
+// depotHerunterladen/depotInDateiSichern/depotInternSichern). Rührt `_ungespeicherteAenderungen`
+// NICHT an — die offenen Edits sind weiterhin genau das: offen, noch nirgends angekommen.
+function markiereSpeichernFehlgeschlagen() {
+  _letzterSpeicherFehlgeschlagen = true;
+  _speicherFehlschlagAnzahlInFolge += 1;
+  // Nachtrag 08.08.2026 (Zug 2): eine frühere Quittierung „trotzdem schließen" galt einem bekannten,
+  // beurteilten Zustand — nicht diesem neuen Fehlschlag. Sie entwertet sich, sonst wäre eine ALTE
+  // Zustimmung stillschweigend die Deckung für einen Verlust, den die Nutzerin nie gesehen hat.
+  _dateiVerlustQuittiert = false;
+  try { renderSaveStatus(); } catch (_) {}
+}
+// Persistenz Stück 5 (Nachtrag 08.08.2026, Zug 2) — EIN Prüfpunkt für JEDEN Aufrufer von
+// kernAPI.speichern(): depotInternSichern() liefert bei Fehlschlag jetzt den String
+// 'fehlgeschlagen' (kein Wurf), depotInDateiSichern() kann weiterhin werfen (Datei-/Picker-Fehler,
+// Sub-Versiegelung). Beide Formen laufen hier zusammen — jede Aufrufstelle braucht nur EINE Zeile
+// statt einer eigenen try/catch-Fallunterscheidung. REGEL: kein `catch (_) {}` mehr auf einem
+// Schreibpfad — jeder Aufrufer von kernAPI.speichern() ruft stattdessen dies.
+async function speichernOderFehlschlagMarkieren() {
+  try {
+    const r = await kernAPI.speichern();
+    // Gemessen (während des Baus, 08.08.2026): depotInternSichern() markiert einen Fehlschlag
+    // bereits SELBST (return 'fehlgeschlagen'), bevor es zurückkehrt — ein zweiter Aufruf hier
+    // hätte _speicherFehlschlagAnzahlInFolge fälschlich verdoppelt (ein einzelner Fehlschlag
+    // zählte sofort als „wiederholt"). Nur PRÜFEN, nicht erneut markieren.
+    if (r === 'fehlgeschlagen') { return false; }
+    return true;
+  } catch (_) {
+    markiereSpeichernFehlgeschlagen();
+    return false;
+  }
+}
+// Reines, testbares Status-Modell (jetzt VIER Zustände): kein Sektor-/DOM-Bezug.
+//   'fehlgeschlagen' — letzter Schreibversuch scheiterte (Vorrang vor allen anderen)
 //   'ungespeichert' — offene Edits (Knopf aktiv)   · 'keine-datei' — gespeichert, keine aktuelle Datei (Knopf aktiv)
 //   'als-datei'     — aktuelle Sicherungsdatei liegt vor (Knopf ruhig)
 function saveStatusModell() {
+  // Nachtrag (Gesamtumbau 08.08.2026, Zug 1): `wiederholt` unterscheidet den ERSTEN Fehlschlag
+  // (kann ein selbstheilender Aussetzer sein) vom ZWEITEN in Folge (rechtfertigt den Ausweg-Hinweis).
+  if (_letzterSpeicherFehlgeschlagen) return { zustand: 'fehlgeschlagen', anzahl: _ungespeicherteAenderungen, knopfAktiv: true, wiederholt: _speicherFehlschlagAnzahlInFolge >= SPEICHER_FEHLSCHLAG_SCHWELLE_WIEDERHOLT };
   if (_ungespeicherteAenderungen > 0) return { zustand: 'ungespeichert', anzahl: _ungespeicherteAenderungen, knopfAktiv: true };
   if (_aktuelleDateiSicherung)        return { zustand: 'als-datei',     anzahl: 0, knopfAktiv: false };
   return { zustand: 'keine-datei', anzahl: 0, knopfAktiv: true };
@@ -19148,6 +19508,11 @@ function saveStatusModell() {
 function schliessenWarnungNoetig() {
   if (typeof imVorschau === 'function' && imVorschau()) return vorschauHatDaten(data);   // Vorschau wie bisher
   if (!data || !sessionHkdfKey) return false;
+  // Nachtrag 08.08.2026 (Zug 2): VOR den beiden bestehenden Prüfungen — ein gescheiterter
+  // Schreibversuch warnt immer, auch im (seltenen) Fall Zähler=0 + bereits quittierter Verlust
+  // (z. B. ein reiner IDB-Mirror-Fehlschlag ohne eigene offene Edits). Sonst schlösse die Anwendung
+  // schweigend, obwohl der letzte Schreibversuch misslang.
+  if (_letzterSpeicherFehlgeschlagen) return true;
   if (_ungespeicherteAenderungen > 0) return true;                                       // offene Edits → immer
   return !_aktuelleDateiSicherung && !_dateiVerlustQuittiert && vorschauHatDaten(data);  // Inhalt ohne aktuelle Datei
 }
@@ -19160,19 +19525,25 @@ function renderSaveStatus() {
   el.hidden = !echteSitzung;
   if (el.style) el.style.display = echteSitzung ? '' : 'none';
   if (!echteSitzung) return;
-  // Persistenz Stück 1 (U2-ADR-031): Status ≠ Aktion. Drei Zustände aus dem reinen Modell; der Knopf
-  // führt IMMER zur Datei-Sicherung (nie wieder „gesichert" für reinen Cache). Häkchen nur bei aktueller Datei.
+  // Persistenz Stück 1 (U2-ADR-031) + Stück 5 (Nachtrag 08.08.2026, vierter Zustand): Status ≠ Aktion.
+  // Vier Zustände aus dem reinen Modell; der Knopf führt IMMER zur Datei-Sicherung (nie wieder
+  // „gesichert" für reinen Cache). Häkchen nur bei aktueller Datei.
   const m = saveStatusModell();
+  el.classList.toggle('ist-fehlgeschlagen', m.zustand === 'fehlgeschlagen');
   el.classList.toggle('ist-ungespeichert', m.zustand === 'ungespeichert');
   el.classList.toggle('ist-keine-datei',   m.zustand === 'keine-datei');
   el.classList.toggle('ist-gespeichert',   m.zustand === 'als-datei');
   const ico = el.querySelector('.ico');
   const txt = el.querySelector('.tb-save-text');
   const knopf = el.querySelector('.tb-save-knopf');
-  const text = (m.zustand === 'ungespeichert')
+  // Zug 1 (Nachtrag 08.08.2026): ab der Schwelle nennt die Pille den Ausweg (Datei), statt nur
+  // denselben Weg noch einmal nahezulegen — ein einzelner Fehlschlag bleibt die schlichtere Meldung.
+  const text = (m.zustand === 'fehlgeschlagen') ? (m.wiederholt ? STRINGS.saveStatusFehlgeschlagenWiederholt : STRINGS.saveStatusFehlgeschlagen)
+    : (m.zustand === 'ungespeichert')
     ? (m.anzahl + ' ' + (m.anzahl === 1 ? STRINGS.saveStatusAenderungEinzahl : STRINGS.saveStatusAenderungMehrzahl))
     : (m.zustand === 'als-datei') ? STRINGS.saveStatusAlsDatei : STRINGS.saveStatusKeineDatei;
-  if (ico) ico.innerHTML = (m.zustand === 'ungespeichert') ? svgIcon(ICONS.alertTriangle, 16) : '';   // ✓ steckt im Text
+  // Warndreieck bei „ungespeichert" UND „fehlgeschlagen" — beides braucht Aufmerksamkeit; ✓ steckt im Text der anderen zwei.
+  if (ico) ico.innerHTML = (m.zustand === 'ungespeichert' || m.zustand === 'fehlgeschlagen') ? svgIcon(ICONS.alertTriangle, 16) : '';
   if (txt) txt.textContent = text;
   if (knopf) {
     knopf.hidden = !m.knopfAktiv;
@@ -19181,10 +19552,12 @@ function renderSaveStatus() {
     knopf.innerHTML = svgIcon(ICONS.save, 16) + '<span class="tb-save-knopf-text">' + escapeHTML(STRINGS.saveStatusJetztSichern) + '</span>';
     knopf.setAttribute('aria-label', STRINGS.saveStatusJetztSichern);
     // Aktion = die bewusste .vivodepot-Datei (im internen Modus hält depotInDateiSichern den IDB-Cache mit aktuell).
+    // Persistenz Stück 5 — Regel: kein bare catch(_){} auf einem Schreibpfad. Erfolg und Fehlschlag
+    // laufen beide auf ein sichtbares Signal hinaus, nie auf stillschweigendes Nichts.
     knopf.onclick = async () => {
       bearbeitungSpeichern();
       if (!(await _dateiNameSicherstellen())) return;   // Nicht-FSA: Name erfragt; Abbruch → nicht speichern
-      try { await depotInDateiSichern(); } catch (_) {}
+      try { await depotInDateiSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(); }
       try { renderSaveStatus(); } catch (_) {}
     };
   }
@@ -19660,11 +20033,6 @@ function renderSidebar() {
       ' placeholder="' + escapeHTML(STRINGS.suchePlatzhalter) + '">' +
       '<ul class="suche-vorschlaege" id="suche-vorschlaege" role="listbox" hidden></ul>' +
     '</div>';
-  // Struktur-Spec §4 / Stresstest Anlass-Navigation 30.05. — Rückweg ganz oben (nach der Suche).
-  // Umbenannt 20.07.2026 (CC-Auftrag Eingangsschirm): hieß „Zuhause", führte aber zum
-  // Willkommensschirm außerhalb des Depots — keine Übersicht innerhalb der Sitzung.
-  // Beschriftung jetzt ehrlich.
-  html += '<button class="nav-item" data-verlassen="1"><span class="ico">' + icon('home') + '</span><span>' + STRINGS.navDepotVerlassen + '</span></button>';
   // „Für einen Anlass" — GLEICHWERTIGER Einstieg direkt darunter, OHNE Gruppen-Überschrift
   // (HERAUSHOLEN aufgelöst): ein Anlass ist ein Kontext, kein Ausgang. Jede Kachel führt ins
   // Situationsblatt (waehleAnlass → oeffneSituation), nicht in die Eingabemasken. Welcome-Page nutzt
@@ -19725,6 +20093,10 @@ function renderSidebar() {
   // VERWALTUNG aufgelöst: „Verwaltete Depots" wandert konzeptuell in die Topbar-Depot-Pille (Bruch B,
   // Paket 5). Bis dahin ist die renderVerwalteteDepots-Sicht aus der Sidebar nicht erreichbar — die
   // Funktion bleibt im Code, kein Datenverlust.
+  // Nachtrag (Gesamtumbau 08.08.2026, Zug 5, Carola-Testprotokoll 08.08.): ans UNTERE Ende der
+  // Navigation verschoben, nicht mehr ganz oben — ein Ausgang gehört ans Ende eines Wegs, nicht an
+  // dessen Anfang. Struktur-Spec §4 galt bislang „oben, nach der Suche"; diese Zeile löst das ab.
+  html += '<button class="nav-item" data-verlassen="1"><span class="ico">' + icon('home') + '</span><span>' + STRINGS.navDepotVerlassen + '</span></button>';
   sb.innerHTML = html;
   _sucheVerdrahten();   // Navigations-Suche (CC-Auftrag Suchfunktion-Nachtrag, 02.08.2026)
   sb.querySelectorAll('[data-verlassen]').forEach(b => {
@@ -22976,14 +23348,22 @@ function verdrahteSektorAktionen(c, sektorId, s, darf) {
     renderContent();
   });
   // Sensibel-Schloss pro Feld verdrahten (Schema 21): Markierung umschalten + neu rendern.
+  // Nachtrag (Gesamtumbau 08.08.2026, Zug 3): sensibelFeldUmschalten() wirft „Kein offenes Depot.",
+  // wenn `data` null ist — VORHER ungefangen: der Klick verschwand komplett wortlos (kein Toast,
+  // kein Re-Render, nur ein Konsolenfehler). Das war der gemeldete „Knopf reagiert nicht"-Befund.
   c.querySelectorAll('[data-sensibel-toggle]').forEach(b => {
     b.onclick = (ev) => {
       if (ev && ev.preventDefault) ev.preventDefault();
       if (ev && ev.stopPropagation) ev.stopPropagation();
       const fid = b.getAttribute('data-sensibel-toggle');
-      const jetztAn = sensibelFeldUmschalten(sektorId, fid);
-      if (ui && ui.toast) ui.toast(jetztAn ? STRINGS.sensibelMarkiertToast : STRINGS.sensibelEntferntToast, 'info');
-      renderContent();
+      try {
+        const jetztAn = sensibelFeldUmschalten(sektorId, fid);
+        if (ui && ui.toast) ui.toast(jetztAn ? STRINGS.sensibelMarkiertToast : STRINGS.sensibelEntferntToast, 'info');
+        renderContent();
+      } catch (e) {
+        try { console.error('Sensibel-Umschalten fehlgeschlagen:', e); } catch (_) {}
+        zeigeKernFehler(e);
+      }
     };
   });
   // „Herausgeben"-Knopf pro Bereich (Chooser: PDF / maschinenlesbar / QR).
@@ -23100,12 +23480,20 @@ function verdrahteSektorEingaben(c, sektorId, s, darf) {
       };
     });
     // U2-ADR-065: Listen-Einträge umsortieren (↑/↓) — persistente Reihenfolge via listenEintragVerschieben.
+    // Nachtrag (Gesamtumbau 08.08.2026, Zug 3): listenEintragVerschieben() wirft dieselbe
+    // „Kein offenes Depot."-Wächterklasse wie sensibelFeldUmschalten() — derselbe ungefangene
+    // Direkt-Knopf-Klick wie der gemeldete Sensibel-Bug, hier bloß noch nicht gemeldet.
     c.querySelectorAll('[data-eintrag-hoch]').forEach(btn => {
       btn.onclick = () => {
         const wrap = btn.closest ? btn.closest('[data-feld-liste]') : null;
         const fid = wrap && wrap.getAttribute('data-feld-liste');
         const idx = parseInt(btn.getAttribute('data-eintrag-hoch'), 10);
-        if (fid && listenEintragVerschieben(sektorId, fid, idx, -1)) _renderContentNachListenCrud();
+        try {
+          if (fid && listenEintragVerschieben(sektorId, fid, idx, -1)) _renderContentNachListenCrud();
+        } catch (e) {
+          try { console.error('Eintrag-Verschieben fehlgeschlagen:', e); } catch (_) {}
+          zeigeKernFehler(e);
+        }
       };
     });
     c.querySelectorAll('[data-eintrag-runter]').forEach(btn => {
@@ -23113,7 +23501,12 @@ function verdrahteSektorEingaben(c, sektorId, s, darf) {
         const wrap = btn.closest ? btn.closest('[data-feld-liste]') : null;
         const fid = wrap && wrap.getAttribute('data-feld-liste');
         const idx = parseInt(btn.getAttribute('data-eintrag-runter'), 10);
-        if (fid && listenEintragVerschieben(sektorId, fid, idx, +1)) _renderContentNachListenCrud();
+        try {
+          if (fid && listenEintragVerschieben(sektorId, fid, idx, +1)) _renderContentNachListenCrud();
+        } catch (e) {
+          try { console.error('Eintrag-Verschieben fehlgeschlagen:', e); } catch (_) {}
+          zeigeKernFehler(e);
+        }
       };
     });
     // U2-ADR-065: refMehrfach-Widgets im Sektor-Edit-Modus verdrahten (Add/Entfernen/↑↓/„+ Neu").
@@ -26592,7 +26985,7 @@ function flowSubDepotAnlegen(vorausfuellen) {
       // (Genau das fehlte und kostete „Sophie Klessen".) markiere zuerst „ungespeichert",
       // damit ein abgebrochenes Teilen-Blatt korrekt als ungespeichert sichtbar bleibt.
       markiereUngespeichert(1);
-      try { await kernAPI.speichern(); } catch (_) {}
+      await speichernOderFehlschlagMarkieren();
     },
     nachher: () => { ui.toast(STRINGS.subAngelegt, 'ok'); renderSidebar(); renderContent(); },
   });
@@ -27176,6 +27569,20 @@ async function booteInternenStandVielleicht() {
     return true;
   } catch (_) { return false; }
 }
+// Nachtrag (Gesamtumbau 08.08.2026, Zug 2) — die Funktionsprobe läuft NEBENHER, blockiert den
+// ersten Render nicht (fire-and-forget, wie persistAnfragen()). Bestätigt sie einen funktionsunfähigen
+// Speicher, erfährt die Nutzerin das VOR der ersten Eingabe, einmal, mit dem konkreten Ausweg (Datei)
+// — kein stiller Moduswechsel. Nur relevant, solange noch nichts eingetragen ist: sobald ein
+// Depot existiert, trägt der vierte Statuszustand (Stück 5) denselben Zweck bei einem echten
+// Schreibversuch — diese Meldung wäre dann nur noch eine Doppelung desselben Sachverhalts.
+function internSpeicherProbeStarten() {
+  if (!hatIndexedDB() || _istDateiHerkunft()) return;   // Datei-Modus ist ohnehin unabhängig von IDB
+  internSpeicherFunktionsprobe().then((funktioniert) => {
+    if (funktioniert === false && !data) {
+      try { if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.internSpeicherProbeFehlgeschlagen, 'info'); } catch (_) {}
+    }
+  }).catch(() => {});
+}
 function booteEingang() {
   let dateiPfad = false;
   try {
@@ -27185,6 +27592,8 @@ function booteEingang() {
   } catch (e) { try { renderWelcome(); } catch (_) {} }
   // Kein ausdrücklicher Datei-Pfad → prüfen, ob ein interner Stand zum Laden bereitliegt (gehostet).
   if (!dateiPfad) { try { booteInternenStandVielleicht(); } catch (_) {} }
+  // Nachtrag (Gesamtumbau 08.08.2026, Zug 2): echte Funktionsprobe nebenher, blockiert nichts oben.
+  try { internSpeicherProbeStarten(); } catch (_) {}
   // File-Handling-API: nur in der installierten PWA (Chromium) vorhanden. Bequemer Auto-Pfad
   // nach Lage B, wenn der Nutzer eine .vivodepot-Datei „mit Vivodepot öffnen" lässt.
   try {
