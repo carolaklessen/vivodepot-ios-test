@@ -954,6 +954,9 @@ const _STRINGS_EINGEBAUT = ({
   pwPlaceholder: 'Passwort',
   pwOeffnen: 'Öffnen',
   pwFalsch: 'Das Passwort passt nicht — bitte erneut versuchen.',
+  // QR-Übergabe (b16-Wiedereinbau, 24.08.2026)
+  kreiseQrEmpfangHint: 'Jemand hat Ihnen einen QR-Code gegeben. Bitte geben Sie das Passwort ein, das Sie dazu erhalten haben.',
+  kreiseQrAbgelaufen: 'Dieser QR-Code ist abgelaufen — bitten Sie die Person, einen neuen zu erzeugen.',
   // B3 (21.07.2026): eigener Wortlaut für einen abgelehnten Versions-Umschlag. Vorher lief dieser
   // Fall in denselben catch wie ein Tippfehler und meldete „Das Passwort passt nicht" — die Nutzerin
   // hätte endlos ein korrektes Passwort erneut eingegeben. Kein Technik-Jargon (keine Versionsnummer).
@@ -1390,7 +1393,6 @@ const SEKTOREN = Object.freeze([
         hint: 'Alte Papiere — Zeugnisse, Rentenkonto, Versicherungspolicen, Grundbuch, alte Konten — lauten oft auf frühere Namen. Bei der Rente und im Erbfall ist die Namenskette das, was jemand belegen muss.',
         felder: [
           { id: 'fruehere_namen', label: 'Frühere Namen', typ: 'liste',
-            hint: 'Jeder frühere Name als eigener Eintrag.',
             unterFelder: [
               { id: 'name', sensibel: true, label: 'Name', typ: 'text', beispiel: 'Maria Müller' },
               { id: 'gefuehrt_bis', sensibel: true, label: 'geführt bis', typ: 'datum' },
@@ -1420,7 +1422,6 @@ const SEKTOREN = Object.freeze([
              zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
              hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
           { id: 'haustiere', label: 'Tiere', typ: 'liste',
-            hint: 'Jedes Tier als eigener Eintrag.',
             unterFelder: [
               { id: 'name',      label: 'Tier — Name & Art',                       typ: 'text', beispiel: 'Felix, Katze' },
               // E2 D1 (15.07.2026): Freitext → ref-Widget (Weiche B — kein Doppel-Register-Modus;
@@ -1442,16 +1443,27 @@ const SEKTOREN = Object.freeze([
     sektionen: [
       { id: 'menschen-liste', label: 'Menschen',
         hint: 'Menschen, die Ihnen wichtig sind. Manche kennt jeder, manche kennt sonst niemand — alle gehören hierher: auch nicht-verheiratete Partnerinnen und Partner, beste Freundinnen und Freunde, wichtige Bezugspersonen. Einmal erfasst, überall im Vivodepot referenzierbar.',
+        // A527 (27.08.2026): FELDNAMEN + EINE Randbedingung an data.menschen[] gespiegelt
+        // (MENSCHEN_REGISTER_FELD, vivodepot.html ~46790) — `rolle` hieß im Kern nie so
+        // (`beziehung`), und geburtsdatum/geburtsjahr/geburtsort/institution fehlten ganz.
+        // WOHER gelesen wird, ist die eigentliche Reparatur — s. sektorHTML unten: dieses
+        // Feld hier existiert nur noch als KATALOG (Label/Reihenfolge der Unterfelder), die
+        // Werte kommen seit U2-ADR-022 nicht mehr aus sektoren['meine-menschen'], sondern
+        // aus data.menschen[] direkt (spiegelt menschenRegisterHTML im Kern).
         felder: [
           { id: 'menschen', label: 'Menschen, die mir wichtig sind', typ: 'liste',
             unterFelder: [
-              { id: 'name',      label: 'Name',            typ: 'text', beispiel: 'Anna Schmidt' },
-              { id: 'rolle',     label: 'Rolle / Beziehung', typ: 'text', beispiel: 'Schwester · Freundin · Patin' },
-              { id: 'tel',       label: 'Telefon',         typ: 'text', beispiel: '0151 12345678' },
-              { id: 'email',     label: 'E-Mail',          typ: 'text', beispiel: 'anna.schmidt@example.de' },
-              { id: 'adresse',   label: 'Adresse',         typ: 'text', beispiel: 'Kastanienweg 5, 80331 München' },
-              { id: 'aufgabe',   label: 'Aufgabe / Hinweis', typ: 'text', beispiel: 'soll im Notfall informiert werden' },
-              { id: 'anmerkung', label: 'Anmerkung',       typ: 'text', beispiel: 'kennt meine Tochter seit der Kindheit' },
+              { id: 'name',         label: 'Name',            typ: 'text', beispiel: 'Anna Schmidt' },
+              { id: 'beziehung',    label: 'Beziehung',       typ: 'text', beispiel: 'Schwester · Freundin · Patin' },
+              { id: 'geburtsdatum', label: 'Geburtsdatum',    typ: 'datum' },
+              { id: 'geburtsjahr',  label: 'Geburtsjahr',     typ: 'text', beispiel: '1985' },
+              { id: 'geburtsort',   label: 'Geburtsort',      typ: 'text', beispiel: 'München' },
+              { id: 'tel',          label: 'Telefon',         typ: 'text', beispiel: '0151 12345678' },
+              { id: 'email',        label: 'E-Mail',          typ: 'text', beispiel: 'anna.schmidt@example.de' },
+              { id: 'adresse',      label: 'Adresse',         typ: 'text', beispiel: 'Kastanienweg 5, 80331 München' },
+              { id: 'aufgabe',      label: 'Aufgabe / Hinweis', typ: 'text', beispiel: 'soll im Notfall informiert werden' },
+              { id: 'institution',  label: 'Institution',     typ: 'ref', entitaet: 'institution' },
+              { id: 'anmerkung',    label: 'Anmerkung',       typ: 'text', beispiel: 'kennt meine Tochter seit der Kindheit' },
             ] },
         ] },
       // U2-ADR-109: „Kinder und Schutzbefohlene" sind EINE Liste. Spiegel des Kerns, Feld fuer Feld —
@@ -1501,7 +1513,7 @@ const SEKTOREN = Object.freeze([
             ] },
             { id: 'ausbildung_ende',    label: 'Ausbildung voraussichtlich bis', typ: 'datum',
               verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' } },
-            { id: 'geburtsurkunde_ort', label: 'Geburtsurkunde — Ablageort',  typ: 'text',  beispiel: 'Ordner „Wichtiges", Wohnzimmerschrank',
+            { id: 'geburtsurkunde_ort', sensibel: true, label: 'Geburtsurkunde — Ablageort',  typ: 'text',  beispiel: 'Ordner „Wichtiges", Wohnzimmerschrank',
               verborgenWenn: { feld: 'art', wert: 'betreuter_erwachsener' } },
             { id: 'vertretung_art', sensibel: true,     label: 'Grundlage der Vertretung',    typ: 'auswahl',
               verborgenWenn: { feld: 'art', wert: ['leiblich', 'adoptiert', 'pflege', 'stief', 'muendel'] },
@@ -1599,7 +1611,7 @@ const SEKTOREN = Object.freeze([
             { id: 'bezeichnung',        label: 'Marke / Modell / Kennzeichen', typ: 'text', beispiel: 'VW Golf 7, M-AB 1234' },
             { id: 'fahrzeugausweis_ort', sensibel: true,label: 'Fahrzeugausweis — Ablageort',  typ: 'text', beispiel: 'Handschuhfach',
               hint: 'Wird für Ummeldung oder Verkauf benötigt.' },
-            { id: 'leasing_ort',        label: 'Leasingvertrag — Ablageort',   typ: 'text', beispiel: 'Aktenschrank, Fach „Auto"',
+            { id: 'leasing_ort', sensibel: true,        label: 'Leasingvertrag — Ablageort',   typ: 'text', beispiel: 'Aktenschrank, Fach „Auto"',
               hint: 'Bei Leasing: Leasinggesellschaft sofort informieren.' },
           ] },
         { id: 'fuehrerschein', sensibel: true, label: 'Führerschein — Klassen', typ: 'mehrfachauswahl',
@@ -1799,7 +1811,6 @@ const SEKTOREN = Object.freeze([
           // Feld, das hier als `text` steht und im Kern eine Liste ist, erschiene der Vertrauensperson
           // als „nichts hinterlegt", obwohl Daten da sind. (Genau das hat der Paritäts-Wächter gemeldet.)
           { id: 'voroperationen', sensibel: true,     label: 'Operationen / Eingriffe',                      typ: 'liste', ebene: 'modul',
-            hint: 'Jeder Eingriff als eigener Eintrag.',
             unterFelder: [
               { id: 'eingriff', sensibel: true, label: 'Eingriff',      typ: 'text', beispiel: 'Blinddarm-Entfernung' },
               { id: 'jahr', sensibel: true,     label: 'Jahr',          typ: 'text', beispiel: '2008' },
@@ -1864,7 +1875,7 @@ const SEKTOREN = Object.freeze([
         { id: 'studium_hochschule',     label: 'Studium — Hochschule',                                typ: 'text' },
         { id: 'studium_jahr',           label: 'Studium — Jahr',                                      typ: 'text' },
         { id: 'studium_frueher',        label: 'Studium — frühere Angabe',                            typ: 'text' },
-        { id: 'dok_abschluss',          label: 'Zeugnisse / Abschlüsse — Ablageort',                  typ: 'text', beispiel: 'Ordner „Zeugnisse", Aktenschrank Schlafzimmer' },
+        { id: 'dok_abschluss', sensibel: true,          label: 'Zeugnisse / Abschlüsse — Ablageort',                  typ: 'text', beispiel: 'Ordner „Zeugnisse", Aktenschrank Schlafzimmer' },
         { id: 'beruf',                  label: 'Beruf / Tätigkeit',                                   typ: 'text', beispiel: 'Volkswirtin, Bayerische Landesbank',
           hint: 'Aktueller oder früherer Hauptberuf. Wichtig für Biografie und für Rentenansprüche, Betriebsrenten oder Versorgungswerks-Leistungen.' },
         { id: 'arbeitgeber',            label: 'Arbeitgeber',                                         typ: 'ref', entitaet: 'institution' },
@@ -1892,10 +1903,10 @@ const SEKTOREN = Object.freeze([
           hint: 'Behörden verlangen diesen als Beleg — die Angabe hilft Angehörigen und Ihnen beim schnellen Auffinden.' },
         { id: 'qualifikationen',        label: 'Qualifikationen',                                     typ: 'text', beispiel: 'Bilanzbuchhalterin (IHK), Erste-Hilfe-Trainerin' },
         { id: 'ehrenamt', sensibel: true,               label: 'Ehrenamt',                                            typ: 'text', beispiel: 'Vorstand Tafel München, seit 2018' },
-        { id: 'zeugnis_schule_ort',     label: 'Schulzeugnisse (Ablageort)',                          typ: 'text', beispiel: 'Ordner „Zeugnisse Schule", Aktenschrank' },
-        { id: 'zeugnis_ausbildung_ort', label: 'Ausbildungszeugnis (Ablageort)',                      typ: 'text', beispiel: 'Mappe „Ausbildung", oberer Bereich Schrank' },
-        { id: 'zeugnis_studium_ort',    label: 'Hochschulzeugnis (Ablageort)',                        typ: 'text', beispiel: 'Mappe „Studium", Aktenschrank Schlafzimmer' },
-        { id: 'zeugnis_arbeit_ort',     label: 'Arbeitszeugnis (Ablageort)',                          typ: 'text', beispiel: 'Ordner „Berufslaufbahn", Aktenschrank' },
+        { id: 'zeugnis_schule_ort', sensibel: true,     label: 'Schulzeugnisse (Ablageort)',                          typ: 'text', beispiel: 'Ordner „Zeugnisse Schule", Aktenschrank' },
+        { id: 'zeugnis_ausbildung_ort', sensibel: true, label: 'Ausbildungszeugnis (Ablageort)',                      typ: 'text', beispiel: 'Mappe „Ausbildung", oberer Bereich Schrank' },
+        { id: 'zeugnis_studium_ort', sensibel: true,    label: 'Hochschulzeugnis (Ablageort)',                        typ: 'text', beispiel: 'Mappe „Studium", Aktenschrank Schlafzimmer' },
+        { id: 'zeugnis_arbeit_ort', sensibel: true,     label: 'Arbeitszeugnis (Ablageort)',                          typ: 'text', beispiel: 'Ordner „Berufslaufbahn", Aktenschrank' },
       ] },
     ] },
   { id: 'sozialversicherung',label: 'Sozialversicherung',   format: SEKTOR_FORMATE.W3C_VC,     icon: 'shield',
@@ -2395,7 +2406,7 @@ const SEKTOREN = Object.freeze([
           { id: 'pflegewuensche_alltag', sensibel: true,      label: 'Alltag & Aktivitäten',              typ: 'textarea', beispiel: 'morgens Radio; nachmittags Gartenspaziergang wenn möglich' },
           { id: 'pflegewuensche_sonstiges', sensibel: true,   label: 'Sonstige Wünsche & Hinweise',       typ: 'textarea', beispiel: 'religiöse Begleitung erwünscht; meine Brille immer in Reichweite' },
           { id: 'palliativ_wunsch',           label: 'Palliativversorgung & Sterbebegleitung', typ: 'textarea', beispiel: 'zuhause sterben; Palliativteam einbeziehen' },
-          { id: 'hilfsmittel', sensibel: true,                label: 'Vorhandene Hilfsmittel',            typ: 'text', ebene: 'modul', beispiel: 'Rollator (zuhause), Hörgerät beidseitig' },
+          { id: 'hilfsmittel', sensibel: true,                label: 'Hilfsmittel (z. B. Rollator, Hörgerät, Rollstuhl)',            typ: 'text', ebene: 'modul', beispiel: 'Rollator (zuhause), Hörgerät beidseitig' },
           // Nachlese F8/M1 Zug 2 (11.08.2026): Ziffer 2.7 der Patientenverfügung, ggf.-Klausel.
           { id: 'pv_vollmacht_besprochen', label: 'Inhalt der Patientenverfügung mit der bevollmächtigten Person besprochen?', typ: 'auswahl',
             optionen: [ { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
@@ -2465,6 +2476,11 @@ const SEKTOREN = Object.freeze([
             { id: 'datum',        label: 'Datum (Antrag/Beginn)',  typ: 'datum' },
             { id: 'gueltig_bis',  label: 'Gültig bis / Frist',     typ: 'datum' },
             { id: 'betrag',       label: 'Betrag',                 typ: 'text', beispiel: '1.240' },
+            // CW-CAROLA-26 (24.08.2026, Paritaet zum Kern) — s. meine-menschen.unterhalt.richtung.
+            { id: 'richtung',  label: 'Richtung',    typ: 'auswahl', optionen: [
+                { wert: 'zahle',   label: 'ich zahle' },
+                { wert: 'bekomme', label: 'ich bekomme' },
+              ] },
             { id: 'betrag_waehrung', label: 'Währung', typ: 'auswahl',
               optionen: [
                 { wert: 'EUR', label: 'EUR' }, { wert: 'USD', label: 'USD' },
@@ -2566,7 +2582,7 @@ const SEKTOREN = Object.freeze([
             ] },
           { id: 'kaution', sensibel: true,          label: 'Mietkaution — Bank & Betrag',      typ: 'text', beispiel: 'Sparkasse München, 3.000 EUR auf Sperrkonto',
             hint: 'Die Kaution liegt oft auf einem separaten Sperrkonto bei einer Bank. Nach Kündigung muss sie aktiv zurückgefordert werden.' },
-          { id: 'mietvertrag_ort',  label: 'Mietvertrag — Ablageort',          typ: 'text', beispiel: 'Ordner „Wohnen", Aktenschrank Schlafzimmer',
+          { id: 'mietvertrag_ort', sensibel: true,  label: 'Mietvertrag — Ablageort',          typ: 'text', beispiel: 'Ordner „Wohnen", Aktenschrank Schlafzimmer',
             hint: 'Auch bei mündlichen Vereinbarungen: hier vermerken, ob und wo etwas Schriftliches existiert.' },
           { id: 'mietvertrag_befristet_bis', marken: ['laeuftAb'], typ: 'datum', label: 'Mietvertrag — befristet bis (falls Zeitmietvertrag)' },
           { id: 'wohnsituation_bem', sensibel: true,label: 'Besondere Wohnsituation',          typ: 'textarea', beispiel: 'barrierefrei umgebaut; Treppenlift seit 2022' },
@@ -2586,7 +2602,6 @@ const SEKTOREN = Object.freeze([
              zeigte an dieser Stelle einen leeren Abschnitt — von einer Institution als „nichts
              hinterlegt" zu lesen. Der Fold _foldSlotListenLesen ueberfuehrt Alt-Depots. */
           { id: 'weitere_wohnungen', label: 'Weitere Wohnungen', typ: 'liste',
-            hint: 'Jede weitere Wohnung als eigener Eintrag.',
             unterFelder: [
               { id: 'strasse',         label: 'Straße & Hausnummer',          typ: 'text', beispiel: 'Seestraße 12' },
               { id: 'plz_ort',         label: 'PLZ & Ort',                    typ: 'text', beispiel: '83209 Prien am Chiemsee' },
@@ -2600,7 +2615,7 @@ const SEKTOREN = Object.freeze([
               { id: 'vermieter_email', label: 'Vermieter — E-Mail',           typ: 'text', eingabeTyp: 'email', beispiel: 'vermieter-chiemsee@example.de' },
               { id: 'miete', sensibel: true,           label: 'Monatliche Miete / HV-Kosten', typ: 'text', beispiel: '650 EUR warm' },
               { id: 'kaution', sensibel: true,         label: 'Mietkaution — Bank & Betrag',  typ: 'text', beispiel: 'Sparkasse Rosenheim, 1.500 EUR' },
-              { id: 'mietvertrag_ort', label: 'Mietvertrag — Ablageort',      typ: 'text', beispiel: 'Ordner „Zweitwohnung", Aktenschrank' },
+              { id: 'mietvertrag_ort', sensibel: true, label: 'Mietvertrag — Ablageort',      typ: 'text', beispiel: 'Ordner „Zweitwohnung", Aktenschrank' },
               { id: 'mietvertrag_befristet_bis', marken: ['laeuftAb'], typ: 'datum', label: 'Mietvertrag — befristet bis (falls Zeitmietvertrag)' },
               { id: 'wohnsituation_bem', label: 'Besondere Wohnsituation',    typ: 'textarea', beispiel: 'Ferienwohnung; Mai–Oktober selbst genutzt' },
             ] },
@@ -2619,11 +2634,11 @@ const SEKTOREN = Object.freeze([
         // F6 Zug 3 (10.08.2026) — spiegelbildlich zum Kern (Paritäts-Wächter).
         { id: 'ks_bedarf_personen', label: 'Personenzahl für die Vorratsrechnung', typ: 'text' },
         { id: 'ks_wasser_liter',      label: 'Trinkwasser-Vorrat — Menge',        typ: 'text', beispiel: '20 Liter' },
-        { id: 'ks_wasser_ort',        label: 'Trinkwasser-Vorrat — Ablageort',    typ: 'text', beispiel: 'Keller, Regal links' },
+        { id: 'ks_wasser_ort', sensibel: true, label: 'Trinkwasser-Vorrat — Ablageort',    typ: 'text', beispiel: 'Keller, Regal links' },
         { id: 'ks_wasser_haltbar', marken: ['laeuftAb'],    label: 'Trinkwasser-Vorrat — Haltbarkeit prüfen bis',  typ: 'datum' },
         { id: 'ks_wasser_haltbar_frueher', label: 'Trinkwasser-Vorrat — frühere Angabe zur Haltbarkeit', typ: 'text' },
         { id: 'ks_lebensmittel_was',  label: 'Vorräte — was ist eingelagert',     typ: 'textarea', beispiel: 'Reis, Nudeln, Konserven, Trockenobst' },
-        { id: 'ks_lebensmittel_ort',  label: 'Vorräte — Ablageort',               typ: 'text', beispiel: 'Speisekammer' },
+        { id: 'ks_lebensmittel_ort', sensibel: true, label: 'Vorräte — Ablageort',               typ: 'text', beispiel: 'Speisekammer' },
         { id: 'ks_lebensmittel_haltbar', marken: ['laeuftAb'], label: 'Vorräte — Haltbarkeit prüfen bis', typ: 'datum' },
         { id: 'ks_lebensmittel_haltbar_frueher', label: 'Vorräte — frühere Angabe zur Haltbarkeit', typ: 'text' },
         { id: 'ks_taschenlampe',      label: 'Taschenlampe',                     typ: 'text', beispiel: 'vorhanden, Flur-Schrank' },
@@ -2632,13 +2647,21 @@ const SEKTOREN = Object.freeze([
         { id: 'ks_radio',             label: 'Kurbelradio / Batterieradio',      typ: 'text', beispiel: 'Kurbelradio, Abstellkammer' },
         { id: 'ks_powerbank',         label: 'Powerbank',                        typ: 'text', beispiel: 'geladen, Schreibtischschublade' },
         { id: 'ks_heizung_notfall',   label: 'Heizmöglichkeit im Notfall',       typ: 'text', beispiel: 'Campingkocher + Gaskartuschen, Balkonschrank' },
-        { id: 'ks_erstehilfe_ort',    label: 'Erste-Hilfe-Set — Ablageort',       typ: 'text', beispiel: 'Bad, Spiegelschrank' },
+        { id: 'ks_erstehilfe_ort', sensibel: true, label: 'Erste-Hilfe-Set — Ablageort',       typ: 'text', beispiel: 'Bad, Spiegelschrank' },
         { id: 'ks_erstehilfe_datum',  label: 'Erste-Hilfe-Set — zuletzt geprüft', typ: 'datum' },
         { id: 'ks_medikamente_vorrat', sensibel: true, label: 'Medikamenten-Vorrat',             typ: 'textarea', beispiel: 'Schmerzmittel, Fieberzäpfchen, Blutdruckmittel für 2 Wochen' },
         { id: 'ks_rucksack_vorhanden', label: 'Notfallrucksack vorhanden?',      typ: 'auswahl', optionen: [
           { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
-        { id: 'ks_rucksack_ort',      label: 'Notfallrucksack — Ablageort',      typ: 'text', beispiel: 'Flur, neben der Wohnungstür' },
+        { id: 'ks_rucksack_ort', sensibel: true, label: 'Notfallrucksack — Ablageort',      typ: 'text', beispiel: 'Flur, neben der Wohnungstür' },
         { id: 'ks_rucksack_liste',    label: 'Notfallrucksack — Inhalt',         typ: 'textarea', beispiel: 'Ausweise-Kopien, Bargeld, Powerbank, Erste-Hilfe, Medikamente' },
+        { id: 'ks_dokumente_vorhanden', label: 'Mappe mit wichtigen Dokumenten vorhanden?', typ: 'auswahl', optionen: [
+          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+        { id: 'ks_dokumente_ort', sensibel: true, label: 'Dokumenten-Mappe — Ablageort',    typ: 'text', beispiel: 'Aktenschrank, oberes Fach' },
+        { id: 'ks_bargeld_vorhanden', label: 'Bargeld-Reserve vorhanden?',       typ: 'auswahl', optionen: [
+          { wert: 'ja', label: 'ja' }, { wert: 'nein', label: 'nein' } ] },
+        { id: 'ks_bargeld_ort', sensibel: true, label: 'Bargeld-Reserve — Ablageort',        typ: 'text', beispiel: 'Nicht im Portemonnaie — separates Fach' },
+        { id: 'ks_hygiene_liste',     label: 'Hygiene-Vorrat — was ist eingelagert', typ: 'textarea', beispiel: 'Zahnpasta, Seife, Toilettenpapier, Desinfektionsmittel' },
+        { id: 'ks_hygiene_ort', sensibel: true, label: 'Hygiene-Vorrat — Ablageort',          typ: 'text', beispiel: 'Badschrank, unteres Fach' },
         { id: 'ks_sammelplatz', sensibel: true,       label: 'Sammelplatz (Familie/Nachbarschaft)', typ: 'text', beispiel: 'Spielplatz Ecke Bergstraße' },
         { id: 'ks_fluchtweg', sensibel: true,         label: 'Fluchtweg aus der Wohnung',        typ: 'textarea', beispiel: 'Treppenhaus, Notausgang Hinterhof bei Blockade' },
         { id: 'ks_ausweichort_2',     label: 'Ausweichort (2. Stufe)',           typ: 'text', beispiel: 'Wohnung der Schwester, Musterstraße 5' },
@@ -2654,11 +2677,11 @@ const SEKTOREN = Object.freeze([
       { id: 'erinnerungen-briefe', label: 'Erinnerungsstücke & Briefe',
         hint: 'Diese Angaben sind Teil Ihrer Lebensgeschichte.',
         felder: [
-          { id: 'fotos_physisch',           label: 'Physische Fotos (Ablageort)',                       typ: 'text', beispiel: 'Fotoalben im Bücherregal, Kiste Dachboden',
+          { id: 'fotos_physisch', sensibel: true,           label: 'Physische Fotos (Ablageort)',                       typ: 'text', beispiel: 'Fotoalben im Bücherregal, Kiste Dachboden',
             hint: 'Wo liegen Fotoalben, alte Briefe, Tagebücher, Kinderzeichnungen? Diese Dinge sind für Angehörige oft unbezahlbar.' },
-          { id: 'fotos_digital',            label: 'Digitale Fotos (Ablageort)',                        typ: 'text', beispiel: 'iCloud-Fotos, Festplatte „Fotos" im Schreibtisch',
+          { id: 'fotos_digital', sensibel: true,            label: 'Digitale Fotos (Ablageort)',                        typ: 'text', beispiel: 'iCloud-Fotos, Festplatte „Fotos" im Schreibtisch',
             hint: 'Wer hat Zugang zu diesem Dienst? Zugangsdaten im Passwort-Manager.' },
-          { id: 'erinnerungen_sonstiges',   label: 'Weitere Erinnerungsstücke — Ablageort',             typ: 'text', beispiel: 'Tagebücher im Nachttisch; Kinderzeichnungen im Karton' },
+          { id: 'erinnerungen_sonstiges', sensibel: true,   label: 'Weitere Erinnerungsstücke — Ablageort',             typ: 'text', beispiel: 'Tagebücher im Nachttisch; Kinderzeichnungen im Karton' },
           { id: 'gegenstaende_wuensche',    label: 'Persönliche Gegenstände & Wünsche',                 typ: 'textarea', beispiel: 'Großmutters Ring soll an Tochter Anna; Klavier an Enkel Tim' },
           { id: 'haushalt_spenden',         label: 'Haushalt, Kleider, Möbel — Wünsche',                typ: 'textarea', beispiel: 'gut Erhaltenes an Caritas; Bücher an die Stadtbibliothek' },
           { id: 'abhaengige_personen', sensibel: true,      label: 'Wer ist auf mich angewiesen?',                       typ: 'liste',
@@ -2677,7 +2700,7 @@ const SEKTOREN = Object.freeze([
           { id: 'brief_krankenhaus',        label: 'Brief für Szenario „Krankenhaus"',                   typ: 'textarea', beispiel: 'Bitte informieren Sie meinen Sohn unter 0151 … Ich vertraue Ihnen.' },
           { id: 'brief_pflegeheim',         label: 'Brief für Szenario „Pflegeheim-Aufnahme"',           typ: 'textarea', beispiel: 'Ich mag morgens Kaffee mit Milch, kein Zucker. Mein Lieblingslied: …' },
           { id: 'brief_todesfall',          label: 'Brief für Szenario „Todesfall"',                     typ: 'textarea', beispiel: 'Bitte feiert mein Leben — nicht trauert um den Tod. Folgendes ist mir wichtig …' },
-          { id: 'briefe_ablage',            label: 'Handgeschriebene Briefe — Ablageort',                typ: 'text', beispiel: 'Schreibtisch, oberste Schublade rechts' },
+          { id: 'briefe_ablage', sensibel: true,            label: 'Handgeschriebene Briefe — Ablageort',                typ: 'text', beispiel: 'Schreibtisch, oberste Schublade rechts' },
           /* Paritaets-Nachtrag 23.07.2026 — Slot→Liste, aus dem Kern gespiegelt.
              Hier standen die Flachfelder: brief_1, brief_2, brief_3.
              Der Kern fuehrt sie seit Schema 33-37 als EINE Liste; die Lese-App kannte sie nicht und
@@ -2706,7 +2729,7 @@ const SEKTOREN = Object.freeze([
         { id: 'bestattung_unternehmen',    label: 'Bestattungsunternehmen',               typ: 'text', beispiel: 'Bestattung Sommer, München',
           hint: 'Falls Sie bereits ein Unternehmen beauftragt haben.' },
         { id: 'bestattung_ort',            label: 'Gewünschter Ort / Grab / Urnenstätte / Friedhof', typ: 'text', beispiel: 'Familiengrab Waldfriedhof München' },
-        { id: 'bestattung_vorsorge_nachweis', label: 'Vorsorgevertrag — Ablageort',      typ: 'text', beispiel: 'Ordner „Vorsorge", Wohnzimmerschrank',
+        { id: 'bestattung_vorsorge_nachweis', sensibel: true, label: 'Vorsorgevertrag — Ablageort',      typ: 'text', beispiel: 'Ordner „Vorsorge", Wohnzimmerschrank',
           hint: 'Wo liegt der Vertrag, falls bereits abgeschlossen?' },
       ] },
     ] },
@@ -3575,7 +3598,13 @@ function listenEintragZusammenfassung(feld, eintrag, sektorId) {
       if (namen.length) teile.push(namen.join(', '));
     } else if (uf.typ === 'auswahl') {
       const opt = (Array.isArray(uf.optionen) ? uf.optionen : []).find(o => o.wert === w);
-      teile.push((opt && opt.label) || String(w));
+      const angezeigt = (opt && opt.label) || String(w);
+      // Krisenvorsorge-Auftrag Zug 3a (24.08.2026, CW-CAROLA-13): ein freistehendes "ja"/"nein"
+      // ohne Feldbezug ist nicht zuordenbar. NICHT weglassen -- diese Sicht ist fuer die
+      // Lese-App die EINZIGE (s. Dateikopf-Begruendung oben), darum dem Feld zuordnen statt
+      // zu kuerzen. Kern-seitig dieselbe Korrektur (Paritaet).
+      teile.push((angezeigt === 'ja' || angezeigt === 'nein') && uf.label
+        ? uf.label + ': ' + angezeigt : angezeigt);
     } else {
       teile.push(String(w));
     }
@@ -3736,7 +3765,11 @@ function situationModell(sitOrId) {
               : (werte.length === 1 ? werte[0] : werte.map(v => _wertTextMenschlich(uf, v)).join(' · '));
         } else {
           qF = qS && qS.sektionen.flatMap(s2 => s2.felder || []).find(f => f.id === eintrag.feld);
-          roh = ((data && data.sektoren[eintrag.quelle]) || {})[eintrag.feld];
+          // A527-Nachtrag (27.08.2026): dieselbe Quelle wie sektorHTML — _sektorDatenFuerLesen
+          // speist 'meine-menschen'.menschen aus dem echten Register (data.menschen[]), nicht aus
+          // dem seit U2-ADR-022 toten Sektor-Feld. Ohne das zeigte "Einfach so" & Co. "nicht
+          // hinterlegt", obwohl echte Personen im Register standen.
+          roh = _sektorDatenFuerLesen(eintrag.quelle)[eintrag.feld];
         }
         // Befund 2 (12./13.08.2026), wortgleicher Spiegel des Kerns (crossRefFeldUndRoh-Aufrufer,
         // U2-ADR „Die Sensibel-Architektur" Zug 2): ein ECHTES Sektorfeld zieht sonst ungeprüft in
@@ -4607,7 +4640,260 @@ function vorlagenMarkeHTML(felder) {
   return '<p class="vorlage-marke vorlage-marke--' + klasse + '">' + escapeHTML(text) + '</p>';
 }
 
+/* ── A528 (27.08.2026) — Siebtes-Register-Interpreter, gespiegelt vom Kern ──────────────────
+   Die Lese-App kannte logikModul (das Siebtes-Register-Konzept aus dem Kern, deklarative
+   Baukasten-Bundles wie der Erbschein-Vorbereitungsauszug) überhaupt nicht — 0 Treffer für
+   logikModul/EINLASS_REGISTER. Anders als bei A527 (Meine Menschen) gab es hier noch nie eine
+   "generiertes Dokument"-Ansicht in der Lese-App, für KEIN Modul (auch PV/Vollmacht/Betreuung/
+   KI nicht) — sie zeigt sonst ausschließlich rohe Feldwerte.
+
+   GENERISCH gebaut, nicht Erbschein-spezifisch (Carola, Siebtes-Register-Auftrag: "keine
+   Verdrahtung, nirgends, sondern ein Baukasten von Elementen" — ein künftiges zweites
+   logikModul soll automatisch funktionieren). bedingungAuswerten/formatSchemaAnwenden/
+   _codeListeLabelLesen/_datenPrimitivLesen/datenSchemaLesen/logikModulPruefen sind
+   byte-gleiche Spiegel der Kern-Funktionen (vivodepot.html) — dieselben geschlossenen Enums,
+   derselbe "Baukasten-Prinzip"-Rückfall (unbekannter typ → sicherer Leerwert im Interpreter,
+   aber ZURÜCKGEWIESEN beim Einlass/hier beim Lesen, nicht still ignoriert).
+
+   NUR DREI Blocktypen: immer/crossRef/frageAntwortOderLuecke — die einzigen der ~15 Kern-
+   MODUL_BLOCK_HANDLER-Typen, die OHNE eine vom Bundle mitgebrachte Funktion auskommen (reines
+   JSON, U2-ADR-181). Ein Bundle mit einem anderen (im Kern gültigen, hier nicht implementierten)
+   Blocktyp wird hier — ANDERS als im Kern — zurückgewiesen (geschlossene Lese-App-eigene
+   Liste, LOGIK_BLOCK_TYPEN_LESEN) statt still leer zu rendern: dieselbe "Baukasten, aber
+   Einlass ist scharf"-Haltung wie beim Kern, nur an der Lese-Grenze statt der Schreib-Grenze.
+
+   SICHERHEITSKRITISCH: jedes Datenlesen-Primitiv prüft `feldIstSensibel`/`unterfeldIstSensibel`
+   VOR dem Lesen (Befund 2, 12./13.08.2026) — ein Bundle darf nie ein sensibles Feld an der
+   Sensibel-Zurückhaltung vorbeischmuggeln, nur weil es über ein Bundle statt den generischen
+   Feld-Katalog gelesen wird (tests/a528-lese-app-logikmodul-erbschein.test.js, eigener
+   Rot-Beweis). */
+const LOGIK_DATEN_TYPEN_LESEN = Object.freeze(['feld', 'verbinden', 'listenfeld', 'personenNamen', 'listenfeldPersonenNamen']);
+const LOGIK_BEDINGUNG_TYPEN_LESEN = Object.freeze(['feldGleich', 'feldIn', 'listeEnthaeltTyp', 'und', 'oder', 'nicht']);
+const LOGIK_FORMAT_TYPEN_LESEN = Object.freeze(['liste', 'codeListeLabel']);
+const LOGIK_BLOCK_TYPEN_LESEN = Object.freeze(['immer', 'crossRef', 'frageAntwortOderLuecke']);
+function _logikBedingungGueltigLesen(bed, tiefe) {
+  if (tiefe > 6) return false;
+  if (!bed || typeof bed !== 'object' || LOGIK_BEDINGUNG_TYPEN_LESEN.indexOf(bed.typ) < 0) return false;
+  if (bed.typ === 'und' || bed.typ === 'oder') {
+    return Array.isArray(bed.bedingungen) && bed.bedingungen.length > 0
+      && bed.bedingungen.every((b) => _logikBedingungGueltigLesen(b, tiefe + 1));
+  }
+  if (bed.typ === 'nicht') return _logikBedingungGueltigLesen(bed.bedingung, tiefe + 1);
+  if (bed.typ === 'feldGleich') return typeof bed.feld === 'string' && !!bed.feld;
+  if (bed.typ === 'feldIn') return typeof bed.feld === 'string' && !!bed.feld && Array.isArray(bed.werte);
+  if (bed.typ === 'listeEnthaeltTyp') return typeof bed.feld === 'string' && !!bed.feld && typeof bed.wertFeld === 'string' && !!bed.wertFeld;
+  return false;
+}
+// Struktur-Validierung — byte-gleicher Spiegel von logikModulPruefen (vivodepot.html), nur
+// dokAusgabe schlanker (kein knopfAttr/dateiBasis/toolbarHinweisHTML — die Lese-App hat keinen
+// Klickweg zum Öffnen/Herunterladen, sie rendert den Auszug direkt in den Sektor).
+function logikModulPruefenLesen(modul) {
+  if (!modul || typeof modul !== 'object') return { gueltig: false };
+  // Unbekannte Top-Level-Schlüssel sind harmlos (werden schlicht nicht gelesen) — anders als ein
+  // unbekannter typ in datenSchema/abschnitte/bedingung/format, der das ganze Bundle zurückweist.
+  if (typeof modul.id !== 'string' || !modul.id.trim()) return { gueltig: false };
+  if (typeof modul.titel !== 'string' || !modul.titel.trim()) return { gueltig: false };
+  if (typeof modul.sektor !== 'string' || !SEKTOR_BY_ID[modul.sektor]) return { gueltig: false };
+  if (typeof modul.herkunft !== 'string' || !modul.herkunft.trim()) return { gueltig: false };
+  const ds = modul.datenSchema;
+  if (!ds || typeof ds !== 'object' || Array.isArray(ds)) return { gueltig: false };
+  for (const def of Object.values(ds)) {
+    if (!def || typeof def !== 'object' || LOGIK_DATEN_TYPEN_LESEN.indexOf(def.typ) < 0) return { gueltig: false };
+    if (def.typ === 'verbinden') {
+      if (!Array.isArray(def.teile) || !def.teile.length
+        || def.teile.some((t) => !t || !SEKTOR_BY_ID[t.sektor] || typeof t.feld !== 'string')) return { gueltig: false };
+    } else if (!SEKTOR_BY_ID[def.sektor] || typeof def.feld !== 'string') {
+      return { gueltig: false };
+    }
+    if ((def.typ === 'listenfeld' || def.typ === 'listenfeldPersonenNamen')
+      && (!def.diskriminante || typeof def.diskriminante.feld !== 'string' || typeof def.diskriminante.wert !== 'string')) {
+      return { gueltig: false };
+    }
+  }
+  if (!Array.isArray(modul.abschnitte) || !modul.abschnitte.length) return { gueltig: false };
+  for (const abschnitt of modul.abschnitte) {
+    if (!abschnitt || !Array.isArray(abschnitt.bloecke)) return { gueltig: false };
+    for (const blk of abschnitt.bloecke) {
+      if (!blk || LOGIK_BLOCK_TYPEN_LESEN.indexOf(blk.typ) < 0) return { gueltig: false };
+      if (blk.bedingung && !_logikBedingungGueltigLesen(blk.bedingung, 0)) return { gueltig: false };
+      if (blk.format && LOGIK_FORMAT_TYPEN_LESEN.indexOf(blk.format.typ) < 0) return { gueltig: false };
+    }
+  }
+  const da = modul.dokAusgabe;
+  if (!da || typeof da !== 'object' || typeof da.h1 !== 'string' || !da.h1.trim()) return { gueltig: false };
+  return { gueltig: true, logik: {
+    id: modul.id.trim(), titel: modul.titel.trim(), sektor: modul.sektor,
+    datenSchema: ds, abschnitte: modul.abschnitte,
+    dokAusgabe: { h1: da.h1.trim(), herkunftText: (typeof da.herkunftText === 'string' && da.herkunftText) || '' },
+  } };
+}
+function bedingungAuswertenLesen(bed, d) {
+  if (!bed || typeof bed !== 'object') return false;
+  switch (bed.typ) {
+    case 'feldGleich': return d[bed.feld] === bed.wert;
+    case 'feldIn': return Array.isArray(bed.werte) && bed.werte.includes(d[bed.feld]);
+    case 'listeEnthaeltTyp': {
+      const liste = Array.isArray(d[bed.feld]) ? d[bed.feld] : [];
+      return liste.some((r) => r && r[bed.wertFeld] === bed.wert);
+    }
+    case 'und': return Array.isArray(bed.bedingungen) && bed.bedingungen.every((b) => bedingungAuswertenLesen(b, d));
+    case 'oder': return Array.isArray(bed.bedingungen) && bed.bedingungen.some((b) => bedingungAuswertenLesen(b, d));
+    case 'nicht': return !bedingungAuswertenLesen(bed.bedingung, d);
+    default: return false;
+  }
+}
+function formatSchemaAnwendenLesen(schema, wert) {
+  if (!schema || typeof schema !== 'object') return String(wert);
+  switch (schema.typ) {
+    case 'liste': return Array.isArray(wert) ? wert.join(schema.trenner || ', ') : String(wert);
+    case 'codeListeLabel': return (schema.praefix || '') + _codeListeLabelLesen(schema.sektor, schema.feld, schema.unterfeld || null, wert);
+    default: return String(wert);
+  }
+}
+// Label eines Auswahl-Werts aus der kanonischen Felddefinition — byte-gleicher Spiegel des
+// Kerns (dort umbenannt von `_erbscheinFeldLabel`, war schon generisch).
+function _codeListeLabelLesen(sektorId, feldId, unterfeldId, wert) {
+  try {
+    const sek = SEKTOR_BY_ID[sektorId];
+    for (const sektion of (sek.sektionen || [])) {
+      const feld = (sektion.felder || []).find((f) => f.id === feldId);
+      if (!feld) continue;
+      const uf = unterfeldId ? (feld.unterFelder || []).find((u) => u.id === unterfeldId) : feld;
+      const o = uf && (uf.optionen || []).find((x) => x.wert === wert);
+      if (o) return o.label || wert;
+    }
+  } catch (e) { /* fällt auf den Rohwert zurück */ }
+  return wert;
+}
+function _pvRefmNamenLesen(arr) { return (Array.isArray(arr) ? arr : []).map((e) => personName(e)).filter(Boolean); }
+function _feldDefLesen(sektorId, feldId) {
+  const sek = SEKTOR_BY_ID[sektorId];
+  return (sek ? sek.sektionen : []).flatMap((s) => s.felder || []).find((f) => f.id === feldId);
+}
+// Datenlesen-Primitiv — SICHERHEITSKRITISCH: prüft feldIstSensibel/unterfeldIstSensibel VOR
+// jedem Lesen (anders als der Kern, der das erst beim Export tut — die Lese-App hat keine
+// "eigene Sicht der Bürgerin", jede Sicht hier ist eine dritte Person, s. Befund 2). Ein
+// sensibles Quellfeld liefert `undefined` — dieselbe Wirkung wie "nie eingetragen".
+function _datenPrimitivLesenLesen(def) {
+  switch (def.typ) {
+    case 'feld': {
+      const feld = _feldDefLesen(def.sektor, def.feld);
+      if (feld && feldIstSensibel(feld, def.sektor)) return undefined;
+      return _sektorDatenFuerLesen(def.sektor)[def.feld];
+    }
+    case 'verbinden': {
+      const teile = (def.teile || []).map((t) => {
+        const feld = _feldDefLesen(t.sektor, t.feld);
+        if (feld && feldIstSensibel(feld, t.sektor)) return null;
+        return _sektorDatenFuerLesen(t.sektor)[t.feld] || null;
+      });
+      const zusammen = teile.filter(Boolean).join(def.trenner || ', ');
+      return zusammen || undefined;
+    }
+    case 'listenfeld': {
+      const liste = Array.isArray(_sektorDatenFuerLesen(def.sektor)[def.feld]) ? _sektorDatenFuerLesen(def.sektor)[def.feld] : [];
+      const treffer = liste.find((r) => r && r[def.diskriminante.feld] === def.diskriminante.wert);
+      if (!treffer) return undefined;
+      const uf = _listenUnterfeldDef(def.sektor, def.feld, def.unterfeld);
+      if (uf && unterfeldIstSensibel(def.sektor, def.feld, treffer, uf)) return undefined;
+      return treffer[def.unterfeld];
+    }
+    case 'personenNamen': {
+      const feld = _feldDefLesen(def.sektor, def.feld);
+      if (feld && feldIstSensibel(feld, def.sektor)) return [];
+      const liste = Array.isArray(_sektorDatenFuerLesen(def.sektor)[def.feld]) ? _sektorDatenFuerLesen(def.sektor)[def.feld] : [];
+      if (def.unterfeld) return liste.map((e) => e && e[def.unterfeld] && personName(e[def.unterfeld])).filter(Boolean);
+      return _pvRefmNamenLesen(liste);
+    }
+    case 'listenfeldPersonenNamen': {
+      const liste = Array.isArray(_sektorDatenFuerLesen(def.sektor)[def.feld]) ? _sektorDatenFuerLesen(def.sektor)[def.feld] : [];
+      const treffer = liste.find((r) => r && r[def.diskriminante.feld] === def.diskriminante.wert);
+      if (!treffer) return [];
+      const uf = _listenUnterfeldDef(def.sektor, def.feld, def.unterfeld);
+      if (uf && unterfeldIstSensibel(def.sektor, def.feld, treffer, uf)) return [];
+      return _pvRefmNamenLesen(treffer[def.unterfeld]);
+    }
+    default: return undefined;
+  }
+}
+function datenSchemaLesenLesen(schema) {
+  const out = {};
+  for (const [key, def] of Object.entries(schema || {})) {
+    const wert = _datenPrimitivLesenLesen(def);
+    if (Array.isArray(wert) || (wert !== undefined && wert !== '')) out[key] = wert;
+  }
+  return out;
+}
+const LOGIK_BLOCK_HANDLER_LESEN = {
+  immer(blk) { return (blk.texte || []).slice(); },
+  crossRef(blk, d) { return bedingungAuswertenLesen(blk.bedingung, d) ? [blk.text] : []; },
+  frageAntwortOderLuecke(blk, d) {
+    const w = d[blk.feldId];
+    const leer = w == null || w === '' || (Array.isArray(w) && w.length === 0);
+    const antwort = !leer
+      ? (blk.format ? formatSchemaAnwendenLesen(blk.format, w) : String(w))
+      : (blk.luecke || 'Lücke');
+    return { frage: blk.frage, antwort };
+  },
+};
+// Render aller eingelassenen logikModule, die zu diesem Sektor gehören — als eigene Sektion(en),
+// direkt an sektorHTML angedockt (additiv, wie _tplAbschnitte darunter). Zeilenform: "immer"/
+// "crossRef" als Fließtext-Absatz (kein Label/Wert-Paar sinnvoll — reiner erklärender Satz),
+// "frageAntwortOderLuecke" als Label/Wert-Zeile (dieselbe .feld-zeile-Form wie überall sonst in
+// der Lese-App — besser lesbar als der Kern-eigene Fließtext-Zusammenzug, der fürs Druckbild
+// gedacht ist, nicht für die Lese-App-Feldliste).
+function logikModulAbschnitteHTML(sektorId) {
+  const module = (data && Array.isArray(data.logikModule)) ? data.logikModule : [];
+  let html = '';
+  for (const roh of module) {
+    if (!roh || roh.sektor !== sektorId) continue;
+    const geprueft = logikModulPruefenLesen(roh);
+    if (!geprueft.gueltig) continue;
+    const logik = geprueft.logik;
+    const daten = datenSchemaLesenLesen(logik.datenSchema);
+    let koerper = '';
+    for (const abschnitt of logik.abschnitte) {
+      let abschnittHTML = '';
+      for (const blk of (abschnitt.bloecke || [])) {
+        const handler = LOGIK_BLOCK_HANDLER_LESEN[blk.typ];
+        if (!handler) continue;
+        const ergebnis = handler(blk, daten);
+        if (Array.isArray(ergebnis)) {
+          for (const zeile of ergebnis) abschnittHTML += '<p class="sektion-hint">' + escapeHTML(zeile) + '</p>';
+        } else if (ergebnis && ergebnis.frage) {
+          abschnittHTML += '<div class="feld-zeile"><div class="feld-label">' + escapeHTML(ergebnis.frage) + '</div>'
+            + '<div class="feld-wert">' + escapeHTML(ergebnis.antwort) + '</div></div>';
+        }
+      }
+      if (abschnittHTML) koerper += '<h3>' + escapeHTML(abschnitt.titel || '') + '</h3>' + abschnittHTML;
+    }
+    if (!koerper) continue;
+    html += '<div class="sektion"><h2 class="sektion-titel">' + escapeHTML(logik.dokAusgabe.h1) + '</h2>';
+    if (logik.dokAusgabe.herkunftText) html += '<p class="bereich-intro">' + escapeHTML(logik.dokAusgabe.herkunftText) + '</p>';
+    html += koerper + '</div>';
+  }
+  return html;
+}
+
 // Ein Bereich, alle Sektionen/Felder read-only.
+/* A527 (27.08.2026, sicherheitsrelevanter Fund): der Kern hat das Sektor-Listenfeld
+   `sektoren['meine-menschen'].menschen` bei der Personen-Vereinheitlichung abgeschafft
+   (U2-ADR-022) und rendert seither `data.menschen[]` direkt (menschenRegisterHTML,
+   vivodepot.html). Die Lese-App zog das nie mit — ihr Feldkatalog fragte weiterhin das
+   seit Monaten tote Sektor-Feld ab, das nie befüllt wurde. "Meine Menschen" zeigte darum
+   IMMER "nicht hinterlegt", unabhängig davon, wie viele Personen im Register standen.
+   Fix: für diesen einen Sektor wird `daten.menschen` aus dem echten Register gespeist,
+   statt aus dem toten Sektor-Feld — alles andere (Kinder-Liste etc.) bleibt unverändert
+   der generische Pfad. `nichtMitgeben:true` wird HIER gefiltert, nicht erst in der
+   Zusammenfassung: vollExportJSON filtert data.menschen nicht danach (geprüft, keine
+   Fundstelle) — ohne diesen Filter würde ausgerechnet die "nicht weitergeben"-Markierung
+   durch den Fix zum ersten Mal sichtbar. */
+function _sektorDatenFuerLesen(sektorId) {
+  const basis = (data && data.sektoren && data.sektoren[sektorId]) || {};
+  if (sektorId !== 'meine-menschen') return basis;
+  const register = (data && Array.isArray(data.menschen)) ? data.menschen : [];
+  return Object.assign({}, basis, { menschen: register.filter((m) => m && m.nichtMitgeben !== true) });
+}
 function sektorHTML(sektorId) {
   const sek = SEKTOR_BY_ID[sektorId];
   if (!sek) return '';
@@ -4617,7 +4903,7 @@ function sektorHTML(sektorId) {
     // zwei bereich-kopf gleichzeitig — sicher als einziges h1 der Sicht.
     '<div class="bereich-kopf"><h1>' + escapeHTML(sek.label) + '</h1></div>';
   if (sek.einfuehrungstext) html += '<p class="bereich-intro">' + escapeHTML(sek.einfuehrungstext) + '</p>';
-  const daten = (data && data.sektoren && data.sektoren[sektorId]) || {};
+  const daten = _sektorDatenFuerLesen(sektorId);
   for (const sektion of (sek.sektionen || [])) {
     const felder = sektion.felder || [];
     // Sektion auslassen, wenn kein Feld eingetragen ist (kompakte Lese-Sicht).
@@ -4652,8 +4938,13 @@ function sektorHTML(sektorId) {
     for (const d of sichtbar) html += feldZeileHTML(sektorId, _tplDefAlsFeld(d), daten[d.feldId]);
     html += '</div>';
   }
-  // Falls gar nichts eingetragen ist
-  if (!html.includes('feld-zeile')) html += '<p class="leer-bereich">' + escapeHTML(STRINGS.leerZustand) + '</p>';
+  // A528: eingelassene logikModule (Siebtes Register), die zu diesem Sektor gehören — additiv,
+  // wie die angedockten Template-Felder oben.
+  html += logikModulAbschnitteHTML(sektorId);
+  // Falls gar nichts eingetragen ist. Prüft auch sektion-hint (logikModul-"immer"/"crossRef"-
+  // Absätze tragen kein feld-zeile — ein Modul, das NUR aus solchen Absätzen besteht, darf nicht
+  // fälschlich zusätzlich als "nicht hinterlegt" gelten).
+  if (!html.includes('feld-zeile') && !html.includes('sektion-hint')) html += '<p class="leer-bereich">' + escapeHTML(STRINGS.leerZustand) + '</p>';
   html += '</div>';
   return html;
 }
@@ -5052,10 +5343,90 @@ function entladen() {
   try { if (typeof sessionHkdfKey !== 'undefined') sessionHkdfKey = null; } catch (e) {}
 }
 
+/* ── QR-Übergabe empfangen (b16-Wiedereinbau, Krisenvorsorge-Auftrag 24.08.2026, Zug 3c) ──
+   Gegenstück zu `empfaengerQrPayloadBauen`/`empfaengerQrHerausgeben` im Kern. Kein neuer
+   Renderer: nach dem Entschlüsseln läuft derselbe Pfad wie eine geöffnete Empfänger-Datei
+   (`leseModus = 'sub'`, `renderVollExport()`) — der Zuschnitt hat exakt dieselbe Form. */
+const EMPFAENGER_QR_HASH_PRAEFIX = 'eqr=';
+
+async function _empfaengerQrDeriveKey(passwort, saltBytes) {
+  const basis = await crypto.subtle.importKey('raw', new TextEncoder().encode(String(passwort)),
+    { name: 'PBKDF2' }, false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: saltBytes, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    basis, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+}
+
+function _empfaengerQrHashLesen() {
+  const roh = (typeof location !== 'undefined' && location.hash) ? location.hash.slice(1) : '';
+  if (!roh.startsWith(EMPFAENGER_QR_HASH_PRAEFIX)) return null;
+  return roh.slice(EMPFAENGER_QR_HASH_PRAEFIX.length);
+}
+
+async function _empfaengerQrEntschluesseln(payloadB64, passwort) {
+  const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+  const umschlag = JSON.parse(json);
+  const salt = base64ToBytes(umschlag.s);
+  const iv = base64ToBytes(umschlag.i);
+  const ct = base64ToBytes(umschlag.c);
+  const key = await _empfaengerQrDeriveKey(passwort, salt);
+  const klartext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return JSON.parse(new TextDecoder().decode(klartext));
+}
+
+function renderEmpfaengerQrPasswort(payloadB64) {
+  const wrap = el('app');
+  setModusFarbe('sub');
+  wrap.className = 'sheet-screen';
+  wrap.innerHTML =
+    '<div class="sheet" role="main">' +
+      '<h1>' + escapeHTML(STRINGS.pwTitel) + '</h1>' +
+      '<p class="hint">' + escapeHTML(STRINGS.kreiseQrEmpfangHint) + '</p>' +
+      '<form id="pw-form" autocomplete="off">' +
+        '<input type="password" id="pw-feld" class="pw-feld" placeholder="' + escapeHTML(STRINGS.pwPlaceholder) + '" autocomplete="off">' +
+        '<div class="pw-fehler" id="pw-fehler" hidden></div>' +
+        '<div class="sheet-aktionen">' +
+          '<button type="button" class="btn btn-sek" id="btn-zurueck">' + escapeHTML(STRINGS.zurueck) + '</button>' +
+          '<button type="submit" class="btn">' + escapeHTML(STRINGS.pwOeffnen) + '</button>' +
+        '</div>' +
+      '</form>' +
+    '</div>';
+  el('btn-zurueck').addEventListener('click', () => {
+    if (typeof history !== 'undefined' && history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+    renderWelcome();
+  });
+  const form = el('pw-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pw = el('pw-feld').value;       // nie loggen, nie in URL
+    const f = el('pw-fehler');
+    try {
+      const nutzlast = await _empfaengerQrEntschluesseln(payloadB64, pw);
+      if (typeof nutzlast.ablauf === 'number' && Date.now() > nutzlast.ablauf) {
+        f.textContent = STRINGS.kreiseQrAbgelaufen; f.hidden = false; el('pw-feld').value = '';
+        return;
+      }
+      el('pw-feld').value = '';
+      data = _foldVollmachtenLesen(nutzlast.inhalt);
+      leseModus = 'sub';
+      subInfo = { inhaberin: '', bezeichnung: nutzlast.kreis || '' };
+      renderVollExport();
+    } catch (err) {
+      f.textContent = STRINGS.pwFalsch;
+      f.hidden = false;
+      el('pw-feld').value = '';
+      el('pw-feld').focus();
+    }
+  });
+  const pf = el('pw-feld'); if (pf && pf.focus) pf.focus();
+}
+
 /* ── Boot ─────────────────────────────────────────────────────────────────── */
 function boot() {
   // Defensive: niemals persistente Speicher anfassen. (Es gibt im Code keinen Zugriff;
   // dieser Block dokumentiert die Invariante und ist ein no-op.)
+  const qrPayload = _empfaengerQrHashLesen();
+  if (qrPayload) { renderEmpfaengerQrPasswort(qrPayload); return; }
   renderWelcome();
 }
 if (typeof document !== 'undefined' && document.addEventListener) {
