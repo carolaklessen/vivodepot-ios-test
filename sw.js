@@ -201,7 +201,7 @@
 // v69 (2026-07-16): reiner Versions-Bump, KEINE Logik-Änderung — der zweite, eigentliche
 // Testschritt für die Update-Zustellung (v68 lief bereits, jetzt: nur zum Tab zurückkehren,
 // NICHT Website-Daten löschen. Wenn der "Neu laden"-Hinweis erscheint, greift der Fix).
-const CACHE = 'vivodepot-shell-v477';
+const CACHE = 'vivodepot-shell-v478';
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT — z. B. wenn die Manifest-Entscheidung „inline" lautet und es
