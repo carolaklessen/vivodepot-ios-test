@@ -1379,13 +1379,12 @@
      verlieren die Karten-Optik. Alle anderen .sektion-Flächen (Situations-Blöcke,
      Mappe, Cross-Sektor, Sub-Depot) bleiben Karten. Padding/Margin/Mobile erben
      unverändert von .sektion. Keine Funktion, kein !important. */
-  .sektion--eingabe { border: none; background: var(--salbei-light); box-shadow: none; }
-  /* Design-Sprache-Nachtrag (25.08.2026, abends) — NUR auf dem Referenzbildschirm Identität &
-     Person (data-sektor-id, s. renderSektor()): Karten-Grammatik (Rand+Schatten+Rundung wie
-     .bereich-karte/.modal/.karte) statt der randlosen Fläche. Bewusst NICHT die geteilte
-     Basisregel oben geändert — die gilt auf allen zwölf Bereichs-Bildschirmen; Rollout dorthin
-     ist Teilprojekt 3, noch nicht begonnen. */
-  [data-sektor-id="identitaet"] .sektion--eingabe {
+  /* Teilprojekt 3 (30.08.2026, Carolas Entscheidung per VD KOORD): die Karten-Grammatik
+     (Rand+Schatten+Rundung+Weiß wie .bereich-karte/.modal/.karte), die der Design-Sprache-
+     Nachtrag vom 25.08.2026 nur auf dem Referenzbildschirm Identität & Person erprobt hatte
+     ([data-sektor-id="identitaet"]-Ausnahme), gilt jetzt auf allen zwölf Bereichs-Bildschirmen —
+     keine sektorspezifische Ausnahme mehr, die geteilte Basisregel selbst trägt sie. */
+  .sektion--eingabe {
     border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-strong);
     background: var(--white); padding: var(--space-5);
   }
@@ -3926,7 +3925,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v475';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — Merge zweier paralleler Sitzungen (Kontrast Teil 1 + Herausgeberweg CLI-Onboarding), Lockstep-Gate verlangt einen eigenen Bump je schale-ändernden Commit, 29.08.2026
+const SCHALEN_STAND = 'v477';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — Teilprojekt 3: Karten-Grammatik (.sektion--eingabe) auf alle zwölf Bereiche ausgeweitet, 30.08.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -3961,7 +3960,7 @@ function heuteLokal(d = new Date()) {
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-08-29';
+const BUILD_DATUM = '2026-08-30';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -5263,15 +5262,11 @@ const _STRINGS_EINGEBAUT = ({
   dateiNichtLesbar: null,
   entsperrPasswortFalsch: null,
   bereichLeer: null,
-  /* E2 — der Bereich IST spezifiziert, die Bürgerin hat nur noch nichts eingetragen. Zwei
-     verschiedene Auskünfte; `bereichLeer` oben meint die Datenmodell-Lücke, nicht diesen Fall.
-     GEMESSEN 29.07. ⟦M⟧ am leeren Depot: 178 leere Feldzeilen über die damals elf Bereiche,
-     Median 19,
-     Gesundheit 28. Wer „Ich schaue mich erst einmal um" wählt, sieht das — und keinen Weg. */
-  bereichOhneEintraegeTitel: null,
-  bereichOhneEintraegeText: null,
-  bereichOhneEintraegeGefuehrt: null,
-  /* Der Vorschau-Fall ist der, den die Zeile beschreibt — und er braucht einen ANDEREN Weg.
+  /* E2 — der Bereich IST spezifiziert, die Bürgerin hat nur noch nichts eingetragen;
+     `bereichLeer` oben meint die Datenmodell-Lücke, nicht diesen Fall. GEMESSEN 29.07. ⟦M⟧ am
+     leeren Depot: 178 leere Feldzeilen über die damals elf Bereiche. Der Vorschau-Fall ist der,
+     den die Zeile beschreibt — und er braucht einen eigenen Weg (die echte Sitzung bekommt seit
+     30.08.2026 keinen eigenen Erklärkasten mehr, Carolas Entscheidung, s. renderSektor).
      „Füllen Sie die Felder aus" wäre hier eine Zumutung: in der Vorschau ist kein Feld
      beschreibbar (kein Akteur, alles read-only). Der einzige Schritt nach vorn ist das
      eigene Depot. GEMESSEN ⟦M⟧: Vorschau zeigt in Gesundheit 28-mal „nicht hinterlegt" bei
@@ -8530,9 +8525,6 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:dateiNichtLesbar.text': "Diese Datei kann nicht gelesen werden — beschädigt oder keine Vivodepot-Datei.",
   'strings:entsperrPasswortFalsch.text': "Das Passwort stimmt nicht.",
   'strings:bereichLeer.text': "Für diesen Bereich sind noch keine Felder spezifiziert (noch zu lesen).",
-  'strings:bereichOhneEintraegeTitel.text': "Hier ist noch nichts hinterlegt.",
-  'strings:bereichOhneEintraegeText.text': "Sie können jedes Feld einzeln ausfüllen. Es gibt keine Reihenfolge, nichts muss vollständig sein, und Sie können jederzeit aufhören.",
-  'strings:bereichOhneEintraegeGefuehrt.text': "Wenn Sie lieber Schritt für Schritt vorgehen: unter den Feldern steht ein geführter Einstieg.",
   'strings:importMehrteiligerChip.text': "„{feld}“ enthält mehrere Angaben in einem Eintrag: {wert}. Sie wurden nicht automatisch getrennt — nach dem Einlesen können Sie den Eintrag von Hand in einzelne aufteilen.",
   'strings:bereichOhneEintraegeVorschauTitel.text': "Sie sehen sich gerade um.",
   // Gesamtbild-UX-Konzept, Abschnitt D (27.08.2026): auf einen kürzeren Hinweis gestrafft — der
@@ -41437,14 +41429,10 @@ function renderSektor(sektorOrId) {
       html += '<div class="hinweis-box" data-bereich-leer="vorschau">' +
         '<p><strong>' + escapeHTML(STRINGS.bereichOhneEintraegeVorschauTitel) + '</strong></p>' +
         '<p>' + escapeHTML(STRINGS.bereichOhneEintraegeVorschauText) + '</p></div>';
-    } else if (darfFruh) {
-      const _hatWiz = !!(s.wizardId || (Array.isArray(s.wizards) && s.wizards.length));
-      html += '<div class="hinweis-box" data-bereich-leer="sitzung">' +
-        '<p><strong>' + escapeHTML(STRINGS.bereichOhneEintraegeTitel) + '</strong></p>' +
-        '<p>' + escapeHTML(STRINGS.bereichOhneEintraegeText) + '</p>' +
-        (_hatWiz ? '<p>' + escapeHTML(STRINGS.bereichOhneEintraegeGefuehrt) + '</p>' : '') +
-        '</div>';
     }
+    // Carolas Entscheidung (30.08.2026, per VD KOORD): der farbig getönte Erklärkasten für die
+    // echte Sitzung ist ERSATZLOS entfallen — alle Bereiche sehen im leeren Zustand jetzt aus
+    // wie Identität & Person (neutral, nur die leeren Feldzeilen), kein Salbei/Gold-Kasten mehr.
   }
   // Umbau „immer editierbar": kein „Bearbeiten"-Knopf mehr — die Felder sind dauerhaft
   // Eingabefelder (Schreibrecht = darfFruh). Die optionalen Türen (Erinnerung/Dokumente)
