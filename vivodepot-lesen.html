@@ -1728,6 +1728,38 @@ const SEKTOREN = Object.freeze([
           ] },
       ] },
     ] },
+  { id: 'vermoegen',         label: 'Vermögen und Einkommen', format: SEKTOR_FORMATE.GENERISCH,  icon: 'landmark',
+    sektionen: [
+      { id: 'einkommen-wohnsituation', label: 'Einkommen und Wohnsituation', felder: [
+        // Zugang zum Recht (30.08.2026, Zug 1) — spiegelbildlich zum Kern (Paritäts-Wächter).
+        { id: 'weitere_einkommensarten', sensibel: true, label: 'Weitere Einkommensarten', typ: 'mehrfachauswahl',
+          optionen: [
+            { wert: 'unterhaltszahlungen', label: 'Unterhaltszahlungen' },
+            { wert: 'arbeitslosengeld',    label: 'Arbeitslosengeld' },
+            { wert: 'wohngeld',            label: 'Wohngeld' },
+            { wert: 'kindergeld',          label: 'Kindergeld' },
+            { wert: 'bafoeg',              label: 'BAföG' },
+            { wert: 'krankengeld',         label: 'Krankengeld' },
+            { wert: 'rente',               label: 'Rente' },
+            { wert: 'elterngeld',          label: 'Elterngeld' },
+            { wert: 'insolvenzgeld',       label: 'Insolvenzgeld' },
+            { wert: 'ueberbrueckungsgeld', label: 'Überbrückungsgeld' },
+            { wert: 'sonstiges',           label: 'Sonstiges' },
+            { wert: 'keine',               label: 'Keine weiteren' },
+          ] },
+        { id: 'wohnsituation', label: 'Wohnsituation', typ: 'auswahl',
+          optionen: [
+            { wert: 'alleine',          label: 'Allein wohnhaft' },
+            { wert: 'mit_angehoerigen', label: 'Mit Angehörigen wohnhaft' },
+            { wert: 'mit_anderen',      label: 'Mit anderen Personen wohnhaft' },
+          ] },
+        { id: 'wohnung_groesse_qm',      label: 'Wohnungsgröße',                    typ: 'text', beispiel: '62 qm' },
+        { id: 'wohnkosten_allein', sensibel: true, label: 'Wohnkosten — allein getragen', typ: 'text', beispiel: '780 EUR' },
+        { id: 'wohnung_personenzahl',    label: 'Personenzahl in der Wohnung',      typ: 'text', beispiel: '3' },
+        { id: 'wohnkosten_gesamt', sensibel: true, label: 'Wohnkosten — gesamt',    typ: 'text', beispiel: '1.450 EUR' },
+        { id: 'wohnkosten_eigenanteil', sensibel: true, label: 'Wohnkosten — eigener Anteil', typ: 'text', beispiel: '480 EUR' },
+      ] },
+    ] },
   { id: 'gesundheit',        label: 'Gesundheit',           format: SEKTOR_FORMATE.FHIR_IPS,   icon: 'heartPulse',
     // text+code-Felder tragen `codeListe`-Marker (allergien, krankheiten, medikamente, impfungen,
     // implantate — fünf Felder). Andock kommt mit dem text+code-Auftrag (Gesundheits-Sektor).
@@ -4454,7 +4486,7 @@ function renderPasswort(art, umschlag, blackboxDatei) {
   const pf = el('pw-feld'); if (pf && pf.focus) pf.focus();
 }
 
-/* ── F-4 Vollexport-Lese-Sicht (alle zwölf Bereiche, read-only) ──────────── */
+/* ── F-4 Vollexport-Lese-Sicht (alle dreizehn Bereiche, read-only) ───────── */
 let aktiverSektorId = null;
 function renderVollExport() {
   const wrap = el('app');
