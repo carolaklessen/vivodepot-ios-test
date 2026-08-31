@@ -3925,7 +3925,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v480';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — B16-Migration: benannter Knopf an der zentralen "Wohin einlesen?"-Tür statt nur über Inhaltserkennung erreichbar, 30.08.2026
+const SCHALEN_STAND = 'v482';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — CC-Auftrag Service-Worker-Update-Sackgasse: „App-Update jetzt prüfen"-Knopf in den Einstellungen, 31.08.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -3960,7 +3960,7 @@ function heuteLokal(d = new Date()) {
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-08-30';
+const BUILD_DATUM = '2026-08-31';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -4783,7 +4783,7 @@ const _STRINGS_EINGEBAUT = ({
   delExportOhne: null,
   // fhirLab*-Strings (self-erzeugter Laborbericht-Export) entfernt — E3, Datenmodell-Konzept v1.2 §3.
   depotAktiv: null,                                    // Marker für das gerade geöffnete Depot
-  gruppeEintragen: null,                           // Sidebar-Gruppe (Struktur-Spec §4, Achse Eintragen) — die zwölf Bereiche
+  gruppeEintragen: null,                           // Sidebar-Gruppe (Struktur-Spec §4, Achse Eintragen) — die dreizehn Bereiche
   // Fortsetzen-Fokus (Klick-Dummy validiert, 26.08.2026): die frühere EINTRAGEN-Überschrift über
   // dem Zwölf-Bereiche-Baum entfällt — der Baum steckt jetzt hinter diesem Umschalter (eigenes
   // <summary>, kein .gruppe-titel mehr). gruppeEintragen (oben) bleibt stehen — weiterhin für
@@ -5009,6 +5009,15 @@ const _STRINGS_EINGEBAUT = ({
   einstUeberVersionAltKurz: null,
   einstVersionSuchenKnopf: null,
   einstVersionSuchenHinweis: null,
+  // CC-Auftrag Service-Worker-Update-Sackgasse (31.08.2026) — Form B (s. tests/strings-form-b.test.js):
+  // die Zeile hier, der Wortlaut im Textsatz unter 'strings:einstSwPruefen*.text'.
+  einstSwPruefenKnopf: null,
+  einstSwPruefenHinweis: null,
+  einstSwPruefenLaeuft: null,
+  einstSwPruefenGefunden: null,
+  einstSwPruefenAktuell: null,
+  einstSwPruefenNichtVerfuegbar: null,
+  einstSwPruefenFehler: null,
   einstUpdateAnleitungTitel: null,
   einstUpdateSchritt1: null,
   einstUpdateSchritt2: null,
@@ -6185,7 +6194,7 @@ function icon(name, groesse) {
   return svgIcon(pfad, groesse);
 }
 
-/* ── Datenmodell (4.4) — die zwölf Sektoren ─────────────────────────────── */
+/* ── Datenmodell (4.4) — die dreizehn Sektoren ──────────────────────────── */
 const SEKTOR_FORMATE = Object.freeze({
   FHIR_IPS: 'FHIR_IPS', SD_JWT_VC: 'SD_JWT_VC', W3C_VC: 'W3C_VC', EDCI: 'EDCI',
   ISO_18013: 'ISO_18013', MDOC: 'MDOC', GENERISCH: 'GENERISCH', XOEV: 'XOEV',
@@ -6793,6 +6802,37 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'bildung.zeugnis_studium_ort.beispiel': 'Mappe „Studium", Aktenschrank Schlafzimmer',
   'bildung.zeugnis_arbeit_ort.label': 'Arbeitszeugnis (Ablageort)',
   'bildung.zeugnis_arbeit_ort.beispiel': 'Ordner „Berufslaufbahn", Aktenschrank',
+
+  /* ── vermoegen ───────────────────────────────────────────────────── */
+  'vermoegen.label': 'Vermögen und Einkommen',
+  'vermoegen#einkommen-wohnsituation.label': 'Einkommen und Wohnsituation',
+  'vermoegen.weitere_einkommensarten.label': 'Weitere Einkommensarten',
+  'vermoegen.weitere_einkommensarten/unterhaltszahlungen.label': 'Unterhaltszahlungen',
+  'vermoegen.weitere_einkommensarten/arbeitslosengeld.label': 'Arbeitslosengeld',
+  'vermoegen.weitere_einkommensarten/wohngeld.label': 'Wohngeld',
+  'vermoegen.weitere_einkommensarten/kindergeld.label': 'Kindergeld',
+  'vermoegen.weitere_einkommensarten/bafoeg.label': 'BAföG',
+  'vermoegen.weitere_einkommensarten/krankengeld.label': 'Krankengeld',
+  'vermoegen.weitere_einkommensarten/rente.label': 'Rente',
+  'vermoegen.weitere_einkommensarten/elterngeld.label': 'Elterngeld',
+  'vermoegen.weitere_einkommensarten/insolvenzgeld.label': 'Insolvenzgeld',
+  'vermoegen.weitere_einkommensarten/ueberbrueckungsgeld.label': 'Überbrückungsgeld',
+  'vermoegen.weitere_einkommensarten/sonstiges.label': 'Sonstiges',
+  'vermoegen.weitere_einkommensarten/keine.label': 'Keine weiteren',
+  'vermoegen.wohnsituation.label': 'Wohnsituation',
+  'vermoegen.wohnsituation/alleine.label': 'Allein wohnhaft',
+  'vermoegen.wohnsituation/mit_angehoerigen.label': 'Mit Angehörigen wohnhaft',
+  'vermoegen.wohnsituation/mit_anderen.label': 'Mit anderen Personen wohnhaft',
+  'vermoegen.wohnung_groesse_qm.label': 'Wohnungsgröße',
+  'vermoegen.wohnung_groesse_qm.beispiel': '62 qm',
+  'vermoegen.wohnkosten_allein.label': 'Wohnkosten — allein getragen',
+  'vermoegen.wohnkosten_allein.beispiel': '780 EUR',
+  'vermoegen.wohnung_personenzahl.label': 'Personenzahl in der Wohnung',
+  'vermoegen.wohnung_personenzahl.beispiel': '3',
+  'vermoegen.wohnkosten_gesamt.label': 'Wohnkosten — gesamt',
+  'vermoegen.wohnkosten_gesamt.beispiel': '1.450 EUR',
+  'vermoegen.wohnkosten_eigenanteil.label': 'Wohnkosten — eigener Anteil',
+  'vermoegen.wohnkosten_eigenanteil.beispiel': '480 EUR',
 
   /* ── gesundheit ──────────────────────────────────────────────────── */
   'gesundheit.label': 'Gesundheit',
@@ -8335,6 +8375,19 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:einstUeberVersionAltKurz.text': "Update prüfen",
   'strings:einstVersionSuchenKnopf.text': "Nach Aktualisierung suchen",
   'strings:einstVersionSuchenHinweis.text': "Öffnet die Vivodepot-Website in einem neuen Tab. Erst dann gehen Sie online — die App selbst lädt nie etwas aus dem Internet nach.",
+  // CC-Auftrag Service-Worker-Update-Sackgasse (31.08.2026) — nur sichtbar, wenn die App als
+  // installierte/gehostete Schale läuft (_swRegistrierenErlaubt(), s. einstellungenHTML). Prüft
+  // AKTIV auf eine neue Schale, statt auf den nächsten Fokus-Wechsel zu warten (serviceWorkerRegistrieren
+  // deckt visibilitychange/focus bereits automatisch ab — dieser Knopf ist der Sofort-Weg dafür).
+  // Kein Zwangs-Reload: registration.update() lädt höchstens im Hintergrund nach; die Aktivierung
+  // bleibt an geschlossene Clients gebunden (skipWaiting bleibt aus, U2-ADR-015 Etappe 8).
+  'strings:einstSwPruefenKnopf.text': "App-Update jetzt prüfen",
+  'strings:einstSwPruefenHinweis.text': "Nur wirksam, wenn Sie Vivodepot als installierte App nutzen. Prüft im Hintergrund, ob eine neue Schale bereitsteht — Ihre Daten bleiben dabei unberührt.",
+  'strings:einstSwPruefenLaeuft.text': "Suche nach einer neuen App-Version …",
+  'strings:einstSwPruefenGefunden.text': "Eine neue Version liegt bereit. Sie wird aktiv, sobald Sie die App vollständig schließen und neu öffnen.",
+  'strings:einstSwPruefenAktuell.text': "Keine neue Version gefunden — Sie haben vermutlich schon den aktuellen Stand.",
+  'strings:einstSwPruefenNichtVerfuegbar.text': "Diese Prüfung ist hier nicht verfügbar.",
+  'strings:einstSwPruefenFehler.text': "Die Prüfung ist fehlgeschlagen. Bitte später erneut versuchen.",
   'strings:einstUpdateAnleitungTitel.text': "So holen Sie eine neue Version",
   'strings:einstUpdateSchritt1.text': "Neue App-Datei von der Website laden.",
   'strings:einstUpdateSchritt2.text': "Die neue Datei öffnen.",
@@ -10443,7 +10496,7 @@ function textsatzNeuAnwenden() {
   return SEKTOREN.length;
 }
 
-// sektionen ist bei allen zwölf Sektoren bewusst LEER: die innere Feldstruktur ist in
+// sektionen ist bei allen dreizehn Sektoren bewusst LEER: die innere Feldstruktur ist in
 // der Spezifikation als „noch zu lesen" (4.4) markiert und wird NICHT geraten. Sektoren
 // werden im Re-Build einer nach dem anderen mit Inhalt gefüllt; das Fundament selbst
 // kennt keinen Sektor-Inhalt.
@@ -11169,6 +11222,56 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
             { id: 'wert', sensibel: true, typ: 'text', },
             { id: 'ort', sensibel: true,  typ: 'text', },
           ] },
+      ] },
+    ] },
+  { id: 'vermoegen',         format: SEKTOR_FORMATE.GENERISCH,  icon: 'landmark',
+    // Zugang zum Recht (30.08.2026, Zug 1) — Feldvorschlag: 07_Spezifikationen-Konzepte/
+    // zugang-zum-recht-buergermodul-felder-vorschlag-2026-08-30.md (VD-lokal). Eigener Bereich
+    // statt Erweiterung von `finanzen`/`bildung.einkommensart`: die künftige Zugang-zum-Recht-
+    // Vorlage (Beratungshilfe/Prozesskostenhilfe/Kontopfändung) liest diese Felder PLUS
+    // bestehende Kernfelder (Name etc.) für die Gerichtseinreichung zusammen — Carolas eigenes
+    // Modell (Klarstellung Modul vs. Vorlage, 30.08.2026). `finanzen.konten`/`wertgegenstaende`
+    // bleiben unverändert (bewusst ohne Saldo, U2-ADR-074) — diese Felder tragen die Beträge,
+    // die eine Gerichtseinreichung tatsächlich verlangt, getrennt von der Erbfall-Übersicht.
+    // Zug 1: Einkommen-Ergänzung + Wohnsituation. Vermögens-Listen (Bankkonten/Geldanlagen/
+    // Kraftfahrzeuge/Grundeigentum), Personen-Finanzen und laufende Ausgaben folgen in
+    // weiteren Zügen.
+    sektionen: [
+      { id: 'einkommen-wohnsituation', felder: [
+        // A2J-Quelle (github.com/digitalservicebund/a2j-rechtsantragstelle, MIT):
+        // app/domains/beratungshilfe/formular/finanzielleAngaben/einkommen/pages.ts,
+        // Feld `weitereseinkommen` — zusätzliche Einkommensarten NEBEN dem Erwerbsstatus
+        // (bildung.einkommensart bleibt unverändert, deckt den Erwerbsstatus schon ab).
+        { id: 'weitere_einkommensarten', sensibel: true, typ: 'mehrfachauswahl',
+          optionen: [
+            { wert: 'unterhaltszahlungen' },
+            { wert: 'arbeitslosengeld' },
+            { wert: 'wohngeld' },
+            { wert: 'kindergeld' },
+            { wert: 'bafoeg' },
+            { wert: 'krankengeld' },
+            { wert: 'rente' },
+            { wert: 'elterngeld' },
+            { wert: 'insolvenzgeld' },
+            { wert: 'ueberbrueckungsgeld' },
+            { wert: 'sonstiges' },
+            { wert: 'keine' },
+          ] },
+        // A2J-Quelle: finanzielleAngaben/wohnung/pages.ts. Alle sechs Felder koexistieren
+        // unbedingt (kein Ausblenden nach `wohnsituation`) — dieselbe flache Katalog-Haltung
+        // wie überall im Kern; welche Frage wann gestellt wird, entscheidet die künftige
+        // Vorlage, nicht der Feldkatalog.
+        { id: 'wohnsituation', typ: 'auswahl',
+          optionen: [
+            { wert: 'alleine' },
+            { wert: 'mit_angehoerigen' },
+            { wert: 'mit_anderen' },
+          ] },
+        { id: 'wohnung_groesse_qm', typ: 'text', inputmode: 'numeric', },
+        { id: 'wohnkosten_allein', sensibel: true, typ: 'text', inputmode: 'decimal', },
+        { id: 'wohnung_personenzahl', typ: 'text', inputmode: 'numeric', },
+        { id: 'wohnkosten_gesamt', sensibel: true, typ: 'text', inputmode: 'decimal', },
+        { id: 'wohnkosten_eigenanteil', sensibel: true, typ: 'text', inputmode: 'decimal', },
       ] },
     ] },
   { id: 'gesundheit',        format: SEKTOR_FORMATE.FHIR_IPS,   icon: 'heartPulse',
@@ -14157,6 +14260,23 @@ const BAUSTEINE = Object.freeze([
       'Eine rechtliche Betreuung macht nicht geschäftsunfähig — nur ein zusätzlich vom Gericht angeordneter Einwilligungsvorbehalt schränkt die Geschäftsfähigkeit ein (§ 1825 BGB).',
       'Eine Vorsorgevollmacht in der Schublade verhindert eine Betreuung nicht: Wer eine Vollmachtsurkunde besitzt und von einem Betreuungsverfahren erfährt, muss sie dem Gericht vorlegen (§ 1820 Abs. 1 BGB).',
     ],
+  },
+  {
+    // Zugang zum Recht (30.08.2026, Zug 1): der Anlass, für den die neue Sektion
+    // vermoegen#einkommen-wohnsituation überhaupt gebaut wird — Beratungshilfe/
+    // Prozesskostenhilfe/Kontopfändung verlangen alle dieselbe Einkommens-/
+    // Vermögenserklärung. Quelle der Feldstruktur: github.com/digitalservicebund/
+    // a2j-rechtsantragstelle (MIT).
+    // sorte:'zustand' statt 'ereignis' (nicht 'ereignis'): Ereignis-Bausteine rendern automatisch als
+    // Willkommens-Kachel ("Was bringt Sie heute hierher?", A61) — eine prominente Startseiten-Kachel für
+    // eine Lage mit heute erst 7 von absehbar 40+ Feldern und ohne fertige Vorlage wäre ein Vorgriff auf
+    // eine UX-Entscheidung, die nicht Teil von Zug 1 ist. Erreichbar bleibt sie über den zweiten Einstieg
+    // ("Was möchten Sie hinterlegen?"), wie jede andere Zustands-/Ausstattungslage.
+    id: 'zugang-zum-recht', sorte: 'zustand', name: 'Beratungshilfe oder Prozesskostenhilfe beantragen',
+    unterlagen: 'Einkommensnachweis, Kontoauszüge, Mietvertrag, Nachweise über Vermögen und laufende Zahlungsverpflichtungen',
+    felder: ['vermoegen.weitere_einkommensarten', 'vermoegen.wohnsituation', 'vermoegen.wohnung_groesse_qm',
+      'vermoegen.wohnkosten_allein', 'vermoegen.wohnung_personenzahl', 'vermoegen.wohnkosten_gesamt',
+      'vermoegen.wohnkosten_eigenanteil'],
   },
 
   /* ══ AUSSTATTUNG — was jemand an Zugängen und Beziehungen HAT ════════════ */
@@ -20265,7 +20385,7 @@ function _vollDepotFelder(depot) {
 
 /* ── Parser + Mapping: Vivodepot Beta 16 (b16-Migration — Import-Welle 3) ───────────
    Bestandsnutzer der ALTEN App (ProfileManifest/localStorage, flaches `data`-Objekt,
-   Legacy-200k-PBKDF2-Krypto) holen ihre Daten in die Clean-Slate-App (zwölf Bereiche).
+   Legacy-200k-PBKDF2-Krypto) holen ihre Daten in die Clean-Slate-App (dreizehn Bereiche).
 
    EINGABEFORMAT (dokumentierte Annahme — siehe verifikation-import-welle3.md):
    Migriert wird die ENTSCHLÜSSELTE Daten-Repräsentation der alten App. Die alte App
@@ -31702,7 +31822,7 @@ function dokumentAmpel(doc, jetzt) {
 
 /* ── Prüfblatt: Dokument-Liste über alle Bereiche (U2-ADR-014, Stufe 3) ──────
    EINSAMMELN: sammelt ALLE Dokument-Datensätze mit gesetztem gueltigAb über
-   data.dokumente[] (alle zwölf Bereiche), wendet die Ampel-Brücke (dokumentAmpel)
+   data.dokumente[] (alle dreizehn Bereiche), wendet die Ampel-Brücke (dokumentAmpel)
    an und sortiert rot→gelb→grün (innerhalb der Stufe das Dringlichste/Älteste
    zuerst). AUSGESCHLOSSEN: Datensätze OHNE gueltigAb (z. B. noch undatierte
    vvwiz/pvwiz-Dokumente) und quelle:'erkannt-abgelehnt' (dünne Ablehnungen,
@@ -35875,6 +35995,16 @@ function einstellungenHTML() {
         : '<p class="einst-hint">' + escapeHTML(STRINGS.einstVersionAktuell) + '</p>') +
       '<button type="button" class="btn btn-sek" id="einst-version-suchen">' + svgIcon(ICONS.fileDown) + ' ' + escapeHTML(STRINGS.einstVersionSuchenKnopf) + '</button>' +
       '<p class="einst-hint">' + escapeHTML(STRINGS.einstVersionSuchenHinweis) + '</p>' +
+      // CC-Auftrag Service-Worker-Update-Sackgasse (31.08.2026) — eigener, sofortiger Weg für die
+      // installierte/gehostete Schale (Geräte-Befund: eine sehr alte Installation ohne diesen
+      // Mechanismus bleibt für IMMER auf ihrem Stand; ab hier — der Version mit diesem Knopf —
+      // hat jede Installation wenigstens einen aktiven, bewussten Sofort-Check statt nur auf den
+      // nächsten Fokus-Wechsel zu warten). Nur sichtbar, wenn _swRegistrierenErlaubt() true ist
+      // (gehostet, kein file://) — auf der offenen Datei ohne Installation gäbe es nichts zu prüfen.
+      (_swRegistrierenErlaubt()
+        ? '<button type="button" class="btn btn-sek" id="einst-sw-pruefen">' + svgIcon(ICONS.fileDown) + ' ' + escapeHTML(STRINGS.einstSwPruefenKnopf) + '</button>' +
+          '<p class="einst-hint">' + escapeHTML(STRINGS.einstSwPruefenHinweis) + '</p>'
+        : '') +
       '<div class="einst-update-anleitung"><div class="einst-update-titel">' + escapeHTML(STRINGS.einstUpdateAnleitungTitel) + '</div>' +
         '<ol class="einst-update-schritte"><li>' + escapeHTML(STRINGS.einstUpdateSchritt1) + '</li>' +
           '<li>' + escapeHTML(STRINGS.einstUpdateSchritt2) + '</li>' +
@@ -35996,6 +36126,12 @@ function verdrahteEinstellungen() {
       window.open(AKTUALISIERUNGEN_LINK, '_blank', 'noopener,noreferrer');
     }
   };
+  // CC-Auftrag Service-Worker-Update-Sackgasse (31.08.2026) — der Sofort-Check-Knopf. Die Logik
+  // selbst steckt in _swSofortPruefen() (bei den anderen SW-Funktionen weiter unten), NICHT hier
+  // inline — jeder navigator.serviceWorker-Zugriff bleibt so innerhalb der bekannten, benannten
+  // SW-Funktionen (U2-ADR-097 §10, Isolations-Probe in tests/mit-modul/b-zug1-s10-rotmachbarkeit.test.js).
+  const swp = document.getElementById('einst-sw-pruefen');
+  if (swp) swp.onclick = _swSofortPruefen;
   _installKnopfVerdrahten();   // PWA-Install-Knopf im Einstellungen-Abschnitt (W-8, Zug 5) — nur vorhanden, wenn gehalten
 }
 
@@ -36103,6 +36239,7 @@ const BEREICH_CLUSTER_ZUORDNUNG = Object.freeze({
   identitaet: 'ich-mensch', 'meine-menschen': 'ich-mensch', persoenliches: 'ich-mensch',
   mobilitaet: 'alltag', wohnen: 'alltag',
   finanzen: 'geld-absicherung', sozialversicherung: 'geld-absicherung', vorsorge: 'geld-absicherung',
+  vermoegen: 'geld-absicherung',
   gesundheit: 'gesundheit-krisen', krisenvorsorge: 'gesundheit-krisen',
   bildung: 'bildung-verwaltung', verwaltung: 'bildung-verwaltung',
 });
@@ -36192,7 +36329,7 @@ function renderSidebar() {
   // einem geschlossenen <details> verschwinden (kein flacher Weitermachen-Knopf zeigt sie mehr
   // außerhalb). Ohne aktiven Bereich (z. B. Anlass-/Situationsansicht) bleibt er zu.
   const bereicheUmschalterOffen = aktiveAnsicht === 'sektor';
-  // EINTRAGEN — die zwölf Bereiche (gleichwertiger Bereichs-Weg, kein Nebenweg), seit
+  // EINTRAGEN — die dreizehn Bereiche (gleichwertiger Bereichs-Weg, kein Nebenweg), seit
   // U2-ADR-171 (25.08.2026) in fünf Themen-Clustern + Auffangbecken „Module", kollabierbar —
   // seit 26.08.2026 hinter „Alle Bereiche zeigen".
   html += '<details class="bereiche-umschalter"' + (bereicheUmschalterOffen ? ' open' : '') + '>' +
@@ -40482,7 +40619,7 @@ function renderMappe() {
     '<p class="sektor-intro">' + escapeHTML(STRINGS.mappeEinfuehrung) + '</p>' +
     // CC-Auftrag „Seitenleiste" (10.08.2026), Zug 2: „Was hier hineingehört" verlässt die
     // Navigation und wird ein Verweis hier (Sicht `bestand-auswahl` bleibt erreichbar, nur nicht
-    // mehr als eigener Sidebar-Eintrag, der mit den elf/zwölf Bereichen dasselbe versprach).
+    // mehr als eigener Sidebar-Eintrag, der mit den zwölf/dreizehn Bereichen dasselbe versprach).
     '<p class="sektor-intro"><button class="btn-dezent" id="mappe-bestand-link">' + escapeHTML(STRINGS.navBestand) + '</button></p>' +
     '<div class="bereich-aktionen"><button class="btn" id="mappe-add"><span class="ico">' + svgIcon(ICONS.plus, 18) + '</span> ' + escapeHTML(STRINGS.mappeHinzufuegen) + '</button></div>';
   if (!eintraege.length) {
@@ -40760,7 +40897,7 @@ function dataUrlZuBlob(dataUrl) {
     return new Blob([bytes], { type: mime });
   } catch (e) { return null; }
 }
-// Bereichs-Knopfreihe: zwölf Bereiche plus „Allgemein" (Default). Reine HTML-Funktion.
+// Bereichs-Knopfreihe: dreizehn Bereiche plus „Allgemein" (Default). Reine HTML-Funktion.
 function mappeBereichKnopfreiheHTML(aktiv) {
   const akt = aktiv || MAPPE_BEREICH_DEFAULT;
   let h = '<div class="mappe-bereich-wahl" id="mappe-bereich">';
@@ -42301,7 +42438,7 @@ function flowSituationPdf(sitOrId) {
    §3.6 Export-Modul — Gesamt-PDF „Alle Daten als PDF" (jsPDF, inline 3. Skript-Block).
    ────────────────────────────────────────────────────────────────────────
    die Regel der Gründerin: „alle Daten AUCH als PDF". Gibt das KOMPLETTE Depot bürger-lesbar
-   aus — alle zwölf Bereiche mit Überschrift, je Sektion die ausgefüllten Felder als
+   aus — alle dreizehn Bereiche mit Überschrift, je Sektion die ausgefüllten Felder als
    „Label: Wert". Reine LESE-Sicht über die bestehenden Datenpfade (feldEingetragen/
    feldWertText), kein Krypto. Sensible Felder bleiben außen vor — dieselbe Konvention
    wie das Situationsblatt-PDF (f.sensibel → raus); die vollständige Sicherung ist die
@@ -48811,6 +48948,38 @@ function serviceWorkerRegistrieren() {
     if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('load', reg);
     else reg();
   } catch (_) { /* SW ist Auslieferungs-Komfort, nie kritisch für die App */ }
+}
+// CC-Auftrag Service-Worker-Update-Sackgasse (31.08.2026) — der Sofort-Check-Knopf in den
+// Einstellungen (id="einst-sw-pruefen", s. verdrahteEinstellungen). Geräte-Befund: eine sehr alte
+// Installation ohne DIESEN Mechanismus (vor a3e3fd5/16.07.2026) bleibt für immer auf ihrem Stand —
+// dafür kann kein künftiger Code mehr etwas tun. Dieser Knopf hilft JEDER Installation AB dieser
+// Version: ein sofortiger, bewusster Check statt nur auf den nächsten Fokus-Wechsel zu warten
+// (serviceWorkerRegistrieren deckt visibilitychange/focus bereits automatisch ab). Kein Zwangs-
+// Reload: registration.update() lädt höchstens im Hintergrund nach; die Aktivierung bleibt an
+// geschlossene Clients gebunden (skipWaiting bleibt aus, U2-ADR-015 Etappe 8). Berührt IndexedDB/
+// Depot-Daten nie. Eigene, benannte Funktion (nicht inline in verdrahteEinstellungen) — jeder
+// navigator.serviceWorker-Zugriff bleibt so innerhalb der bekannten SW-Funktionen (U2-ADR-097 §10).
+async function _swSofortPruefen() {
+  try {
+    if (!(typeof navigator !== 'undefined' && navigator && navigator.serviceWorker
+        && typeof navigator.serviceWorker.getRegistration === 'function')) {
+      if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.einstSwPruefenNichtVerfuegbar, 'info');
+      return;
+    }
+    if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.einstSwPruefenLaeuft, 'info');
+    var reg = await navigator.serviceWorker.getRegistration();
+    if (!reg || typeof reg.update !== 'function') {
+      if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.einstSwPruefenNichtVerfuegbar, 'info');
+      return;
+    }
+    await reg.update();
+    var gefunden = !!(reg.installing || reg.waiting);
+    if (typeof ui !== 'undefined' && ui.toast) {
+      ui.toast(gefunden ? STRINGS.einstSwPruefenGefunden : STRINGS.einstSwPruefenAktuell, 'success');
+    }
+  } catch (_) {
+    if (typeof ui !== 'undefined' && ui.toast) ui.toast(STRINGS.einstSwPruefenFehler, 'error');
+  }
 }
 serviceWorkerRegistrieren();
 _installEreignisseBinden();   // PWA-Install-Knopf: beforeinstallprompt abfangen + appinstalled

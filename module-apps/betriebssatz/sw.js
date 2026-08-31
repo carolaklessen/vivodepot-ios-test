@@ -201,7 +201,17 @@
 // v69 (2026-07-16): reiner Versions-Bump, KEINE Logik-Änderung — der zweite, eigentliche
 // Testschritt für die Update-Zustellung (v68 lief bereits, jetzt: nur zum Tab zurückkehren,
 // NICHT Website-Daten löschen. Wenn der "Neu laden"-Hinweis erscheint, greift der Fix).
-const CACHE = 'vivodepot-shell-v481';
+// v482 (2026-08-31): CC-Auftrag Service-Worker-Update-Sackgasse — Geräte-Befund: eine sehr alte
+// Installation (vor v68/a3e3fd5, 16.07.2026) trägt den Update-Zustellung-Mechanismus (registration.
+// update() bei Fokus + Hinweis-Banner) selbst gar nicht; für so einen Stand kann kein künftiger
+// Code mehr etwas tun (er lädt seine eigenen neuen Bytes nie — nur hartes Website-Daten-Löschen
+// hilft, s. Bericht). Dieser Bump hilft NICHT dieser Alt-Population, sondern JEDER Installation AB
+// dieser Version: ein neuer, gut sichtbarer Sofort-Check-Knopf in den Einstellungen
+// ("einst-sw-pruefen" → _swSofortPruefen()) ruft registration.update() auf Zuruf auf, statt nur auf
+// den nächsten Fokus-Wechsel zu warten. Kein Zwangs-Reload, keine IndexedDB-Berührung — derselbe
+// Hinweis-statt-Zwang-Pfad wie bisher (skipWaiting bleibt aus). Shell-Bytes (vivodepot.html)
+// geändert → Lockstep-Bump.
+const CACHE = 'vivodepot-shell-v482';
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT — z. B. wenn die Manifest-Entscheidung „inline" lautet und es
