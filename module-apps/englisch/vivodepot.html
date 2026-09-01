@@ -3930,7 +3930,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v486';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-184: Hintergrund-Wipe-Gnadenfrist (30 Min.) + Bildschirm-Aufräumung, 31.08.2026
+const SCHALEN_STAND = 'v487';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-185: Sperrschirm statt Eingangsschirm nach Wipe, 01.09.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -4335,6 +4335,13 @@ const _STRINGS_EINGEBAUT = ({
   ortHinweisAllgemein: null,   // [PLATZHALTER-WORTLAUT — VORLÄUFIG, Vorlage im F5-Bericht]
   ortHinweisSichtbarkeitKreis: null,   // [PLATZHALTER-WORTLAUT — VORLÄUFIG, Vorlage im F5-Bericht]
   cryptoNeuAnfangen: null,            // Lage B → Lage A
+  /* U2-ADR-185 — der EINE Satz, der den Sperrschirm vom Erstbesucher-Schirm unterscheidet.
+     Wird NUR nach einem Hintergrund-Wipe gezeigt, nie beim regulären Öffnen über denselben
+     Schirm. Wortlaut von der Gründerin abgenommen, nicht umformulierbar: „nicht zu sehen"
+     statt „im Hintergrund" ist Absicht — „nicht benutzt" wäre sachlich falsch, der Auslöser
+     ist Hintergrund, nicht Untätigkeit (U2-ADR-184 Punkt 2). Der zweite Halbsatz ist die
+     eigentliche Nachricht: die Gründerin erlebte den Zustand als „alles ist weg". */
+  wipeSperrschirmHinweis: null,
   cryptoDateiGewaehlt: null,
   // CC-Auftrag „Startseite und Oberfläche" (12.08.2026, Zug 3, Posten 15 Entscheidung C):
   // Empfehlung statt Handlungsschritt — die Installation ist NIE Voraussetzung, der Stick allein
@@ -7965,6 +7972,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:ortHinweisAllgemein.text': "Ein Passwort für diese Datei ist hinterlegt: {ort}",
   'strings:ortHinweisSichtbarkeitKreis.text': "Diese Angabe sieht jeder, der diese Datei öffnet — vor der Passwort-Eingabe. Schreiben Sie sie so, dass die gemeinte Person sie versteht, und nennen Sie darin nie das Passwort selbst.",
   'strings:cryptoNeuAnfangen.text': "Doch neu anfangen — ohne Datei",
+  'strings:wipeSperrschirmHinweis.text': "Ihr Depot wurde geschlossen, weil Vivodepot eine halbe Stunde lang nicht zu sehen war. Es ist nichts verlorengegangen.",
   'strings:cryptoDateiGewaehlt.text': "Gewählte Datei",
   'strings:installEmpfehlungTitel.text': "Auf dem Startbildschirm ablegen (optional)",
   'strings:webAppHinweis.text': "Nicht nötig, aber praktisch: Über das Teilen-Menü Ihres Browsers „Zum Home-Bildschirm hinzufügen“ — dann öffnet sich Vivodepot wie eine App. Der Stick allein reicht weiterhin.",
@@ -10200,6 +10208,17 @@ const PRE_DEPOT_EN = Object.freeze({
   cryptoInternAufforderung: 'Your Vivodepot is stored on this device. Enter your password to open it.',
   btnDepotOeffnen: 'Open my Vivodepot',
   cryptoNeuAnfangen: 'Start fresh instead — without a file',
+  /* U2-ADR-185. Dieser Satz erscheint ausschliesslich auf dem Vor-Depot-Sperrschirm, also an
+     einer Stelle, die das signierte Sprachmodul praktisch nie erreicht (`vorDepotText` löst
+     ihn immer schon HIER auf, bevor ein Depot — und mit ihm das Modul — überhaupt existiert).
+     Trotzdem steht dieselbe englische Fassung AUCH in `tools/textsatz-en-vollabdeckung-daten.js`
+     (Zeile bei `strings:wipeSperrschirmHinweis.text`): die Vollabdeckungs-Probe
+     (`tests/textsatz-en-modul-erzeugen.test.js`) verlangt ausdrücklich ALLE
+     TEXTSATZ_EINGEBAUT-Kennungen ohne Ausnahme — Erreichbarkeits-Überlegungen wie diese hier
+     sind bewusst KEIN anerkannter Ausnahmegrund (erste Fassung dieses Kommentars nahm das
+     irrtümlich an, s. Bericht). Kein Modul-Neubau, keine Neu-Signatur nötig: die Quelldaten
+     zu ändern bereitet nur den NÄCHSTEN echten Modul-Build vor. */
+  wipeSperrschirmHinweis: 'Your Vivodepot was closed because it had not been visible for half an hour. Nothing has been lost.',
   cryptoDateiGewaehlt: 'Selected file',
   dateiLabel: 'Vault file',
   dateiAuswaehlenKnopf: 'Choose file',
@@ -16613,6 +16632,9 @@ async function depotLaden(umschlag, password) {
   aktuelleDepotSalt = depotSalt;
   aktuelleDepotUUID = depotUUID;
   data = obj;
+  // U2-ADR-185: der eine Trichter hinter allen drei Öffnen-Wegen ist auch der eine Ort, an dem
+  // der Umschlag für einen späteren Wiedereintritt gemerkt wird — verschlüsselt, ohne Schlüssel.
+  _umschlagMerken(umschlag);
   dateiBindungZuruecksetzen();   // Stück 3: geladenes Depot → erste Sicherung wählt die Datei neu (kein Alt-Handle)
   // Dokument-Ebene (U2-ADR-014): der eine Pfad, durch den jedes geladene Depot geht.
   // Idempotent/additiv/verlustfrei — migriert data.erinnerungen → data.dokumente[],
@@ -16954,6 +16976,11 @@ function _dateiNameErfragen() {
 // Datei-Download des verschlüsselten Umschlags (Stick). Nur Ciphertext + Parameter.
 async function depotHerunterladen() {
   const umschlag = await depotSerialisieren();
+  // U2-ADR-185: der frisch geschriebene Stand löst den zuletzt gehaltenen ab. Ohne diese Zeile
+  // hielte ein späterer Wipe den ÜBERHOLTEN Ladestand — „Es ist nichts verlorengegangen" wäre
+  // still falsch. Vor jedem Abbruch-/Fehlerzweig unten: der Umschlag beschreibt den Stand im
+  // RAM, ganz gleich, ob die Datei danach wirklich ankam (s. `_depotBlobSpeichern`-Rückgabewerte).
+  _umschlagMerken(umschlag);
   // Etappe 5: `gespeichert_am` als KLARTEXT-Geschwisterfeld neben das Chiffrat (NIE in der AAD;
   // AAD bleibt _AAD_DEPOT_V2). Format identisch zur IDB-Senke. Bei unverändertem Stand die interne
   // Zeitmarke übernehmen → Boot erkennt „gleich" (kein Dialog); sonst frisch stempeln.
@@ -17352,6 +17379,7 @@ var VdStore = {
 async function depotInIdbSichern() {
   if (imVorschau() || !sessionHkdfKey || !aktuelleDepotUUID) return null;   // kein Schlüssel/Vorschau → kein interner Stand
   const umschlag = await depotSerialisieren();              // v3-Sechs-Felder-Umschlag (+notfallCache)
+  _umschlagMerken(umschlag);   // U2-ADR-185 — s. Kommentar an depotHerunterladen()
   const record = {
     id: aktuelleDepotUUID,
     cipherBlob: JSON.stringify(umschlag),                   // byte-identischer v3-Umschlag
@@ -29156,6 +29184,14 @@ function renderCryptoOverlay(vorbelegteDatei, internModus) {
       '<span class="welcome-wort"><span class="lw-vivo-d">VIVO</span><span class="lw-depot-d">DEPOT</span></span></h1>' +
       '<p class="welcome-sub">' + escapeHTML(vorDepotText('appTagline')) + '</p>' +
     '</div>' +
+    /* U2-ADR-185 — der Sperrschirm erklärt sich. Genau EINE zusätzliche Zeile, ÜBER der
+       Aufforderung, und NUR nach einem Hintergrund-Wipe (`_wipeErklaerungZeigen`); beim
+       regulären Öffnen über denselben Schirm bleibt sie weg. Kein Name, kein Foto, kein
+       Feldwert, kein Depot-Name — der Schirm existiert, WEIL alles geräumt wurde. Über
+       `vorDepotText`, wie jeder andere Text hier: die englische Fassung steht in
+       PRE_DEPOT_EN, nichts ist verdrahtet. */
+    (_wipeErklaerungZeigen ? '<p class="crypto-auff wipe-hinweis" id="co-wipe-hinweis">'
+      + escapeHTML(vorDepotText('wipeSperrschirmHinweis')) + '</p>' : '') +
     '<p class="crypto-auff">' + escapeHTML(internModus ? vorDepotText('cryptoInternAufforderung') : vorDepotText('cryptoPwAufforderung')) + '</p>' +
     dateiZeile +
     // CC-Auftrag „Startseite und Oberfläche" (12.08.2026, Zug 1) — sagt VOR der Passwortabfrage,
@@ -29208,7 +29244,12 @@ function renderCryptoOverlay(vorbelegteDatei, internModus) {
     };
   }
   // U2-ADR-078: kein 'co-notfall' mehr (passwortlose Sanitäter-Tür entfernt).
-  w('co-neu', () => renderWelcome());      // Lage B → Lage A
+  /* U2-ADR-185 — der Rückweg MUSS erreichbar bleiben: wer nicht sein eigenes Gerät vor sich
+     hat oder aufhören will, kommt hier vom Sperrschirm weg. Und er VERWIRFT dabei, was für den
+     Wiedereintritt gehalten wurde (Umschlag + Stelle + Erklärungs-Merker) — „doch neu anfangen"
+     heisst genau das; einen gehaltenen Umschlag über diesen Klick hinweg stehen zu lassen wäre
+     eine Rest-Exposition, die niemand erwartet. */
+  w('co-neu', () => { _wiedereintrittVerwerfen(); renderWelcome(); });      // Lage B → Lage A
   overlayNachObenScrollen();
 }
 
@@ -29292,8 +29333,22 @@ async function cryptoOverlayOeffnen() {
   if (_internEintritt && !datei) {
     if (!pw) { zeigeFehler(vorDepotText('fehlerFalsch')); return; }
     try {
-      await depotAusIdbLaden(pw);
+      /* U2-ADR-185 — ZWEI Quellen, EIN Schirm; beide brauchen nur das Passwort, keine Datei:
+         (1) der interne Stand auf dem Gerät (D43 Etappe 5, der Boot-Weg). Er hat Vorrang, denn
+             nur `depotAusIdbLaden` setzt die Zeitmarke des Records und die Einstiegsmarke —
+             beides speist die Konflikterkennung beim nächsten Sichern.
+         (2) der im RAM gehaltene Umschlag. Er ist der Rückweg für ein aus einer DATEI
+             geöffnetes Depot: dort gibt es keinen internen Stand, und ohne ihn müsste die
+             Bürgerin nach dem Wipe ihre Datei erneut suchen. Kein zweiter Lade-Weg —
+             `depotLaden` ist derselbe, den auch die Datei nimmt. */
+      let geladen = null;
+      if (internerSpeicherModus()) geladen = await depotAusIdbLaden(pw);   // null = gar kein interner Stand
+      if (!geladen && _gehaltenerUmschlag) { await depotLaden(_gehaltenerUmschlag, pw); geladen = _gehaltenerUmschlag; }
+      // Ohne beides gibt es nichts aufzuschliessen. Vorher fiel dieser Fall durch bis
+      // betreteApp() — mit `data === null`, also einer sichtbar leeren App statt einer Meldung.
+      if (!geladen) { zeigeFehler(vorDepotText('entsperrPasswortFalsch')); return; }
       _internEintritt = false; betreteApp();
+      _stelleNachWiedereintrittAnfahren();   // U2-ADR-185 Stück 2 — dieselbe Stelle wie vorher
       // NICHT vorDepotText(): ab hier ist ein ECHTES Depot mit seiner EIGENEN Sprache aktiv
       // (depotAusIdbLaden hat sie geladen) — der Vor-Depot-Schalter darf sie nicht überschreiben.
       ui.toast(STRINGS.geoeffnet, 'ok');
@@ -29339,6 +29394,10 @@ async function cryptoOverlayOeffnen() {
     // wo die gerade geöffnete Datei der aktuelle Stand selbst ist.
     markiereAlsDateiGesichert();
     betreteApp();
+    /* U2-ADR-185 Stück 2 — auch hier: wer nach einem Wipe DIESELBE Datei wieder öffnet, landet
+       an der Stelle, an der sie unterbrochen wurde. Ohne gemerkte Stelle (regulärer Erst-Eintritt
+       oder eine ANDERE Datei) tut die Funktion nichts, s. dort. */
+    _stelleNachWiedereintrittAnfahren();
     // A475 — ERST nach betreteApp() (Sitzungs-Akteur steht, s. Kommentar an der Funktion):
     // war schon eine Fassung DESSELBEN Depots offen und ist sie abgewichen, fragt/mergt hier.
     try { _fassungenNachOeffnenPruefen(_fassungVorher); } catch (_) { /* darf das Öffnen nie brechen */ }
@@ -30342,6 +30401,106 @@ function flowSubDepotNachAnker() {
 // Sind Änderungen offen, bleibt der Bearbeiten-Zustand bewusst im RAM — das ist die benannte
 // Rest-Exposition, und sie ist der Preis dafür, dass ein Wipe keine Bürgerdaten vernichtet
 // (`data` ist die einzige Kopie; der Autosave schreibt nur RAM).
+//
+// U2-ADR-185 (01.09.2026) — DIESE ZUSAGE IST NEU GEFASST, nicht stillschweigend gelockert.
+// Sie gilt für DIESE FUNKTION unverändert wörtlich: der Reset leert jetzt zusätzlich die drei
+// Wiedereintritts-Halter (`_gehaltenerUmschlag`, `_wipeStelle`, `_wipeErklaerungZeigen`) — jeder
+// Aufrufer, der hier hindurchgeht, hinterlässt danach nichts, woraus sich etwas wiederherstellen
+// liesse. GENAU EIN Aufrufer weicht ab, sichtbar und benannt: `_hintergrundWipeVielleicht()`
+// liest Umschlag und Navigations-Stelle VOR dem Reset in lokale Variablen und setzt sie DANACH
+// wieder ein. Über diesen einen Weg überlebt also der VERSCHLÜSSELTE Umschlag (Chiffrat +
+// Parameter, ohne jeden Schlüssel) und eine Navigations-Kennung — nichts vom Passwort
+// Abgeleitetes, kein Klartext, kein Feldwert. Warum das dort nötig und vertretbar ist, steht
+// vollständig am Halter-Block unten; die Alternative wäre gewesen, die Zusage hier weiter
+// wörtlich zu behaupten und die Ausnahme zu verschweigen.
+
+/* ══ U2-ADR-185 — was für den Wiedereintritt gehalten wird ═══════════════════════════════
+   DREI Halter, alle NUR im Arbeitsspeicher. Kein localStorage, kein sessionStorage, kein
+   IndexedDB-Schreiben: ein Neuladen der Seite löscht sie restlos, wie den Sprachschalter
+   und den Nachtmodus (dieselbe Linie, s. Kommentar an PRE_DEPOT_EN).
+
+   `_gehaltenerUmschlag` — der zuletzt GELADENE oder GESCHRIEBENE Umschlag, also Chiffrat plus
+   die Parameter, die zum Aufschliessen nötig sind. WARUM das keine Aufweichung ist: Chiffrat
+   ohne Schlüssel ist Rauschen, und der Schlüssel ist genau das, was der Wipe räumt. Dieselbe
+   Datei liegt ohnehin auf der Platte — ein Angreifer bekäme dort dasselbe Chiffrat.
+   WARUM ER NÖTIG IST: ohne ihn müsste ein aus einer DATEI geöffnetes Depot nach dem Wipe erneut
+   gesucht werden; ein interner Stand käme aus IndexedDB zurück, ein Datei-Depot nicht.
+   WAS BEWUSST NICHT ZUSÄTZLICH GEHALTEN WIRD: die Salts. Der Umschlag trägt sie selbst
+   (`pbkdf2.salt`, `depotSalt`, `depotUUID` — s. depotSerialisierenV3/V4); sie daneben noch
+   einmal zu halten wäre ein zweites Stück ohne Zugewinn. `depotLaden` liest sie beim Öffnen
+   aus dem Umschlag, wie bei jeder Datei auch.
+   WAS UNVERÄNDERT VOLLSTÄNDIG GERÄUMT WIRD (nichts vom Passwort Abgeleitetes bleibt liegen):
+   `data`, `_ankerData`, `sessionSubKeys` (Schlüssel UND entschlüsselter Sub-Inhalt),
+   `sessionHkdfKey`, `sitzungsAkteur`, `_ankerAkteur`, `aktiverSubKontext` — s. der Reset unten.
+   IMMER der ANKER, nie ein Sub-Inhalt: `depotLaden` wird für einen Sub-Kontext nie aufgerufen
+   (der betritt über `subKontextBetreten`, das `data` direkt aus bereits entsiegelten
+   Session-Schlüsseln setzt); und beide Schreib-Stellen (`depotInDateiSichern`/
+   `depotInternSichern`) swappen im Sub-Kontext `data` selbst KURZ auf `_ankerData`, bevor sie
+   serialisieren — der Umschlag, der hier ankommt, ist also immer der Anker-Umschlag.
+
+   `_wipeStelle` — die reine Navigations-Stelle (Ansicht, Bereich, Situation, Wizard-Schritt).
+   KEINE Inhalte: hier steht kein Feldwert, kein Name, kein Eintrag, nur woraufhin gezeigt wurde.
+
+   `_wipeErklaerungZeigen` — ob der Sperrschirm den EINEN erklärenden Satz trägt. Nur nach einem
+   Wipe wahr, nie beim regulären Öffnen über denselben Schirm. */
+let _gehaltenerUmschlag = null;
+let _wipeStelle = null;
+let _wipeErklaerungZeigen = false;
+
+/* Merkt den Umschlag, der GERADE den gültigen Stand trägt. Drei Aufruf-Arten, alle an der
+   Stelle, an der der Umschlag ohnehin schon in der Hand liegt:
+   • beim LADEN (`depotLaden`) — der eine Trichter hinter allen drei Öffnen-Wegen,
+   • beim SCHREIBEN (`depotInIdbSichern`, `depotHerunterladen`) — sonst hielte ein Wipe nach
+     einem Speichern den ÜBERHOLTEN Ladestand, und die Bürgerin fände nach dem Entsperren ihre
+     seither gesicherte Arbeit nicht wieder. Der Satz „Es ist nichts verlorengegangen" wäre dann
+     falsch, und zwar still. */
+function _umschlagMerken(umschlag) {
+  if (umschlag && typeof umschlag === 'object') _gehaltenerUmschlag = umschlag;
+}
+/* Der Rückweg „Doch neu anfangen" und der reguläre Reset: alles Gehaltene fällt. */
+function _wiedereintrittVerwerfen() {
+  _gehaltenerUmschlag = null; _wipeStelle = null; _wipeErklaerungZeigen = false;
+}
+/* Liest die Navigations-Stelle, BEVOR der Reset sie auf den Standard zurückstellt. Reine
+   Kennungen, keine Objekte aus `data` — was hier hineingerät, ist eine Bereichs-/Situations-/
+   Wizard-ID und ein Zahlenindex. */
+function _stelleLesen() {
+  return {
+    ansicht: aktiveAnsicht,
+    sektorId: aktiverSektorId,
+    situationId: aktiveSituationId,
+    wizardId: aktiverWizardId,
+    schrittIndex: wizardSchrittIndex,
+  };
+}
+/* Fährt die gemerkte Stelle wieder an — NACH `betreteApp()`, das selbst `oeffneSektor()` ruft
+   und die Ansicht sonst wieder auf 'sektor' zöge.
+
+   JEDE Angabe wird gegen den GERADE GELADENEN Bestand geprüft, nicht geglaubt: ein Bereich kann
+   seit dem Wipe fehlen (anderes Depot, abgemeldetes Bereichs-Modul), ein Wizard-Schritt kann
+   unsichtbar geworden sein. Was nicht mehr existiert, fällt still auf den Standard zurück —
+   das ist der Fall, der in der Praxis zuerst auffällt, und er darf nicht werfen.
+   Ansichten ohne eigenen, nebenwirkungsfreien Einstieg (Mappe, Prüftermine, Übergabe-Protokoll,
+   Anfrage …) werden bewusst NICHT wiederhergestellt: sie führen ihren Zustand ausserhalb dieser
+   fünf Kennungen, und ein halb angefahrener Weg wäre schlechter als der Bereichs-Standard. */
+function _stelleNachWiedereintrittAnfahren() {
+  const s = _wipeStelle;
+  _wipeStelle = null;
+  if (!s || !data) return;
+  try {
+    if (s.sektorId && bereicheAlle().some((b) => b && b.id === s.sektorId)) oeffneSektor(s.sektorId);
+    if (s.ansicht === 'verwaltung') oeffneVerwaltung();
+    else if (s.ansicht === 'kartenraster') oeffneEintragenUebersicht();
+    else if (s.ansicht === 'situation' && s.situationId && SITUATION_BY_ID[s.situationId]) oeffneSituation(s.situationId);
+    else if (s.ansicht === 'wizard' && s.wizardId && WIZARD_BY_ID[s.wizardId]) {
+      if (wizardLauf(s.wizardId)) {   // startet am ersten Schritt; scheitert still und sicher
+        const sichtbar = wizardSichtbareIndizes(WIZARD_BY_ID[s.wizardId]);
+        if (sichtbar.indexOf(s.schrittIndex) >= 0) { wizardSchrittIndex = s.schrittIndex; renderContent(); }
+      }
+    }
+  } catch (_) { /* eine Stelle wiederzufinden darf den Eintritt nie brechen */ }
+}
+
 function _depotSpeicherZuruecksetzen() {
   data = null;
   /* U2-ADR-103 Teil 1 — die VIER Halter, die der Reset bis 26.07.2026 übersah, obwohl der
@@ -30359,6 +30518,9 @@ function _depotSpeicherZuruecksetzen() {
      ALLE Referenzen fallen, ist der Klartext unerreichbar. `data` ist eine Zeile darüber genullt. */
   sessionSubKeys.clear();
   _ankerData = null; _ankerAkteur = null; aktiverSubKontext = null;
+  // U2-ADR-185: die drei Wiedereintritts-Halter fallen hier mit — s. der neu gefasste
+  // Zusage-Absatz oben. Nur `_hintergrundWipeVielleicht()` setzt zwei davon danach wieder ein.
+  _wiedereintrittVerwerfen();
   aktuelleSalt = null; aktuelleDepotSalt = null; aktuelleDepotUUID = null;
   sessionHkdfKey = null; sitzungsAkteur = null;
   aktiveAnsicht = 'sektor';
@@ -30405,7 +30567,17 @@ function _hintergrundWipeVielleicht() {
   // Bedingung wie schliessenWarnungNoetig(), kein neuer Mechanismus: ein Fehlschlag ist kein
   // sicherer Moment zum stillen Wegräumen.
   if (_letzterSpeicherFehlgeschlagen) return;
+  /* U2-ADR-185 — DIE EINE benannte Ausnahme von der „NICHTS Wiederherstellbares"-Zusage des
+     Resets (s. dort, neu gefasster Absatz). Beides wird VOR dem Reset in lokale Variablen
+     gelesen und DANACH wieder eingesetzt: der verschlüsselte Umschlag (Chiffrat + Parameter,
+     kein Schlüssel) und die reine Navigations-Stelle. Nichts vom Passwort Abgeleitetes ist
+     dabei — `sessionHkdfKey`, `sessionSubKeys` und der Klartext fallen unverändert. */
+  const _haltUmschlag = _gehaltenerUmschlag;
+  const _haltStelle = _stelleLesen();
   _depotSpeicherZuruecksetzen();
+  _gehaltenerUmschlag = _haltUmschlag;
+  _wipeStelle = _haltStelle;
+  _wipeErklaerungZeigen = true;   // nur hier — der Sperrschirm erklärt sich NUR nach einem Wipe
   // Fund (31.08.2026, Sub-Depot-Klick-Freeze): renderWelcome() räumt den DOM (_eingangsschirmDom-
   // Aufraeumen) nur, wenn IHR EIGENER Wächter beim Aufruf noch `data` truthy vorfindet — genau
   // das ist hier nicht mehr der Fall, `data` steht seit der Zeile darüber auf null. Verlassen auf
@@ -30425,7 +30597,23 @@ function _hintergrundWipeVielleicht() {
   // nur eben mit leerem #content — eine leere Hülle statt eines Eingangsschirms.
   const appEl = document.getElementById('app'); if (appEl && appEl.classList) appEl.classList.remove('an');
   try { overlayModalOeffnen(); } catch (_) {}
-  try { renderWelcome(); } catch (_) {}
+  /* U2-ADR-185 — HIER STAND `renderWelcome()`. Der Erstbesucher-Schirm teilte der Bürgerin mit,
+     sie sei zum ersten Mal hier, obwohl nichts gelöscht wurde (die Gründerin, die es selbst
+     erlebte: „alles ist weg"). Die Konvention, die sie vorgab: „zurückkommen und kurz Passwort
+     eingeben und dann an der Stelle weitermachen … wie das Fenster einer Bank." Genau dieser
+     Schirm ist `renderCryptoOverlay()` bereits — Passwortfeld, Öffnen-Knopf, Rückweg „Doch neu
+     anfangen". Kein neuer Bildschirm gebaut, der vorhandene angefahren.
+
+     `internModus` (kein Datei-Picker) genau dann, wenn ein Stand ohne Datei erreichbar ist —
+     gemessen an dem einen Halter, den BEIDE Quellen füllen: der interne Save (`depotInIdbSichern`
+     merkt denselben Umschlag, den er nach IndexedDB schreibt) und jedes Laden (`depotLaden`).
+     Damit ist „liegt ein Depot auf dem Gerät" hier ohne einen zweiten, asynchronen IndexedDB-Blick
+     beantwortet — und der Fall „noch nie gesichert" (nichts, wohin zurückzukehren wäre) landet
+     richtig auf dem Schirm MIT Datei-Auswahl statt auf einem Passwortfeld ins Leere.
+     Welche der beiden Quellen dann wirklich lädt, entscheidet `cryptoOverlayOeffnen()` — dort
+     hat der interne Stand Vorrang, weil nur er Zeitmarke und Einstiegsmarke mitbringt. */
+  try { renderCryptoOverlay(null, !!_gehaltenerUmschlag); }
+  catch (_) { try { renderWelcome(); } catch (__) {} }   // ein Render-Fehler darf nie ohne Bildschirm enden
 }
 
 // Hintergrundwechsel BEGINNT: keine sofortige Wirkung mehr (Carolas Entscheidung, 31.08.2026) —
@@ -30678,6 +30866,11 @@ function betreteApp() {
   // zuverlässiges Zustandssignal (in der Testumgebung nicht abfragbar).
   const warSchonDrin = _appBereitsBetreten;
   _appBereitsBetreten = true;
+  /* U2-ADR-185: der Wipe-Erklärungssatz ist verbraucht, sobald jemand DRIN ist — an genau
+     dieser einen Stelle gelöscht, weil jeder Weg in die App durch sie führt (auch der
+     Konflikt-Dialog-Weg, der `cryptoOverlayOeffnen` vorzeitig verlässt). Bei einem reinen
+     Navigations-Ruf aus einer laufenden Sitzung steht er ohnehin schon auf false. */
+  _wipeErklaerungZeigen = false;
   const appEl = document.getElementById('app');
   overlayModalSchliessen();
   if (appEl && appEl.classList) appEl.classList.add('an');
