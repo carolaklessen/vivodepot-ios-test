@@ -891,8 +891,13 @@
      Anker wie eingehängtes Depot: sie ist der Rahmen und sagt „die Datei liegt bei
      Ihnen". Die Topbar bekommt darum bewusst KEINEN vm-chrome-Flächen-Eintrag; sie
      bleibt bei ihrer eigenen Basis-Regel (.topbar { background: var(--salbei-dunkel) }).
-     SIDEBAR FÄRBT SEIT §7/§8 (25.08.2026) NICHT MEHR — sie ist immer Papierton. */
-  #app.modus-vollmacht.vm-akzent .topbar { border-bottom-color: var(--cream); }
+     SIDEBAR FÄRBT SEIT §7/§8 (25.08.2026) NICHT MEHR — sie ist immer Papierton.
+     Die frühere Creme-Kante an der Topbar-Unterkante (05.08.2026, `3931e3e4`) ist darum
+     ersatzlos entfernt: ihr einziger Zweck war, zu verhindern, dass die (damals noch
+     akzentgefärbte) Sidebar und der Topbar-Rand ohne Trennung ineinanderliefen. Seit die
+     Sidebar Papierton ist, gibt es diesen Fall nicht mehr — die Basisregel
+     (.topbar { border-bottom: 3px solid var(--akzent) }) trägt jetzt unbedingt den echten
+     Sub-Akzent, auch im Vollmacht-Sub-Kontext. */
   /* Karten-Rand (NEU, 27.08.2026): dieselbe verdunkelte ≥3:1-Fassung wie --sd-akzent-linie
      ("nie betreten"-Karten, Gesamtbild-UX-Konzept Abschnitt C) — --vm-linie wird beim
      Betreten gesetzt (setzeSubDepotAkzent), keine neue Kontrastrechnung nötig. */
@@ -3925,7 +3930,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v482';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — CC-Auftrag Service-Worker-Update-Sackgasse: „App-Update jetzt prüfen"-Knopf in den Einstellungen, 31.08.2026
+const SCHALEN_STAND = 'v487';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-185: Sperrschirm statt Eingangsschirm nach Wipe, 01.09.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -3960,7 +3965,7 @@ function heuteLokal(d = new Date()) {
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-08-31';
+const BUILD_DATUM = '2026-09-01';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -4330,6 +4335,13 @@ const _STRINGS_EINGEBAUT = ({
   ortHinweisAllgemein: null,   // [PLATZHALTER-WORTLAUT — VORLÄUFIG, Vorlage im F5-Bericht]
   ortHinweisSichtbarkeitKreis: null,   // [PLATZHALTER-WORTLAUT — VORLÄUFIG, Vorlage im F5-Bericht]
   cryptoNeuAnfangen: null,            // Lage B → Lage A
+  /* U2-ADR-185 — der EINE Satz, der den Sperrschirm vom Erstbesucher-Schirm unterscheidet.
+     Wird NUR nach einem Hintergrund-Wipe gezeigt, nie beim regulären Öffnen über denselben
+     Schirm. Wortlaut von der Gründerin abgenommen, nicht umformulierbar: „nicht zu sehen"
+     statt „im Hintergrund" ist Absicht — „nicht benutzt" wäre sachlich falsch, der Auslöser
+     ist Hintergrund, nicht Untätigkeit (U2-ADR-184 Punkt 2). Der zweite Halbsatz ist die
+     eigentliche Nachricht: die Gründerin erlebte den Zustand als „alles ist weg". */
+  wipeSperrschirmHinweis: null,
   cryptoDateiGewaehlt: null,
   // CC-Auftrag „Startseite und Oberfläche" (12.08.2026, Zug 3, Posten 15 Entscheidung C):
   // Empfehlung statt Handlungsschritt — die Installation ist NIE Voraussetzung, der Stick allein
@@ -7960,6 +7972,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:ortHinweisAllgemein.text': "Ein Passwort für diese Datei ist hinterlegt: {ort}",
   'strings:ortHinweisSichtbarkeitKreis.text': "Diese Angabe sieht jeder, der diese Datei öffnet — vor der Passwort-Eingabe. Schreiben Sie sie so, dass die gemeinte Person sie versteht, und nennen Sie darin nie das Passwort selbst.",
   'strings:cryptoNeuAnfangen.text': "Doch neu anfangen — ohne Datei",
+  'strings:wipeSperrschirmHinweis.text': "Ihr Depot wurde geschlossen, weil Vivodepot eine halbe Stunde lang nicht zu sehen war. Es ist nichts verlorengegangen.",
   'strings:cryptoDateiGewaehlt.text': "Gewählte Datei",
   'strings:installEmpfehlungTitel.text': "Auf dem Startbildschirm ablegen (optional)",
   'strings:webAppHinweis.text': "Nicht nötig, aber praktisch: Über das Teilen-Menü Ihres Browsers „Zum Home-Bildschirm hinzufügen“ — dann öffnet sich Vivodepot wie eine App. Der Stick allein reicht weiterhin.",
@@ -10195,6 +10208,17 @@ const PRE_DEPOT_EN = Object.freeze({
   cryptoInternAufforderung: 'Your Vivodepot is stored on this device. Enter your password to open it.',
   btnDepotOeffnen: 'Open my Vivodepot',
   cryptoNeuAnfangen: 'Start fresh instead — without a file',
+  /* U2-ADR-185. Dieser Satz erscheint ausschliesslich auf dem Vor-Depot-Sperrschirm, also an
+     einer Stelle, die das signierte Sprachmodul praktisch nie erreicht (`vorDepotText` löst
+     ihn immer schon HIER auf, bevor ein Depot — und mit ihm das Modul — überhaupt existiert).
+     Trotzdem steht dieselbe englische Fassung AUCH in `tools/textsatz-en-vollabdeckung-daten.js`
+     (Zeile bei `strings:wipeSperrschirmHinweis.text`): die Vollabdeckungs-Probe
+     (`tests/textsatz-en-modul-erzeugen.test.js`) verlangt ausdrücklich ALLE
+     TEXTSATZ_EINGEBAUT-Kennungen ohne Ausnahme — Erreichbarkeits-Überlegungen wie diese hier
+     sind bewusst KEIN anerkannter Ausnahmegrund (erste Fassung dieses Kommentars nahm das
+     irrtümlich an, s. Bericht). Kein Modul-Neubau, keine Neu-Signatur nötig: die Quelldaten
+     zu ändern bereitet nur den NÄCHSTEN echten Modul-Build vor. */
+  wipeSperrschirmHinweis: 'Your Vivodepot was closed because it had not been visible for half an hour. Nothing has been lost.',
   cryptoDateiGewaehlt: 'Selected file',
   dateiLabel: 'Vault file',
   dateiAuswaehlenKnopf: 'Choose file',
@@ -10764,7 +10788,7 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
     merkmale: ['personenRegister'],
     rollen: { personenListe: 'menschen', schutzbefohleneListe: 'kinder',
       personenSektion: 'menschen-liste', schutzbefohleneSektion: 'kinder-sek' },
-    exporte: [{ format: 'vcard-menschen', label: STRINGS.exportVcardMenschenLabel }],   // Welle 2 (vCard)
+    exporte: [{ format: 'vcard-menschen', get label() { return STRINGS.exportVcardMenschenLabel; } }],   // Welle 2 (vCard)
     // Geführter Einstieg: der Sorgerechts-Wizard (srwiz) und – Welle 2/3 – Pflege/Heirat schreiben
     // ihren Bereich-2-Teil hierher; der Startknopf ist datenlage-adaptiv (erstellen/bearbeiten).
     wizards: ['pflwiz', 'heirwiz'],
@@ -11088,7 +11112,7 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
     ] },
   { id: 'finanzen',          format: SEKTOR_FORMATE.SD_JWT_VC,  icon: 'wallet',
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md (U2-ADR-009).
-    exporte: [{ format: 'sd-jwt-vc-finanzen', label: STRINGS.exportFinanzenLabel }],   // Welle 1
+    exporte: [{ format: 'sd-jwt-vc-finanzen', get label() { return STRINGS.exportFinanzenLabel; } }],   // Welle 1
     // Geführter Einstieg: der Erbschafts-Wizard (erbwiz) schreibt seinen Bereich-4-Teil
     // (Vermögensübersicht für den Nachlass) hierher. Startknopf datenlage-adaptiv.
     wizards: [],
@@ -11279,7 +11303,7 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
     // E2 (Datenmodell-Konzept v1.2 §3): impfungen/implantate gaben ihre Stub-Slots ab — Code-Slot nur
     // mit lesendem Generator. Stub-Registrierungen + SBOM bleiben, bis Code-Listen im Template-Vertrag reisen.
     // Template-Backlog: siehe docs/spec/Templates-Backlog.md.
-    exporte: [{ format: 'fhir-ips', label: STRINGS.fhirExportKurz }],   // §5.4 / T3.4 — herausholen als FHIR-IPS (Kurz-Label ②). U2-ADR-046 ③ zog fhir-lab aus dem Chooser; E3 (Datenmodell-Konzept v1.2 §3) wickelte Generator + Export-Format ganz ab — der konforme Laborweg ist der autoritative Import (U2-ADR-045/047).
+    exporte: [{ format: 'fhir-ips', get label() { return STRINGS.fhirExportKurz; } }],   // §5.4 / T3.4 — herausholen als FHIR-IPS (Kurz-Label ②). U2-ADR-046 ③ zog fhir-lab aus dem Chooser; E3 (Datenmodell-Konzept v1.2 §3) wickelte Generator + Export-Format ganz ab — der konforme Laborweg ist der autoritative Import (U2-ADR-045/047).
     // Geführter Einstieg: Anamnese-Wizard (anamwiz) und Pflege-Übernahme-Wizard (pflwiz, B5-Teil).
     // Startknöpfe datenlage-adaptiv.
     wizards: ['anamwiz', 'pflwiz'],
@@ -11409,7 +11433,7 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
       // Pflegedienst & Pflegegeld jetzt mit hierher → sozialversicherung/renten-pflege-soz.
     ] },
   { id: 'bildung',           format: SEKTOR_FORMATE.EDCI,       icon: 'graduationCap',
-    exporte: [{ format: 'edci-bildung', label: STRINGS.exportBildungLabel }],   // §3.5 — herausholen
+    exporte: [{ format: 'edci-bildung', get label() { return STRINGS.exportBildungLabel; } }],   // §3.5 — herausholen
     sektionen: [
       { id: 'ausbildung-beruf', felder: [
         // F4 Zug 3 (11.08.2026): Abschluss war mit Jahr und Schule in einem Freitext gemischt
@@ -11529,7 +11553,7 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
     wizards: ['pflwiz'],
     // U2-ADR-030: unsignierter SD-JWT-VC-Selbstauskunft-Export (Variante A). Pflegegrad reist auf
     // dem Sozial-Pfad, NICHT im klinischen FHIR-IPS (U2-ADR-018/019 entmedikalisieren ihn).
-    exporte: [{ format: 'sd-jwt-vc-sozialversicherung', label: STRINGS.exportSozialversicherungLabel }],
+    exporte: [{ format: 'sd-jwt-vc-sozialversicherung', get label() { return STRINGS.exportSozialversicherungLabel; } }],
     // Standard-Dokument-Liste (U2-ADR-014, Einheit 2). Heimat-Bereich des Schwerbehinderten-
     // ausweises: ein sozialrechtliches Instrument (Versorgungsamt, GdB, Nachteilsausgleiche);
     // das bestehende Gültigkeits-Feld schwerbehindertenausweis_gueltig liegt hier. Ablauf-
@@ -11694,7 +11718,7 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
     // als keiner.
     wizardId: null,
     wizards: ['pvwiz', 'kiwiz', 'pflwiz', 'heirwiz'],
-    exporte: [{ format: 'ics-vorsorge', label: STRINGS.exportIcsLabel }],   // Welle 2 (ICS-Termine)
+    exporte: [{ format: 'ics-vorsorge', get label() { return STRINGS.exportIcsLabel; } }],   // Welle 2 (ICS-Termine)
     // Standard-Dokument-Liste (U2-ADR-014, Stufe 2/Einheit 2). Additiver Registry-Schlüssel,
     // strukturgleich zu exporte/wizards — Katalog typischer Dokumente dieses Bereichs. KEINE
     // Werte, KEINE Instanzen (die liegen in data.dokumente[], Einheit 3). felder = optionale
@@ -16608,6 +16632,9 @@ async function depotLaden(umschlag, password) {
   aktuelleDepotSalt = depotSalt;
   aktuelleDepotUUID = depotUUID;
   data = obj;
+  // U2-ADR-185: der eine Trichter hinter allen drei Öffnen-Wegen ist auch der eine Ort, an dem
+  // der Umschlag für einen späteren Wiedereintritt gemerkt wird — verschlüsselt, ohne Schlüssel.
+  _umschlagMerken(umschlag);
   dateiBindungZuruecksetzen();   // Stück 3: geladenes Depot → erste Sicherung wählt die Datei neu (kein Alt-Handle)
   // Dokument-Ebene (U2-ADR-014): der eine Pfad, durch den jedes geladene Depot geht.
   // Idempotent/additiv/verlustfrei — migriert data.erinnerungen → data.dokumente[],
@@ -16949,6 +16976,11 @@ function _dateiNameErfragen() {
 // Datei-Download des verschlüsselten Umschlags (Stick). Nur Ciphertext + Parameter.
 async function depotHerunterladen() {
   const umschlag = await depotSerialisieren();
+  // U2-ADR-185: der frisch geschriebene Stand löst den zuletzt gehaltenen ab. Ohne diese Zeile
+  // hielte ein späterer Wipe den ÜBERHOLTEN Ladestand — „Es ist nichts verlorengegangen" wäre
+  // still falsch. Vor jedem Abbruch-/Fehlerzweig unten: der Umschlag beschreibt den Stand im
+  // RAM, ganz gleich, ob die Datei danach wirklich ankam (s. `_depotBlobSpeichern`-Rückgabewerte).
+  _umschlagMerken(umschlag);
   // Etappe 5: `gespeichert_am` als KLARTEXT-Geschwisterfeld neben das Chiffrat (NIE in der AAD;
   // AAD bleibt _AAD_DEPOT_V2). Format identisch zur IDB-Senke. Bei unverändertem Stand die interne
   // Zeitmarke übernehmen → Boot erkennt „gleich" (kein Dialog); sonst frisch stempeln.
@@ -17347,6 +17379,7 @@ var VdStore = {
 async function depotInIdbSichern() {
   if (imVorschau() || !sessionHkdfKey || !aktuelleDepotUUID) return null;   // kein Schlüssel/Vorschau → kein interner Stand
   const umschlag = await depotSerialisieren();              // v3-Sechs-Felder-Umschlag (+notfallCache)
+  _umschlagMerken(umschlag);   // U2-ADR-185 — s. Kommentar an depotHerunterladen()
   const record = {
     id: aktuelleDepotUUID,
     cipherBlob: JSON.stringify(umschlag),                   // byte-identischer v3-Umschlag
@@ -18879,13 +18912,13 @@ function flowAnlassExport(anlassId, optionen) {
 
 const EXPORT_FORMATE = Object.freeze([
   // 3.1 — ganzes Depot als offenes JSON (Umzug/Sicherung/Weitergabe).
-  { id: 'json', kategorie: 'depot', label: STRINGS.exportJsonLabel,
+  { id: 'json', kategorie: 'depot', get label() { return STRINGS.exportJsonLabel; },
     mime: 'application/json', endung: 'json', dateibasis: 'Vivodepot_Daten',
     // N4 (09.08.2026): `optionen` fehlte hier — das „auch Sensibles einschließen"-Opt-in erreichte
     // `vollExportJSON` nie. Unsichtbar, solange kein Feld `sensibel:true` trug (N4 Zug 1 ändert das).
     toast: STRINGS.exportJsonFertig, baue: (opt) => vollExportJSON(opt) },
   // 3.4 — Gesundheit als FHIR-IPS (bereits gebaut; hier in die Registry eingereiht).
-  { id: 'fhir-ips', kategorie: 'sektor', sektor: 'gesundheit', label: STRINGS.fhirExportLabel,
+  { id: 'fhir-ips', kategorie: 'sektor', sektor: 'gesundheit', get label() { return STRINGS.fhirExportLabel; },
     mime: 'application/fhir+json', endung: 'json', dateibasis: 'Vivodepot_Gesundheit_IPS',
     toast: STRINGS.fhirExportiert, baue: (opt) => fhirIpsBundle(opt && opt.jetzt, opt) },
   // Export-Format 'fhir-lab' (self-erzeugter Laborbericht) entfernt — E3, Datenmodell-Konzept v1.2 §3.
@@ -18893,26 +18926,26 @@ const EXPORT_FORMATE = Object.freeze([
   // 3.5 — je ein Format-Profil pro Bereich (Format-Tag der Inhalts-Spec). Bereich 1 (Identität)
   // als vollständiger Muster-Fall (SD-JWT-VC), Bereich 9 (Verwaltung, XÖV) und Bereich 6 (Bildung,
   // EDCI) als Definition. Der Bürger sieht nur das Label, nie „SD-JWT"/„Claim"/„XÖV".
-  { id: 'sd-jwt-vc-identitaet', kategorie: 'sektor', sektor: 'identitaet', label: STRINGS.exportIdentitaetLabel,
+  { id: 'sd-jwt-vc-identitaet', kategorie: 'sektor', sektor: 'identitaet', get label() { return STRINGS.exportIdentitaetLabel; },
     mime: 'application/json', endung: 'json', dateibasis: 'Vivodepot_Identitaet', eudiw: true,
     toast: STRINGS.exportIdentitaetFertig, baue: (opt) => sdJwtVcIdentitaet(opt) },
-  { id: 'xoev-verwaltung', kategorie: 'sektor', sektor: 'verwaltung', label: STRINGS.exportVerwaltungLabel,
+  { id: 'xoev-verwaltung', kategorie: 'sektor', sektor: 'verwaltung', get label() { return STRINGS.exportVerwaltungLabel; },
     mime: 'application/json', endung: 'json', dateibasis: 'Vivodepot_Verwaltung',
     // N4 (09.08.2026): `optionen` fehlte hier — dieselbe Lücke wie beim json-Format, s. dort.
     toast: STRINGS.exportVerwaltungFertig, baue: (opt) => xoevVerwaltung(opt) },
-  { id: 'edci-bildung', kategorie: 'sektor', sektor: 'bildung', label: STRINGS.exportBildungLabel,
+  { id: 'edci-bildung', kategorie: 'sektor', sektor: 'bildung', get label() { return STRINGS.exportBildungLabel; },
     mime: 'application/json', endung: 'json', dateibasis: 'Vivodepot_Bildung',
     toast: STRINGS.exportBildungFertig, baue: (opt) => edciBildung(opt) },
   // ── Weitere Format-Exporte (Welle 1+2) ──
-  { id: 'sd-jwt-vc-finanzen', kategorie: 'sektor', sektor: 'finanzen', label: STRINGS.exportFinanzenLabel,
+  { id: 'sd-jwt-vc-finanzen', kategorie: 'sektor', sektor: 'finanzen', get label() { return STRINGS.exportFinanzenLabel; },
     mime: 'application/json', endung: 'json', dateibasis: 'Vivodepot_Finanzen', sensibelOpt: true, eudiw: true,
     toast: STRINGS.exportFinanzenFertig, baue: (opt) => sdJwtVcFinanzen(opt) },
   // Bereich 7 — Sozialversicherung als SD-JWT-VC (Selbstauskunft, unsigniert; U2-ADR-030). eudiw:true →
   // automatisch über eudiwDefFuerSektor in die EUDIW-Übergabe (eudiwSdJwtVcSerialisieren) eingereiht.
-  { id: 'sd-jwt-vc-sozialversicherung', kategorie: 'sektor', sektor: 'sozialversicherung', label: STRINGS.exportSozialversicherungLabel,
+  { id: 'sd-jwt-vc-sozialversicherung', kategorie: 'sektor', sektor: 'sozialversicherung', get label() { return STRINGS.exportSozialversicherungLabel; },
     mime: 'application/json', endung: 'json', dateibasis: 'Vivodepot_Sozialversicherung', sensibelOpt: true, eudiw: true,
     toast: STRINGS.exportSozialversicherungFertig, baue: (opt) => sdJwtVcSozialversicherung(opt) },
-  { id: 'fim-json', kategorie: 'sektor', sektor: 'verwaltung', label: STRINGS.exportFimLabel,
+  { id: 'fim-json', kategorie: 'sektor', sektor: 'verwaltung', get label() { return STRINGS.exportFimLabel; },
     mime: 'application/json', endung: 'json', dateibasis: 'Vivodepot_Verwaltung_FIM',
     toast: STRINGS.exportFimFertig, baue: (opt) => fimVerwaltung(opt) },
   // CC-Auftrag „Herausgabe ohne Auswahl" (13.08.2026), Zug 1: alle drei `baue: () => …` hatten
@@ -18922,7 +18955,7 @@ const EXPORT_FORMATE = Object.freeze([
   // VOR dem baue()-Aufruf mutiert (`exportAuswahlEphemerAnwenden`). Der Dialog wirkt dort darum
   // bereits korrekt, auch ohne `opt` — `(opt)` steht nur, damit der Zug-3-Wächter (jeder Erzeuger
   // nimmt `opt`) nicht an einem funktionierenden Fall vorbeimeldet.
-  { id: 'vcard-identitaet', kategorie: 'sektor', sektor: 'identitaet', label: STRINGS.exportVcardLabel,
+  { id: 'vcard-identitaet', kategorie: 'sektor', sektor: 'identitaet', get label() { return STRINGS.exportVcardLabel; },
     mime: 'text/vcard', endung: 'vcf', dateibasis: 'Vivodepot_Kontakt',
     toast: STRINGS.exportVcardFertig, baue: (opt) => vcardIdentitaet(opt) },
   // `vcardMenschen()` liest `data.menschen[]` direkt — kein Eintrag dort trägt eine Sensibel-
@@ -18932,7 +18965,7 @@ const EXPORT_FORMATE = Object.freeze([
   // Zug 3 (Auftrag „Die Mappe bleibt drin — und der Kontakt bekommt eine Markierung", 13.08.2026):
   // `zurueckgehaltenFn` liefert die Namen der als „Privat" markierten Kontakte für die
   // Nicht-mitgeschickt-Box nach dem Download (s. `_formatExportDownload`).
-  { id: 'vcard-menschen', kategorie: 'sektor', sektor: 'meine-menschen', label: STRINGS.exportVcardMenschenLabel,
+  { id: 'vcard-menschen', kategorie: 'sektor', sektor: 'meine-menschen', get label() { return STRINGS.exportVcardMenschenLabel; },
     mime: 'text/vcard', endung: 'vcf', dateibasis: 'Vivodepot_Kontakte', ohneAuswahl: true,
     zurueckgehaltenFn: () => _vcardMenschenZurueckgehalten().map(e => e.name),
     toast: STRINGS.exportVcardFertig, baue: (opt) => vcardMenschen(opt) },
@@ -18946,7 +18979,7 @@ const EXPORT_FORMATE = Object.freeze([
   // existierte bereits, wurde aber nie vor dem Erfolgs-Toast geprüft — eine de-facto-leere Datei
   // (kein datierter Prüftermin) meldete sich als „fertig" wie jede andere. Analog zu
   // `zurueckgehaltenFn` (bislang nur vcard-menschen) eine deklarative, formatspezifische Vorrichtung.
-  { id: 'ics-vorsorge', kategorie: 'sektor', sektor: 'vorsorge', label: STRINGS.exportIcsLabel, nurExport: true, ohneAuswahl: true,
+  { id: 'ics-vorsorge', kategorie: 'sektor', sektor: 'vorsorge', get label() { return STRINGS.exportIcsLabel; }, nurExport: true, ohneAuswahl: true,
     mime: 'text/calendar', endung: 'ics', dateibasis: 'Vivodepot_Termine',
     toast: STRINGS.exportIcsFertig, toastLeerFn: () => !icsHatTermine(), toastLeer: STRINGS.exportIcsLeer,
     baue: (opt) => icsKalender(opt) },
@@ -21149,7 +21182,7 @@ function _sdJwtVctErkenner(vctErwartet) {
 }
 const IMPORT_FORMATE = Object.freeze([
   // Umkehrung von vollExportJSON — ganzes Depot wiederherstellen (Umzug/Sicherung).
-  { id: 'json', kategorie: 'depot', label: STRINGS.importJsonLabel,
+  { id: 'json', kategorie: 'depot', get label() { return STRINGS.importJsonLabel; },
     akzeptiert: '',   // B1/iOS: KEIN accept-Filter — .vivodepot würde sonst ausgegraut (system-unbekannte Endung ohne UTI); Echtheit/Format prüfen erkennen()/parse(), nicht die Endung
 
     erkennen: (t) => /"vivodepot-klartext-export"|"sektoren"\s*:/.test(t),
@@ -21159,12 +21192,12 @@ const IMPORT_FORMATE = Object.freeze([
   // jedes Bundle. autoritativDoc lenkt die Import-UI in den Ablage-Zweig (flowImportAutoritativ) statt in
   // die Feld-Vorschau. `parse` liefert null (kein Feld-Plan) — nur Absicherung, falls je regulär aufgerufen.
   { id: 'fhir-lab', kategorie: 'sektor', sektor: 'gesundheit', nurImport: true, autoritativDoc: true,
-    label: STRINGS.importFhirLabLabel,
+    get label() { return STRINGS.importFhirLabLabel; },
     akzeptiert: '.json,application/fhir+json,application/json',
     erkennen: (t) => _istAutoritativesMedDokument(t),
     parse: () => null },
   // Umkehrung von fhirIpsBundle (§5.4 / T3.4).
-  { id: 'fhir-ips', kategorie: 'sektor', sektor: 'gesundheit', label: STRINGS.importFhirLabel,
+  { id: 'fhir-ips', kategorie: 'sektor', sektor: 'gesundheit', get label() { return STRINGS.importFhirLabel; },
     akzeptiert: '.json,application/fhir+json,application/json',
     erkennen: (t) => /"resourceType"\s*:\s*"Bundle"|application\/fhir\+json/.test(t),
     parse: (text) => { const o = _jsonParse(text); return o ? { felder: _fhirIpsFelder(o) } : null; } },
@@ -21180,25 +21213,25 @@ const IMPORT_FORMATE = Object.freeze([
   // Nachweis mit einem ANDEREN Namensraum wird davon NICHT erkannt, weil kein realer externer
   // Beispiel-Nachweis zur Messung vorliegt — geraten wird hier nichts, aber die Reichweite ist
   // bewusst auf den heute pruefbaren Fall begrenzt: den Rundgang eines eigenen Exports.
-  { id: 'sd-jwt-vc-identitaet', kategorie: 'sektor', sektor: 'identitaet', label: STRINGS.importIdentitaetLabel,
+  { id: 'sd-jwt-vc-identitaet', kategorie: 'sektor', sektor: 'identitaet', get label() { return STRINGS.importIdentitaetLabel; },
     akzeptiert: '.json,application/json',
     erkennen: _sdJwtVctErkenner('urn:vivodepot:identitaet'),
     parse: (text) => { const o = _jsonParse(text); return o ? { felder: _sdJwtIdentitaetFelder(o) } : null; } },
-  { id: 'sd-jwt-vc-finanzen', kategorie: 'sektor', sektor: 'finanzen', label: STRINGS.importFinanzenLabel,
+  { id: 'sd-jwt-vc-finanzen', kategorie: 'sektor', sektor: 'finanzen', get label() { return STRINGS.importFinanzenLabel; },
     akzeptiert: '.json,application/json',
     erkennen: _sdJwtVctErkenner('urn:vivodepot:finanzen'),
     parse: (text) => { const o = _jsonParse(text); return o ? { felder: _sdJwtFinanzenFelder(o) } : null; } },
-  { id: 'sd-jwt-vc-sozialversicherung', kategorie: 'sektor', sektor: 'sozialversicherung', label: STRINGS.importSozialversicherungLabel,
+  { id: 'sd-jwt-vc-sozialversicherung', kategorie: 'sektor', sektor: 'sozialversicherung', get label() { return STRINGS.importSozialversicherungLabel; },
     akzeptiert: '.json,application/json',
     erkennen: _sdJwtVctErkenner('urn:vivodepot:sozialversicherung'),
     parse: (text) => { const o = _jsonParse(text); return o ? { felder: _sdJwtSozialversicherungFelder(o) } : null; } },
-  { id: 'xoev-verwaltung', kategorie: 'sektor', sektor: 'verwaltung', label: STRINGS.importVerwaltungLabel,
+  { id: 'xoev-verwaltung', kategorie: 'sektor', sektor: 'verwaltung', get label() { return STRINGS.importVerwaltungLabel; },
     akzeptiert: '.json,application/json', hinweis: STRINGS.einlesenBundidHinweis,
     parse: (text) => { const o = _jsonParse(text); return o ? { felder: _xoevFelder(o) } : null; } },
-  { id: 'fim-json', kategorie: 'sektor', sektor: 'verwaltung', label: STRINGS.importFimLabel,
+  { id: 'fim-json', kategorie: 'sektor', sektor: 'verwaltung', get label() { return STRINGS.importFimLabel; },
     akzeptiert: '.json,application/json', hinweis: STRINGS.einlesenBundidHinweis,
     parse: (text) => { const o = _jsonParse(text); return o ? { felder: _fimFelder(o) } : null; } },
-  { id: 'edci-bildung', kategorie: 'sektor', sektor: 'bildung', label: STRINGS.importBildungLabel,
+  { id: 'edci-bildung', kategorie: 'sektor', sektor: 'bildung', get label() { return STRINGS.importBildungLabel; },
     akzeptiert: '.json,application/json',
     erkennen: (t) => {
       const o = _jsonParse(t);
@@ -21208,16 +21241,16 @@ const IMPORT_FORMATE = Object.freeze([
   // Echter externer EDCI/Europass-Nachweis (A109/Z10) — MUSS vor `edci-bildung` NICHT stehen:
   // beide Erkenner sind disjunkt (eigener `schemaVersion`-Wert vs. `EuropeanDigitalCredential`-Typ),
   // die Reihenfolge ist darum ohne Wirkung; hier direkt danach aus thematischer Nähe.
-  { id: 'edci-europass-extern', kategorie: 'sektor', sektor: 'bildung', nurImport: true, label: STRINGS.importEdciExternLabel,
+  { id: 'edci-europass-extern', kategorie: 'sektor', sektor: 'bildung', nurImport: true, get label() { return STRINGS.importEdciExternLabel; },
     akzeptiert: '.json,application/json',
     erkennen: (t) => _edciExternErkennen(t),
     parse: (text) => { const n = _edciExternNutzlast(text); return n ? { felder: _edciExternFelder(text) } : null; } },
   // Umkehrung von vcardIdentitaet / vcardMenschen (Welle 2).
-  { id: 'vcard-identitaet', kategorie: 'sektor', sektor: 'identitaet', label: STRINGS.importVcardLabel,
+  { id: 'vcard-identitaet', kategorie: 'sektor', sektor: 'identitaet', get label() { return STRINGS.importVcardLabel; },
     akzeptiert: '.vcf,text/vcard',
     erkennen: (t) => /BEGIN:VCARD/i.test(t),
     parse: (text) => ({ felder: _vcardIdentitaetFelder(parseVCards(text)) }) },
-  { id: 'vcard-menschen', kategorie: 'sektor', sektor: 'meine-menschen', label: STRINGS.importVcardMenschenLabel,
+  { id: 'vcard-menschen', kategorie: 'sektor', sektor: 'meine-menschen', get label() { return STRINGS.importVcardMenschenLabel; },
     akzeptiert: '.vcf,text/vcard',
     parse: (text) => ({ listen: [{ sektorId: 'meine-menschen', feldId: 'menschen', eintraege: _vcardMenschenEintraege(parseVCards(text)) }] }) },
   // C7/U2-ADR-118 (Weg 1): der ICS-Import (`ics-vorsorge`, Umkehrung von icsKalender) ist ENTFERNT.
@@ -21225,12 +21258,12 @@ const IMPORT_FORMATE = Object.freeze([
   // Round-Trip eines abgeschafften Flachfelds am Leben. ICS ist jetzt reiner Export (`nurExport`).
   // ── Welle 2: externe EINLESE-Standards (nurImport — kein Export-Gegenstück, kein Round-Trip) ──
   // CAMT.053 (ISO 20022) — Bank-Kontoauszug (XML) → Bereich Finanzen (Konto-Identität).
-  { id: 'camt053', kategorie: 'sektor', sektor: 'finanzen', nurImport: true, label: STRINGS.importCamtLabel,
+  { id: 'camt053', kategorie: 'sektor', sektor: 'finanzen', nurImport: true, get label() { return STRINGS.importCamtLabel; },
     akzeptiert: '.xml,application/xml,text/xml',
     erkennen: (t) => /camt\.053|<\w*:?BkToCstmrStmt[\s>]|<\w*:?Stmt[\s>]/.test(t),
     parse: (text) => { const p = parseCamt053(text); return p ? { listen: _camt053Listen(p) } : null; } },
   // XMeld (XÖV-Meldewesen) — Personendaten (XML) → Bereich Identität.
-  { id: 'xmeld', kategorie: 'sektor', sektor: 'identitaet', nurImport: true, label: STRINGS.importXmeldLabel,
+  { id: 'xmeld', kategorie: 'sektor', sektor: 'identitaet', nurImport: true, get label() { return STRINGS.importXmeldLabel; },
     akzeptiert: '.xml,application/xml,text/xml',
     // GESCHAERFT 27.07.2026 (Posten 19) — dieselbe Klasse wie elster: Wortsuche
     // im Volltext. Heute faellt kein Export darauf, aber jede Datei, die das Wort
@@ -21240,7 +21273,7 @@ const IMPORT_FORMATE = Object.freeze([
                      /<(\w+:)?natuerliche[Pp]erson[\s>/]/.test(t),
     parse: (text) => { const p = parseXMeld(text); return p ? { felder: _xmeldFelder(p) } : null; } },
   // ELSTER — Steuer-Kernfelder (JSON-Projektion, s. Annahme) → Bereich Finanzen.
-  { id: 'elster', kategorie: 'sektor', sektor: 'finanzen', nurImport: true, label: STRINGS.importElsterLabel,
+  { id: 'elster', kategorie: 'sektor', sektor: 'finanzen', nurImport: true, get label() { return STRINGS.importElsterLabel; },
     akzeptiert: '.json,application/json',
     // GESCHAERFT 27.07.2026 (Posten 19). Vorher: Wortsuche im Volltext auf
     // `identifikationsnummer` u. a. — das traf die VOLLE Depot-Sicherung, den
@@ -21259,7 +21292,7 @@ const IMPORT_FORMATE = Object.freeze([
   // Kategorie 'depot', weil die Migration über VIELE Bereiche schreibt — daher in jedem Bereich-
   // Chooser angeboten (wie die Voll-Wiederherstellung). nurImport (kein Export-Gegenstück). Eigene
   // Provenienz-Quelle „Vivodepot Beta 16" (quelle ≠ Bürger-Label).
-  { id: 'vivodepot-beta', kategorie: 'depot', nurImport: true, fachpfad: true, label: STRINGS.importBetaLabel, quelle: STRINGS.importBetaQuelle,
+  { id: 'vivodepot-beta', kategorie: 'depot', nurImport: true, fachpfad: true, get label() { return STRINGS.importBetaLabel; }, quelle: STRINGS.importBetaQuelle,
     akzeptiert: '.json,.htm,.html,application/json',
     erkennen: (t) => {
       const s = String(t == null ? '' : t);
@@ -21283,7 +21316,7 @@ const IMPORT_FORMATE = Object.freeze([
   // externe Aussteller, z. B. die sd-jwt-vc-Formate) sind Ebene 3b und bleiben hier UNBERÜHRT
   // (eigene Trust-Liste/Governance, nicht im Scope). `felderAusClaims` liest die geprüfte Nutzlast.
   { id: 'provider-credential', kategorie: 'depot', nurImport: true, signiert: true, fachpfad: true,
-    label: STRINGS.importProviderLabel, quelle: STRINGS.importProviderQuelle,
+    get label() { return STRINGS.importProviderLabel; }, quelle: STRINGS.importProviderQuelle,
     akzeptiert: '',   // JWS-Compact ohne feste Endung; Echtheit prüft die Signatur, nicht die Endung
     erkennen: (t) => {
       const s = String(t == null ? '' : t).trim();
@@ -21995,9 +22028,9 @@ const FHIR_IPS_DOC_IG = 'hl7.fhir.uv.ips#2.0.0';          // deklarierte Ziel-IG
 // fhir-ips) — der generische fhir-ips-Flatten-Import bleibt für UNprofilierte Bündel, die Selbst-Erzeugung
 // (fhirIpsBundle) ist unberührt.
 const MED_DOK_TYPEN = Object.freeze([
-  { typ: 'lab', muster: /laboratory\/StructureDefinition\/Bundle-eu-lab/i, ig: FHIR_LAB_DOC_IG, label: STRINGS.importAutoritativBeschriftung },
-  { typ: 'hdr', muster: /hdr\/StructureDefinition\/bundle-eu-hdr/i,        ig: FHIR_HDR_DOC_IG, label: STRINGS.importHdrBeschriftung },
-  { typ: 'ips', muster: /uv\/ips\/StructureDefinition\/Bundle-uv-ips/i,    ig: FHIR_IPS_DOC_IG, label: STRINGS.importIpsBeschriftung, uebernahmeFormat: 'fhir-ips' },   // U2-ADR-049: Feld-Übernahme über den bestehenden fhir-ips-Mapper (_fhirIpsFelder); lab/hdr haben keinen Bürgerfeld-Mapper
+  { typ: 'lab', muster: /laboratory\/StructureDefinition\/Bundle-eu-lab/i, ig: FHIR_LAB_DOC_IG, get label() { return STRINGS.importAutoritativBeschriftung; } },
+  { typ: 'hdr', muster: /hdr\/StructureDefinition\/bundle-eu-hdr/i,        ig: FHIR_HDR_DOC_IG, get label() { return STRINGS.importHdrBeschriftung; } },
+  { typ: 'ips', muster: /uv\/ips\/StructureDefinition\/Bundle-uv-ips/i,    ig: FHIR_IPS_DOC_IG, get label() { return STRINGS.importIpsBeschriftung; }, uebernahmeFormat: 'fhir-ips' },   // U2-ADR-049: Feld-Übernahme über den bestehenden fhir-ips-Mapper (_fhirIpsFelder); lab/hdr haben keinen Bürgerfeld-Mapper
 ]);
 
 // Erkennt den Typ eines autoritativen med. type=document-Bündels am Bundle-Profil. Liefert 'lab' | 'hdr' | null.
@@ -29151,6 +29184,14 @@ function renderCryptoOverlay(vorbelegteDatei, internModus) {
       '<span class="welcome-wort"><span class="lw-vivo-d">VIVO</span><span class="lw-depot-d">DEPOT</span></span></h1>' +
       '<p class="welcome-sub">' + escapeHTML(vorDepotText('appTagline')) + '</p>' +
     '</div>' +
+    /* U2-ADR-185 — der Sperrschirm erklärt sich. Genau EINE zusätzliche Zeile, ÜBER der
+       Aufforderung, und NUR nach einem Hintergrund-Wipe (`_wipeErklaerungZeigen`); beim
+       regulären Öffnen über denselben Schirm bleibt sie weg. Kein Name, kein Foto, kein
+       Feldwert, kein Depot-Name — der Schirm existiert, WEIL alles geräumt wurde. Über
+       `vorDepotText`, wie jeder andere Text hier: die englische Fassung steht in
+       PRE_DEPOT_EN, nichts ist verdrahtet. */
+    (_wipeErklaerungZeigen ? '<p class="crypto-auff wipe-hinweis" id="co-wipe-hinweis">'
+      + escapeHTML(vorDepotText('wipeSperrschirmHinweis')) + '</p>' : '') +
     '<p class="crypto-auff">' + escapeHTML(internModus ? vorDepotText('cryptoInternAufforderung') : vorDepotText('cryptoPwAufforderung')) + '</p>' +
     dateiZeile +
     // CC-Auftrag „Startseite und Oberfläche" (12.08.2026, Zug 1) — sagt VOR der Passwortabfrage,
@@ -29203,7 +29244,12 @@ function renderCryptoOverlay(vorbelegteDatei, internModus) {
     };
   }
   // U2-ADR-078: kein 'co-notfall' mehr (passwortlose Sanitäter-Tür entfernt).
-  w('co-neu', () => renderWelcome());      // Lage B → Lage A
+  /* U2-ADR-185 — der Rückweg MUSS erreichbar bleiben: wer nicht sein eigenes Gerät vor sich
+     hat oder aufhören will, kommt hier vom Sperrschirm weg. Und er VERWIRFT dabei, was für den
+     Wiedereintritt gehalten wurde (Umschlag + Stelle + Erklärungs-Merker) — „doch neu anfangen"
+     heisst genau das; einen gehaltenen Umschlag über diesen Klick hinweg stehen zu lassen wäre
+     eine Rest-Exposition, die niemand erwartet. */
+  w('co-neu', () => { _wiedereintrittVerwerfen(); renderWelcome(); });      // Lage B → Lage A
   overlayNachObenScrollen();
 }
 
@@ -29287,8 +29333,22 @@ async function cryptoOverlayOeffnen() {
   if (_internEintritt && !datei) {
     if (!pw) { zeigeFehler(vorDepotText('fehlerFalsch')); return; }
     try {
-      await depotAusIdbLaden(pw);
+      /* U2-ADR-185 — ZWEI Quellen, EIN Schirm; beide brauchen nur das Passwort, keine Datei:
+         (1) der interne Stand auf dem Gerät (D43 Etappe 5, der Boot-Weg). Er hat Vorrang, denn
+             nur `depotAusIdbLaden` setzt die Zeitmarke des Records und die Einstiegsmarke —
+             beides speist die Konflikterkennung beim nächsten Sichern.
+         (2) der im RAM gehaltene Umschlag. Er ist der Rückweg für ein aus einer DATEI
+             geöffnetes Depot: dort gibt es keinen internen Stand, und ohne ihn müsste die
+             Bürgerin nach dem Wipe ihre Datei erneut suchen. Kein zweiter Lade-Weg —
+             `depotLaden` ist derselbe, den auch die Datei nimmt. */
+      let geladen = null;
+      if (internerSpeicherModus()) geladen = await depotAusIdbLaden(pw);   // null = gar kein interner Stand
+      if (!geladen && _gehaltenerUmschlag) { await depotLaden(_gehaltenerUmschlag, pw); geladen = _gehaltenerUmschlag; }
+      // Ohne beides gibt es nichts aufzuschliessen. Vorher fiel dieser Fall durch bis
+      // betreteApp() — mit `data === null`, also einer sichtbar leeren App statt einer Meldung.
+      if (!geladen) { zeigeFehler(vorDepotText('entsperrPasswortFalsch')); return; }
       _internEintritt = false; betreteApp();
+      _stelleNachWiedereintrittAnfahren();   // U2-ADR-185 Stück 2 — dieselbe Stelle wie vorher
       // NICHT vorDepotText(): ab hier ist ein ECHTES Depot mit seiner EIGENEN Sprache aktiv
       // (depotAusIdbLaden hat sie geladen) — der Vor-Depot-Schalter darf sie nicht überschreiben.
       ui.toast(STRINGS.geoeffnet, 'ok');
@@ -29334,6 +29394,10 @@ async function cryptoOverlayOeffnen() {
     // wo die gerade geöffnete Datei der aktuelle Stand selbst ist.
     markiereAlsDateiGesichert();
     betreteApp();
+    /* U2-ADR-185 Stück 2 — auch hier: wer nach einem Wipe DIESELBE Datei wieder öffnet, landet
+       an der Stelle, an der sie unterbrochen wurde. Ohne gemerkte Stelle (regulärer Erst-Eintritt
+       oder eine ANDERE Datei) tut die Funktion nichts, s. dort. */
+    _stelleNachWiedereintrittAnfahren();
     // A475 — ERST nach betreteApp() (Sitzungs-Akteur steht, s. Kommentar an der Funktion):
     // war schon eine Fassung DESSELBEN Depots offen und ist sie abgewichen, fragt/mergt hier.
     try { _fassungenNachOeffnenPruefen(_fassungVorher); } catch (_) { /* darf das Öffnen nie brechen */ }
@@ -30337,6 +30401,106 @@ function flowSubDepotNachAnker() {
 // Sind Änderungen offen, bleibt der Bearbeiten-Zustand bewusst im RAM — das ist die benannte
 // Rest-Exposition, und sie ist der Preis dafür, dass ein Wipe keine Bürgerdaten vernichtet
 // (`data` ist die einzige Kopie; der Autosave schreibt nur RAM).
+//
+// U2-ADR-185 (01.09.2026) — DIESE ZUSAGE IST NEU GEFASST, nicht stillschweigend gelockert.
+// Sie gilt für DIESE FUNKTION unverändert wörtlich: der Reset leert jetzt zusätzlich die drei
+// Wiedereintritts-Halter (`_gehaltenerUmschlag`, `_wipeStelle`, `_wipeErklaerungZeigen`) — jeder
+// Aufrufer, der hier hindurchgeht, hinterlässt danach nichts, woraus sich etwas wiederherstellen
+// liesse. GENAU EIN Aufrufer weicht ab, sichtbar und benannt: `_hintergrundWipeVielleicht()`
+// liest Umschlag und Navigations-Stelle VOR dem Reset in lokale Variablen und setzt sie DANACH
+// wieder ein. Über diesen einen Weg überlebt also der VERSCHLÜSSELTE Umschlag (Chiffrat +
+// Parameter, ohne jeden Schlüssel) und eine Navigations-Kennung — nichts vom Passwort
+// Abgeleitetes, kein Klartext, kein Feldwert. Warum das dort nötig und vertretbar ist, steht
+// vollständig am Halter-Block unten; die Alternative wäre gewesen, die Zusage hier weiter
+// wörtlich zu behaupten und die Ausnahme zu verschweigen.
+
+/* ══ U2-ADR-185 — was für den Wiedereintritt gehalten wird ═══════════════════════════════
+   DREI Halter, alle NUR im Arbeitsspeicher. Kein localStorage, kein sessionStorage, kein
+   IndexedDB-Schreiben: ein Neuladen der Seite löscht sie restlos, wie den Sprachschalter
+   und den Nachtmodus (dieselbe Linie, s. Kommentar an PRE_DEPOT_EN).
+
+   `_gehaltenerUmschlag` — der zuletzt GELADENE oder GESCHRIEBENE Umschlag, also Chiffrat plus
+   die Parameter, die zum Aufschliessen nötig sind. WARUM das keine Aufweichung ist: Chiffrat
+   ohne Schlüssel ist Rauschen, und der Schlüssel ist genau das, was der Wipe räumt. Dieselbe
+   Datei liegt ohnehin auf der Platte — ein Angreifer bekäme dort dasselbe Chiffrat.
+   WARUM ER NÖTIG IST: ohne ihn müsste ein aus einer DATEI geöffnetes Depot nach dem Wipe erneut
+   gesucht werden; ein interner Stand käme aus IndexedDB zurück, ein Datei-Depot nicht.
+   WAS BEWUSST NICHT ZUSÄTZLICH GEHALTEN WIRD: die Salts. Der Umschlag trägt sie selbst
+   (`pbkdf2.salt`, `depotSalt`, `depotUUID` — s. depotSerialisierenV3/V4); sie daneben noch
+   einmal zu halten wäre ein zweites Stück ohne Zugewinn. `depotLaden` liest sie beim Öffnen
+   aus dem Umschlag, wie bei jeder Datei auch.
+   WAS UNVERÄNDERT VOLLSTÄNDIG GERÄUMT WIRD (nichts vom Passwort Abgeleitetes bleibt liegen):
+   `data`, `_ankerData`, `sessionSubKeys` (Schlüssel UND entschlüsselter Sub-Inhalt),
+   `sessionHkdfKey`, `sitzungsAkteur`, `_ankerAkteur`, `aktiverSubKontext` — s. der Reset unten.
+   IMMER der ANKER, nie ein Sub-Inhalt: `depotLaden` wird für einen Sub-Kontext nie aufgerufen
+   (der betritt über `subKontextBetreten`, das `data` direkt aus bereits entsiegelten
+   Session-Schlüsseln setzt); und beide Schreib-Stellen (`depotInDateiSichern`/
+   `depotInternSichern`) swappen im Sub-Kontext `data` selbst KURZ auf `_ankerData`, bevor sie
+   serialisieren — der Umschlag, der hier ankommt, ist also immer der Anker-Umschlag.
+
+   `_wipeStelle` — die reine Navigations-Stelle (Ansicht, Bereich, Situation, Wizard-Schritt).
+   KEINE Inhalte: hier steht kein Feldwert, kein Name, kein Eintrag, nur woraufhin gezeigt wurde.
+
+   `_wipeErklaerungZeigen` — ob der Sperrschirm den EINEN erklärenden Satz trägt. Nur nach einem
+   Wipe wahr, nie beim regulären Öffnen über denselben Schirm. */
+let _gehaltenerUmschlag = null;
+let _wipeStelle = null;
+let _wipeErklaerungZeigen = false;
+
+/* Merkt den Umschlag, der GERADE den gültigen Stand trägt. Drei Aufruf-Arten, alle an der
+   Stelle, an der der Umschlag ohnehin schon in der Hand liegt:
+   • beim LADEN (`depotLaden`) — der eine Trichter hinter allen drei Öffnen-Wegen,
+   • beim SCHREIBEN (`depotInIdbSichern`, `depotHerunterladen`) — sonst hielte ein Wipe nach
+     einem Speichern den ÜBERHOLTEN Ladestand, und die Bürgerin fände nach dem Entsperren ihre
+     seither gesicherte Arbeit nicht wieder. Der Satz „Es ist nichts verlorengegangen" wäre dann
+     falsch, und zwar still. */
+function _umschlagMerken(umschlag) {
+  if (umschlag && typeof umschlag === 'object') _gehaltenerUmschlag = umschlag;
+}
+/* Der Rückweg „Doch neu anfangen" und der reguläre Reset: alles Gehaltene fällt. */
+function _wiedereintrittVerwerfen() {
+  _gehaltenerUmschlag = null; _wipeStelle = null; _wipeErklaerungZeigen = false;
+}
+/* Liest die Navigations-Stelle, BEVOR der Reset sie auf den Standard zurückstellt. Reine
+   Kennungen, keine Objekte aus `data` — was hier hineingerät, ist eine Bereichs-/Situations-/
+   Wizard-ID und ein Zahlenindex. */
+function _stelleLesen() {
+  return {
+    ansicht: aktiveAnsicht,
+    sektorId: aktiverSektorId,
+    situationId: aktiveSituationId,
+    wizardId: aktiverWizardId,
+    schrittIndex: wizardSchrittIndex,
+  };
+}
+/* Fährt die gemerkte Stelle wieder an — NACH `betreteApp()`, das selbst `oeffneSektor()` ruft
+   und die Ansicht sonst wieder auf 'sektor' zöge.
+
+   JEDE Angabe wird gegen den GERADE GELADENEN Bestand geprüft, nicht geglaubt: ein Bereich kann
+   seit dem Wipe fehlen (anderes Depot, abgemeldetes Bereichs-Modul), ein Wizard-Schritt kann
+   unsichtbar geworden sein. Was nicht mehr existiert, fällt still auf den Standard zurück —
+   das ist der Fall, der in der Praxis zuerst auffällt, und er darf nicht werfen.
+   Ansichten ohne eigenen, nebenwirkungsfreien Einstieg (Mappe, Prüftermine, Übergabe-Protokoll,
+   Anfrage …) werden bewusst NICHT wiederhergestellt: sie führen ihren Zustand ausserhalb dieser
+   fünf Kennungen, und ein halb angefahrener Weg wäre schlechter als der Bereichs-Standard. */
+function _stelleNachWiedereintrittAnfahren() {
+  const s = _wipeStelle;
+  _wipeStelle = null;
+  if (!s || !data) return;
+  try {
+    if (s.sektorId && bereicheAlle().some((b) => b && b.id === s.sektorId)) oeffneSektor(s.sektorId);
+    if (s.ansicht === 'verwaltung') oeffneVerwaltung();
+    else if (s.ansicht === 'kartenraster') oeffneEintragenUebersicht();
+    else if (s.ansicht === 'situation' && s.situationId && SITUATION_BY_ID[s.situationId]) oeffneSituation(s.situationId);
+    else if (s.ansicht === 'wizard' && s.wizardId && WIZARD_BY_ID[s.wizardId]) {
+      if (wizardLauf(s.wizardId)) {   // startet am ersten Schritt; scheitert still und sicher
+        const sichtbar = wizardSichtbareIndizes(WIZARD_BY_ID[s.wizardId]);
+        if (sichtbar.indexOf(s.schrittIndex) >= 0) { wizardSchrittIndex = s.schrittIndex; renderContent(); }
+      }
+    }
+  } catch (_) { /* eine Stelle wiederzufinden darf den Eintritt nie brechen */ }
+}
+
 function _depotSpeicherZuruecksetzen() {
   data = null;
   /* U2-ADR-103 Teil 1 — die VIER Halter, die der Reset bis 26.07.2026 übersah, obwohl der
@@ -30354,6 +30518,9 @@ function _depotSpeicherZuruecksetzen() {
      ALLE Referenzen fallen, ist der Klartext unerreichbar. `data` ist eine Zeile darüber genullt. */
   sessionSubKeys.clear();
   _ankerData = null; _ankerAkteur = null; aktiverSubKontext = null;
+  // U2-ADR-185: die drei Wiedereintritts-Halter fallen hier mit — s. der neu gefasste
+  // Zusage-Absatz oben. Nur `_hintergrundWipeVielleicht()` setzt zwei davon danach wieder ein.
+  _wiedereintrittVerwerfen();
   aktuelleSalt = null; aktuelleDepotSalt = null; aktuelleDepotUUID = null;
   sessionHkdfKey = null; sitzungsAkteur = null;
   aktiveAnsicht = 'sektor';
@@ -30373,10 +30540,25 @@ function _depotSpeicherZuruecksetzen() {
   // räumt zuvor gesetzte Werte weg, statt nur keine neuen zu setzen.
   try { brandingAnwenden(null); } catch (_) {}
 }
+// U2-ADR-103-Nachtrag (31.08.2026) — die Frist vor Politik A. Carolas Abwägung wörtlich: "Oma
+// Erna, die rumläuft und die Papiere zusammensucht, und genervt ist, wenn sie aller 5 Minuten
+// das PW eingeben muss" gegen die Rest-Exposition eines offenen Depots. 30 Minuten HINTERGRUND
+// (nicht Untätigkeit — s. _hintergrundBeginnen) sind der gewählte Mittelweg: kurz aus dem Zimmer
+// oder in eine andere App wechseln bleibt folgenlos, ein liegengelassenes/vergessenes Gerät wird
+// binnen einer halben Stunde kalt. Änderbar, ohne den Mechanismus zu verstehen — nur diese Zahl anfassen.
+const HINTERGRUND_WIPE_FRIST_MS = 30 * 60 * 1000;
+let _hintergrundSeit = null;         // Date.now() beim letzten Wechsel nach "hidden", sonst null
+let _hintergrundWipeTimer = null;    // setTimeout-Handle, solange die Frist läuft
+
 /* U2-ADR-103 Teil 2 — Politik A, der Hintergrund-Wipe. Bewusst auf TOP-LEVEL und benannt, nicht
    als Lambda in der Listener-Verdrahtung: eine block-lokale Pfeilfunktion wäre von der Suite nicht
    erreichbar, und ein Sicherheits-Pfad ohne gekoppelte Probe ist nach §7.5 keiner. */
 function _hintergrundWipeVielleicht() {
+  // Jeder Aufruf (Fristablauf, sofortiges pagehide, Aufhol-Prüfung bei Rückkehr) räumt eine
+  // laufende Frist zuerst ab — sonst könnte ein späterer Timer auf einen längst neuen Zustand
+  // feuern (Kaltstart-Fall, s. Kommentar an _hintergrundBeginnen).
+  if (_hintergrundWipeTimer) { clearTimeout(_hintergrundWipeTimer); _hintergrundWipeTimer = null; }
+  _hintergrundSeit = null;
   if (!data && sessionSubKeys.size === 0) return;    // nichts offen — nichts zu tun
   if (_ungespeicherteAenderungen > 0) return;        // Politik A: kein Datenverlust
   // Nachtrag (Gesamtumbau 08.08.2026, Zug 4): ein Zähler von 0 heißt „keine offene Änderung",
@@ -30385,10 +30567,82 @@ function _hintergrundWipeVielleicht() {
   // Bedingung wie schliessenWarnungNoetig(), kein neuer Mechanismus: ein Fehlschlag ist kein
   // sicherer Moment zum stillen Wegräumen.
   if (_letzterSpeicherFehlgeschlagen) return;
+  /* U2-ADR-185 — DIE EINE benannte Ausnahme von der „NICHTS Wiederherstellbares"-Zusage des
+     Resets (s. dort, neu gefasster Absatz). Beides wird VOR dem Reset in lokale Variablen
+     gelesen und DANACH wieder eingesetzt: der verschlüsselte Umschlag (Chiffrat + Parameter,
+     kein Schlüssel) und die reine Navigations-Stelle. Nichts vom Passwort Abgeleitetes ist
+     dabei — `sessionHkdfKey`, `sessionSubKeys` und der Klartext fallen unverändert. */
+  const _haltUmschlag = _gehaltenerUmschlag;
+  const _haltStelle = _stelleLesen();
   _depotSpeicherZuruecksetzen();
-  // renderWelcome räumt zusätzlich den DOM (_eingangsschirmDomAufraeumen) — sonst bliebe
-  // Klartext im Markup stehen, für den es keinen Schlüssel mehr gibt.
-  try { renderWelcome(); } catch (_) {}
+  _gehaltenerUmschlag = _haltUmschlag;
+  _wipeStelle = _haltStelle;
+  _wipeErklaerungZeigen = true;   // nur hier — der Sperrschirm erklärt sich NUR nach einem Wipe
+  // Fund (31.08.2026, Sub-Depot-Klick-Freeze): renderWelcome() räumt den DOM (_eingangsschirmDom-
+  // Aufraeumen) nur, wenn IHR EIGENER Wächter beim Aufruf noch `data` truthy vorfindet — genau
+  // das ist hier nicht mehr der Fall, `data` steht seit der Zeile darüber auf null. Verlassen auf
+  // renderWelcome() allein ließ Name/Foto/Ansicht unverändert im Markup stehen, während die Sitzung
+  // technisch schon tot war (#content vor/nach Wipe byte-identisch gemessen). Darum hier direkt,
+  // nicht mehr über den defekt gewordenen Umweg:
+  _eingangsschirmDomAufraeumen();
+  // Auflage (VD KOORD, 31.08.2026, Sub-Kontext-Probe): #content ist nicht die einzige Stelle mit
+  // Sitzungs-Resten — die Topbar trägt bei Verlassen eines Sub-Kontexts den zuletzt betretenen
+  // Namen unsichtbar weiter (#tb-sub-hinweis/#tb-sub-name, s. renderTopbar()-Fund zur selben
+  // Zeile). `renderTopbar()` baut sie gegen den jetzt schon zurückgesetzten Zustand neu auf —
+  // `imSubKontext()` ist nach `_depotSpeicherZuruecksetzen()` oben false, der else-Zweig dort
+  // räumt Name/aria-label mit ab.
+  try { renderTopbar(); } catch (_) {}
+  // Sichtbaren Zustand herstellen — derselbe Weg wie zeigeSchlussSicht()/vorschauVerwerfenUndZuhause(),
+  // kein neuer erfunden. Ohne das bliebe #app (CSS: display:none ohne .an) unverändert sichtbar,
+  // nur eben mit leerem #content — eine leere Hülle statt eines Eingangsschirms.
+  const appEl = document.getElementById('app'); if (appEl && appEl.classList) appEl.classList.remove('an');
+  try { overlayModalOeffnen(); } catch (_) {}
+  /* U2-ADR-185 — HIER STAND `renderWelcome()`. Der Erstbesucher-Schirm teilte der Bürgerin mit,
+     sie sei zum ersten Mal hier, obwohl nichts gelöscht wurde (die Gründerin, die es selbst
+     erlebte: „alles ist weg"). Die Konvention, die sie vorgab: „zurückkommen und kurz Passwort
+     eingeben und dann an der Stelle weitermachen … wie das Fenster einer Bank." Genau dieser
+     Schirm ist `renderCryptoOverlay()` bereits — Passwortfeld, Öffnen-Knopf, Rückweg „Doch neu
+     anfangen". Kein neuer Bildschirm gebaut, der vorhandene angefahren.
+
+     `internModus` (kein Datei-Picker) genau dann, wenn ein Stand ohne Datei erreichbar ist —
+     gemessen an dem einen Halter, den BEIDE Quellen füllen: der interne Save (`depotInIdbSichern`
+     merkt denselben Umschlag, den er nach IndexedDB schreibt) und jedes Laden (`depotLaden`).
+     Damit ist „liegt ein Depot auf dem Gerät" hier ohne einen zweiten, asynchronen IndexedDB-Blick
+     beantwortet — und der Fall „noch nie gesichert" (nichts, wohin zurückzukehren wäre) landet
+     richtig auf dem Schirm MIT Datei-Auswahl statt auf einem Passwortfeld ins Leere.
+     Welche der beiden Quellen dann wirklich lädt, entscheidet `cryptoOverlayOeffnen()` — dort
+     hat der interne Stand Vorrang, weil nur er Zeitmarke und Einstiegsmarke mitbringt. */
+  try { renderCryptoOverlay(null, !!_gehaltenerUmschlag); }
+  catch (_) { try { renderWelcome(); } catch (__) {} }   // ein Render-Fehler darf nie ohne Bildschirm enden
+}
+
+// Hintergrundwechsel BEGINNT: keine sofortige Wirkung mehr (Carolas Entscheidung, 31.08.2026) —
+// nur die Uhr startet. Läuft NIE, solange das Fenster sichtbar ist, auch nicht nach Stunden
+// (kein Untätigkeits-Timer — Erna, die durchs Zimmer läuft, während das Fenster vorne liegt, soll
+// nichts merken). Träger bleibt visibilitychange (U2-ADR-103: der auf iOS zuverlässigste
+// Hintergrund-Melder) — nur die Frist steht jetzt davor, ersetzt ihn nicht.
+function _hintergrundBeginnen() {
+  if (!data && sessionSubKeys.size === 0) return;   // nichts offen — kein Timer nötig
+  if (_hintergrundWipeTimer) clearTimeout(_hintergrundWipeTimer);   // defensiv: kein doppelter Timer
+  _hintergrundSeit = Date.now();
+  _hintergrundWipeTimer = setTimeout(_hintergrundWipeVielleicht, HINTERGRUND_WIPE_FRIST_MS);
+}
+// Hintergrundwechsel ENDET (Fenster wieder sichtbar). Zwei Fälle:
+// - Innerhalb der Frist zurück: Timer verwirft sich selbst (_hintergrundWipeVielleicht räumt ihn
+//   ebenfalls ab, hier zusätzlich direkt, damit kein Timer unnötig weiterläuft) — nichts passiert,
+//   niemand merkt etwas.
+// - Frist bereits abgelaufen, BEVOR das Timeout feuern konnte: mobile Betriebssysteme pausieren
+//   JS-Timer in einem hintergründigen Tab oft vollständig (kein Hintergrund-CPU-Budget) — der
+//   Timer selbst ist damit KEIN verlässlicher Träger für "30 Minuten sind wirklich vergangen",
+//   nur ein Best-Effort im Vordergrund/Desktop-Fall. Die Uhrzeit-Nachprüfung hier, ausgelöst vom
+//   selben zuverlässigen visibilitychange-Ereignis, das die Rückkehr überhaupt meldet, holt das
+//   verpasste Wipe sofort nach — Erna sieht beim Hinschauen direkt den Eingangsschirm, nicht erst
+//   Sekunden später, wenn ein aufgewachter Timer irgendwann feuert.
+function _hintergrundBeenden() {
+  if (_hintergrundWipeTimer) { clearTimeout(_hintergrundWipeTimer); _hintergrundWipeTimer = null; }
+  const seit = _hintergrundSeit;
+  _hintergrundSeit = null;
+  if (seit != null && (Date.now() - seit) >= HINTERGRUND_WIPE_FRIST_MS) _hintergrundWipeVielleicht();
 }
 
 /* Posten 47 (02.08.2026): EINE Stelle für die #content-Seite des Overlay-Modals, statt sie an
@@ -30406,7 +30660,11 @@ function overlayModalSchliessen() {
 }
 
 function vorschauVerwerfenUndZuhause() {
+  // U2-ADR-184 (01.09.2026, VD5-Fund): zweiter Aufrufer derselben Ursache wie der Hintergrund-
+  // Wipe — renderWelcome()s Aufräum-Wächter `if (data && !imVorschau())` sieht `data` hier
+  // bereits genullt und feuert nie. Direkt aufräumen statt sich auf den Wächter zu verlassen.
   _depotSpeicherZuruecksetzen();
+  _eingangsschirmDomAufraeumen();
   const appEl = document.getElementById('app'); if (appEl && appEl.classList) appEl.classList.remove('an');
   overlayModalOeffnen();
   renderWelcome();
@@ -30608,6 +30866,11 @@ function betreteApp() {
   // zuverlässiges Zustandssignal (in der Testumgebung nicht abfragbar).
   const warSchonDrin = _appBereitsBetreten;
   _appBereitsBetreten = true;
+  /* U2-ADR-185: der Wipe-Erklärungssatz ist verbraucht, sobald jemand DRIN ist — an genau
+     dieser einen Stelle gelöscht, weil jeder Weg in die App durch sie führt (auch der
+     Konflikt-Dialog-Weg, der `cryptoOverlayOeffnen` vorzeitig verlässt). Bei einem reinen
+     Navigations-Ruf aus einer laufenden Sitzung steht er ohnehin schon auf false. */
+  _wipeErklaerungZeigen = false;
   const appEl = document.getElementById('app');
   overlayModalSchliessen();
   if (appEl && appEl.classList) appEl.classList.add('an');
@@ -35058,6 +35321,15 @@ function renderTopbar() {
     // Trefferflächen-/Eng-Stufen-Fix (13.08.2026): der Name kann bei .tb-eng-1 verschwinden
     // (s. CSS) — das aria-label am Container trägt den vollen Text unabhängig vom Kollaps.
     subHinweis.setAttribute('aria-label', subText);
+  } else {
+    // Fund (31.08.2026, U2-ADR-184): `hidden` allein entfernt nur die SICHTBARKEIT, nicht den
+    // Textknoten/das Attribut — der zuletzt betretene Sub-Depot-Name blieb nach Verlassen als
+    // (unsichtbare) Klartext-Spur im DOM stehen (aria-label UND textContent). Ohne Bedeutung im
+    // normalen Verlassen-Weg (der nächste echte Betreten-Zug überschreibt beides sofort wieder),
+    // aber genau die Sorte Rest, die der Hintergrund-Wipe (U2-ADR-184) ausdrücklich ausschließen
+    // soll — dort wird renderTopbar() aufgerufen, NACHDEM der Sub-Kontext schon verlassen ist.
+    document.getElementById('tb-sub-name').textContent = '';
+    subHinweis.removeAttribute('aria-label');
   }
   // A1/D46: #tb-speichern entfernt — Label/Icon-Set entfällt; das „Sichern" lebt in der
   // Status-Pille (renderSaveStatus). STRINGS.btnSpeichern bleibt für andere Save-Stellen.
@@ -48988,13 +49260,18 @@ _installEreignisseBinden();   // PWA-Install-Knopf: beforeinstallprompt abfangen
 // absichern; pagehide deckt iOS Safari mit ab). Graceful: tut nichts, wenn keine Engine da ist.
 if (typeof window !== 'undefined' && window.addEventListener) {
   window.addEventListener('pagehide', () => vorleseStoppen());
-  /* U2-ADR-103 Teil 2 — Politik A: Schlüsselmaterial verlässt den RAM, wenn die App in den
-     Hintergrund geht UND nichts Ungespeichertes offen ist.
+  /* U2-ADR-103 Teil 2 — Politik A: Schlüsselmaterial verlässt den RAM, wenn die App im
+     Hintergrund die Frist überschreitet (U2-ADR-103-Nachtrag, 31.08.2026 — s.
+     HINTERGRUND_WIPE_FRIST_MS) UND nichts Ungespeichertes offen ist.
 
-     WARUM `visibilitychange → hidden` der Träger ist und nicht `beforeunload`: letzteres feuert
-     auf iOS unzuverlässig. `pagehide` läuft als redundanter zweiter Auslöser mit — die App kann
-     Parken nicht von Schließen unterscheiden (`event.persisted` wird nirgends geprüft), und für
-     Politik A ist das auch nicht nötig: in beiden Fällen ist dieselbe Handlung richtig.
+     WARUM `visibilitychange → hidden` der Träger bleibt (nicht `beforeunload`): letzteres feuert
+     auf iOS unzuverlässig. `pagehide` löst weiterhin SOFORT aus, ohne Frist — anders als ein
+     bloßes Verbergen ist das ein Signal für "die Seite geht wirklich weg" (Tab schließen,
+     navigieren), und eine 30-Minuten-Gnadenfrist für einen Vorgang, der die Seite gerade beendet,
+     wäre kein Schutz, nur eine verpasste Gelegenheit. `event.persisted` (bfcache-Fall) wird
+     weiterhin nirgends geprüft — geprüft am 31.08.: der sofortige, unbedingte pagehide-Wipe deckt
+     ihn bereits ab, ob die Seite danach endgültig verworfen oder eingefroren/zurückgeholt wird,
+     ändert nichts an der schon getroffenen Entscheidung.
 
      WARUM DIE ZÄHLER-BEDINGUNG: `data` ist die EINZIGE Kopie ungespeicherter Bürgerdaten — der
      Autosave schreibt nur RAM, auf Platte liegt erst, was die Bürgerin ausdrücklich sichert. Ein
@@ -49002,10 +49279,13 @@ if (typeof window !== 'undefined' && window.addEventListener) {
      Bearbeiten-Zustand ist damit die BENANNTE Rest-Exposition, keine übersehene.
      Die Bedingung trägt erst seit A1 (sektorFeldSetzen/situationFeldSetzen markieren jetzt) —
      davor stand der Zähler während einer Wizard-Eingabe auf 0, und diese Prüfung hätte genau
-     dann gewipt, wenn am meisten offen war. */
+     dann gewipt, wenn am meisten offen war. Sie wird bei JEDEM Auslöser der Frist neu geprüft
+     (Fristablauf, sofortiges pagehide, Aufhol-Prüfung bei Rückkehr) — nicht nur beim Start der
+     Frist, s. _hintergrundWipeVielleicht(). */
   if (typeof document !== 'undefined' && document.addEventListener) {
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') _hintergrundWipeVielleicht();
+      if (document.visibilityState === 'hidden') _hintergrundBeginnen();
+      else _hintergrundBeenden();
     });
   }
   window.addEventListener('pagehide', _hintergrundWipeVielleicht);

@@ -211,7 +211,7 @@
 // den nächsten Fokus-Wechsel zu warten. Kein Zwangs-Reload, keine IndexedDB-Berührung — derselbe
 // Hinweis-statt-Zwang-Pfad wie bisher (skipWaiting bleibt aus). Shell-Bytes (vivodepot.html)
 // geändert → Lockstep-Bump.
-const CACHE = 'vivodepot-shell-v482';
+const CACHE = 'vivodepot-shell-v487';
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT — z. B. wenn die Manifest-Entscheidung „inline" lautet und es
