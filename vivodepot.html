@@ -3930,7 +3930,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v487';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-185: Sperrschirm statt Eingangsschirm nach Wipe, 01.09.2026
+const SCHALEN_STAND = 'v489';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-189: Sprachmodul wird vererbt, 01.09.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -10044,6 +10044,14 @@ function _textsatzModuleAusDepotAnmelden(d) {
    Totzone, die der Kommentar zu `data` gleich darunter beschreibt: textsatzSpracheAktiv() läuft
    schon beim Depot-Bau, lange bevor die Kern-Datei bei einer später deklarierten Variable ankäme. */
 let _vorDepotSpracheAktiv = '';
+/* Entscheidung der Gründerin (01.09.2026, wörtlich): „Die Datei muss doch die Eigenschaften des
+   Moduls erben, mit dem sie erstellt ist." Ein VOR dem Depot angedocktes Textsatz-Modul lebt bis
+   hierher nur in dieser Laufzeit-Variable (dieselbe TDZ-Begründung wie bei
+   `_vorDepotSpracheAktiv` direkt darüber) — `vorDepotKonfigurationAnwenden()` (weiter unten)
+   füllt sie, `_vorDepotModulInsDepotUebernehmen()` (bei `depotAnlegen`/`depotSerialisieren`)
+   liest sie. KEIN Sonderfall, KEIN zweiter Mechanismus: derselbe `textsatzModulEinbetten()`,
+   den auch ein regulär im offenen Depot angedocktes Modul nimmt (:10000). */
+let _vorDepotTextsatzModule = [];
 
 function textsatzSpracheAktiv() {
   // try/catch statt `typeof data !== 'undefined'`: `data` ist ein `let` WEITER UNTEN in der
@@ -15934,6 +15942,9 @@ async function depotAnlegen(password, opts) {
   aktuelleDepotUUID = uuidV4();                                    // einmal, unveränderlich
   aktuelleDepotSalt = crypto.getRandomValues(new Uint8Array(32));  // 32 Byte HKDF-Salt
   data = leeresDepot();
+  // Entscheidung der Gründerin (01.09.2026): ein vor dem Depot angedocktes Textsatz-Modul
+  // erbt die neu angelegte Datei sofort — s. Kommentar an _vorDepotModulInsDepotUebernehmen().
+  _vorDepotModulInsDepotUebernehmen();
   if (opts && Array.isArray(opts.bereichssatz)) {
     const eingebaut = new Set(BEREICH_IDS_EINGEBAUT);
     const satz = opts.bereichssatz.filter((id) => eingebaut.has(id));
@@ -15955,6 +15966,11 @@ async function depotAnlegen(password, opts) {
    ERZEUGEN, liesse sich nicht proben. Die Rot-Belege der Migrationsstufe brauchen ein
    echtes v3-Bestandsdepot, kein nachgebautes. */
 async function depotSerialisieren() {
+  // Entscheidung der Gründerin (01.09.2026): zweiter, redundanter Aufruf zum bei depotAnlegen()
+  // — jede Sicherung trägt das vor dem Depot angedockte Modul mit, unabhängig davon, ob es beim
+  // Anlegen schon fertig geladen war (async Vor-Depot-Fetch, s. booteEingang()) oder erst
+  // danach eintraf. Idempotent, s. Kommentar an der Funktion selbst.
+  _vorDepotModulInsDepotUebernehmen();
   return depotSerialisierenV4();
 }
 async function depotSerialisierenV3() {
@@ -16662,7 +16678,17 @@ async function depotLaden(umschlag, password) {
   // hier, in derselben Reihe wie Code-Listen und Rechtsraum-Module — ein Andockweg, der erst
   // beim Öffnen eines Depots greift, gehört an die Stelle, an der ein Depot geöffnet wird.
   try {
-    if (_textsatzModuleAusDepotAnmelden(data) > 0) textsatzNeuAnwenden();
+    /* U2-ADR-189 (VD7-Fund, 01.09.2026): NICHT mehr auf "dieses Depot bringt eigene
+       Module mit" gegated — die falsche Bedingung. Die richtige ist "die aktive Sprache
+       könnte sich geändert haben", und die kennt dieser Aufruf nicht im Voraus. Beleg,
+       dass ein Zähler-Gate hier nie nötig war: die zwei Zeilen direkt darunter
+       (Schreibrichtung, Sprachkennung) liefen an genau dieser Stelle schon immer
+       unbedingt — nur die Fill-Runde (SEKTOREN-Beschriftungen) hing am Zähler. Ohne den
+       Fix blieb SEKTOREN auf dem Stand VOR dem Laden stehen, wann immer die aktive
+       Sprache aus einem VOR-Depot-Modul oder einer vorherigen Sitzung kam und DIESES
+       Depot selbst keine eigenen Textsatz-Module mitbrachte. */
+    _textsatzModuleAusDepotAnmelden(data);
+    textsatzNeuAnwenden();
     /* Zug 2 (17.08.2026): die Schreibrichtung ist die eine Wirkung des Modul-Kopfes, die
        nicht ueber einen Text laeuft. Sie hier zu setzen und nicht beim Rendern ist Absicht —
        `dir` gehoert an das Wurzelelement, einmal, nicht an jede Sicht. */
@@ -24121,6 +24147,9 @@ async function vorDepotKonfigurationAnwenden(buendel, root, opts) {
       ? ziel.textsatzModule[ziel.textsatzModule.length - 1] : null;
     _vorDepotSpracheAktiv = (letztesTextsatz && typeof letztesTextsatz.sprache === 'string')
       ? letztesTextsatz.sprache : '';
+    // Entscheidung der Gründerin (01.09.2026): gemerkt für _vorDepotModulInsDepotUebernehmen()
+    // — dieselben geprüften, cert-validierten Module, die gerade schon in `ziel` stehen.
+    _vorDepotTextsatzModule = Array.isArray(ziel.textsatzModule) ? ziel.textsatzModule.slice() : [];
     /* VD-KOORD-Fund (28.08.2026, xShare-Beleg): _textsatzModuleAusDepotAnmelden befüllt NUR die
        Registry — SEKTOREN selbst (Sektor-/Feldbeschriftungen) wird beim Kern-Laden EINMAL gefüllt
        und bleibt sonst auf dem alten Stand, bis textsatzNeuAnwenden() erneut läuft. Beide
@@ -24129,11 +24158,42 @@ async function vorDepotKonfigurationAnwenden(buendel, root, opts) {
        gesetzt statt davor). Muss NACH _vorDepotSpracheAktiv laufen, damit textsatzSpracheAktiv()
        während des Fill-Laufs schon die neue Sprache liefert. */
     textsatzNeuAnwenden();
+    // KOORD2-Auftrag (01.09.2026, WCAG 2.2 SC 3.1.1): derselbe Aufruf-Paar wie in depotLaden()
+    // (:16650/:16647) — dort der einzige Aufrufer bisher, obwohl <html lang> lange VOR dem
+    // ersten Depot steht. Kein neuer Mechanismus: dieselben zwei Funktionen, hier zusätzlich
+    // gerufen, wo die Vor-Depot-Sprache tatsächlich zum ersten Mal gilt. Wirkung hängt am
+    // `regeln`-Block des jeweiligen Moduls (textsatzRegeln(), :9786) — ein Modul ohne diesen
+    // Block ändert hier nichts, wie bisher (kein Rückschritt, nur noch keine Wirkung).
+    textsatzSchreibrichtungAnwenden();
+    textsatzSprachkennungAnwenden();
     const letztesBranding = (Array.isArray(ziel.brandingModule) && ziel.brandingModule.length)
       ? ziel.brandingModule[ziel.brandingModule.length - 1] : null;
     brandingAnwenden(letztesBranding, root);
   } catch (e) { /* defensiv — ein kaputtes Vor-Depot-Modul darf den Boot nie verhindern */ }
   return ziel;
+}
+
+/* Entscheidung der Gründerin (01.09.2026, wörtlich): „Die Datei muss doch die Eigenschaften des
+   Moduls erben, mit dem sie erstellt ist. Wenn zb das Modul der ungarischen Hebammen im dt.
+   Bürgerdepot geöffnet wird, macht es sonst überhaupt keinen Sinn." Das Depot trägt seine
+   Module bereits richtig (_textsatzModuleAusDepotAnmelden/depotLaden, geprüft per Gegenprobe) —
+   nur ein VOR dem Depot angedocktes Modul stand nie IN data.textsatzModule, darum fiel es beim
+   nächsten depotLaden() heraus (data = obj ERSETZT die gesamte Registry-Quelle, :10021).
+
+   KEIN Sonderfall: derselbe textsatzModulEinbetten() (:10000), den auch ein regulär im offenen
+   Depot angedocktes Modul nimmt — das Depot sieht danach keinen Unterschied zwischen „vor" und
+   "im" Depot angedockt, wie es der Bestand für jedes andere Einlass-Register auch nicht tut.
+   Idempotent (aufrufbar bei JEDEM depotAnlegen/depotSerialisieren, ohne Dubletten — die
+   Fassungs-Entscheidung in textsatzModulEinbetten sorgt dafür) und additiv (fasst
+   `data.textsprache` nur an, wenn es noch leer ist — eine spätere, bewusste In-Depot-
+   Sprachwahl der Bürgerin bleibt unberührt stehen). */
+function _vorDepotModulInsDepotUebernehmen() {
+  if (!data || !Array.isArray(_vorDepotTextsatzModule) || !_vorDepotTextsatzModule.length) return;
+  if (!Array.isArray(data.textsatzModule)) data.textsatzModule = [];
+  for (const m of _vorDepotTextsatzModule) {
+    data.textsatzModule = textsatzModulEinbetten(data.textsatzModule, m);
+  }
+  if (!data.textsprache && _vorDepotSpracheAktiv) data.textsprache = _vorDepotSpracheAktiv;
 }
 
 /* REIN/testbar: einen Modul-Text einlassen. Nimmt den ROHTEXT einer Datei, damit derselbe
@@ -25619,6 +25679,33 @@ async function subDepotNeuVersiegeln(depotUUID) {
   return e.umschlag;
 }
 
+/* U2-ADR-188 — „Die Registry folgt data": dieselben fünf Register (plus Code-Listen, s. u.), die
+   depotLaden() beim Öffnen aus dem geladenen Objekt aufbaut (:16650 ff.), hier gebündelt
+   für jede Stelle, die `data` OHNE ein depotLaden() wechselt: Sub-Kontext betreten/
+   verlassen (rebuilden aus dem jeweils neuen `data`) und der Depot-Reset (leeren, `d`
+   dort bewusst `null`). Absichtlich OHNE depotNormalisieren() — das läuft nur beim
+   echten Laden (Migrationen/Rettungs-Slot, A389-Reihenfolge dort), nie bei einem reinen
+   Kontextwechsel. Bewusst eine eigene Funktion statt eines Umbaus von depotLaden() selbst
+   (dort bleibt die bereichsModule-vor-normalisieren-Reihenfolge unangetastet).
+
+   Code-Listen (CODE_LISTEN, :17883) sind die EINE Ausnahme von „folgt data": die
+   Funktion registriert nur additiv (codeListeAnmelden() überschreibt per systemId,
+   löscht nie), und dieselbe Liste trägt zusätzlich die EINGEBAUTEN @vd-codeliste-Blöcke,
+   die nur einmal beim Boot laufen. Ein `d=null`-Aufruf hier räumt darum keine gedockte
+   Code-Liste ab — vorbestehend, nicht durch diese Funktion verursacht, hier nur nicht
+   verschlimmert (additiv bleibt additiv, wie im bestehenden depotLaden()-Weg auch). */
+function _alleModulRegisterAusDepotAnmelden(d) {
+  try { _bereichsModuleAusDepotAnmelden(d); } catch (e) { /* Registry-Aufbau darf den Kontextwechsel nie brechen */ }
+  try { _codeListenAusDepotAnmelden(d); } catch (e) { /* dito */ }
+  try { _rechtsraumModuleAusDepotAnmelden(d); } catch (e) { /* dito */ }
+  try {
+    _textsatzModuleAusDepotAnmelden(d); textsatzNeuAnwenden();
+    textsatzSchreibrichtungAnwenden();
+    textsatzSprachkennungAnwenden();
+  } catch (e) { /* dito */ }
+  try { _institutionsArtenAusDepotAnmelden(d); } catch (e) { /* dito */ }
+}
+
 // Sub-Kontext betreten: `data` → Sub-Inhalt, Modus 'vollmacht'. Sub-Depot muss entsiegelt sein.
 function subKontextBetreten(depotUUID) {
   const sess = sessionSubKeys.get(depotUUID);
@@ -25629,6 +25716,11 @@ function subKontextBetreten(depotUUID) {
   if (!aktiverSubKontext) { _ankerData = data; _ankerAkteur = ankerAk; }   // Anker nur beim ersten Eintritt sichern
   aktiverSubKontext = depotUUID;
   data = sess.inhalt;                                           // ab jetzt zeigt data auf den Sub-Inhalt
+  // U2-ADR-188: „die Registry folgt data" — der Sub bringt eigene Module mit (eigenes
+  // bereichsModule/textsatzModule/… wie jedes strukturell gleiche Depot), die bislang nur
+  // in data.* standen, nie in den fünf Laufzeit-Registries. Ohne diese Zeile wirkte ein
+  // ins Sub gedocktes Modul nie sichtbar — Fund VD7 (01.09.2026), live nachgestellt.
+  _alleModulRegisterAusDepotAnmelden(data);
   // Sitzungs-Akteur im Sub-Kontext: dieselbe Person, aber 'unter-vollmacht', IM Sub-Depot eingetragen.
   // Ohne das würfe das Stempeln (Bearbeiten ginge nicht) und der Name wäre im Sub nicht auflösbar.
   const vorhanden = (data.menschen || []).find(m => m.name === handelnderName);
@@ -25676,6 +25768,11 @@ async function subKontextVerlassen() {
   const uuid = aktiverSubKontext;
   await subDepotNeuVersiegeln(uuid);                            // Bearbeitung in den Umschlag sichern
   data = _ankerData; _ankerData = null; aktiverSubKontext = null;
+  // U2-ADR-188: die Hälfte, die man beim Bauen vergisst (KOORD2, 01.09.2026) — ohne
+  // diese Zeile bliebe die Registry auf dem Stand des VERLASSENEN Sub stehen, und der
+  // Anker trüge fortan dessen Beschriftungen. Sähe wie eine Regression aus, ist aber
+  // nur die andere Hälfte derselben Zusage wie beim Betreten.
+  _alleModulRegisterAusDepotAnmelden(data);
   sitzungsAkteur = _ankerAkteur; _ankerAkteur = null;          // Anker-Akteur wiederherstellen
   entferneSubDepotAkzentOverride();                            // Override entfernen (farbfrei, Zug 3) → Anker-Chrome
   Modus._setzeIntern('anker');
@@ -30539,6 +30636,14 @@ function _depotSpeicherZuruecksetzen() {
   // Subdomain-Sitzung) ins nächste Depot durch. brandingAnwenden(null, ...) ist der Reset-Weg —
   // räumt zuvor gesetzte Werte weg, statt nur keine neuen zu setzen.
   try { brandingAnwenden(null); } catch (_) {}
+  // U2-ADR-188: dasselbe Leck wie beim Branding, eine Zeile darüber — nur für die fünf
+  // Modul-Registries statt CSS. Ohne diesen Reset zeigte das NÄCHSTE, unbeteiligte Depot
+  // (auch ein frisch angelegtes) die Bereiche/Textsätze/Rechtsraum-Typen/Institutions-Arten
+  // des GERADE GESCHLOSSENEN — live nachgestellt: neues Depot B trug den Sektor eines
+  // längst geschlossenen Depots A in der Sidebar (VD7-Fund, 01.09.2026). `data` ist hier
+  // bereits null (s. o.) — _alleModulRegisterAusDepotAnmelden(null) leert darum statt
+  // aufzubauen (dieselbe Funktion wie beim Sub-Kontext-Wechsel, s. dort).
+  try { _alleModulRegisterAusDepotAnmelden(null); } catch (_) {}
 }
 // U2-ADR-103-Nachtrag (31.08.2026) — die Frist vor Politik A. Carolas Abwägung wörtlich: "Oma
 // Erna, die rumläuft und die Papiere zusammensucht, und genervt ist, wenn sie aller 5 Minuten
