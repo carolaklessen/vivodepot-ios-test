@@ -3932,7 +3932,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v495';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-202: Kinder-Liste, verborgenWenn-Live-Verdrahtung (v494) + U2-ADR-207: Vor-Depot-Sprachmodul übersteht fremdes Depot (v495) — Landepunkt-Marken auf Anweisung VD KOORD 2, 02.09.2026
+const SCHALEN_STAND = 'v501';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-202: Kinder-Liste, verborgenWenn-Live-Verdrahtung (v494) + U2-ADR-207: Vor-Depot-Sprachmodul übersteht fremdes Depot (v495) + U2-ADR-193: BBK-Quellenangabe aktueller Stand + U2-ADR-199: Organspende-Register-Feld (v496) + U2-ADR-208: Sprachkennung fällt auf aktive Sprache zurück (v497) + U2-ADR-209: Produkt-Trennung im geteilten internen Speicher (v498) + zweiter Rebase dieses Zweigs auf v498 (v499) + U2-ADR-211: Sicherungsstand bekannt, Rebase auf v499 (v500) + U2-ADR-212: Sichern-Knopf folgt Speicher-Modus (v501) — Landepunkt-Marken auf Anweisung VD KOORD 2, 02.09.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -4693,6 +4693,7 @@ const _STRINGS_EINGEBAUT = ({
   saveStatusUnbestaetigtBestaetigen: null,
   internSpeicherProbeFehlgeschlagen: null,
   saveStatusJetztSichern: null,             // Knopf-Aktion (führt zum .vivodepot-Export)
+  saveStatusJetztSichernIntern: null,       // U2-ADR-212: dieselbe Knopf-Aktion, interner Modus (kein Datei-Export)
   saveStatusInternToast: null,   // interner IDB-Save
   // CC-Auftrag Sektorfeld-Autosave-Rückmeldung (03.08.2026): entprellte aria-live-Ansage nach
   // Sektor-Feld-Autosave, gebündelt bei schnellem Tab-Durchtippen — dasselbe Wort wie das
@@ -5254,6 +5255,11 @@ const _STRINGS_EINGEBAUT = ({
   exportErinnerung: null,
   // Stück 4 (1=a): schärfere Fassung desselben Nudge bei erhöhtem Verlust-Risiko (persist nicht gewährt, nicht installiert).
   exportErinnerungRisiko: null,
+  // U2-ADR-211 (ENTWURF-Wortlaut, die Gründerin darf verfeinern): Zustand statt Frist — nur
+  // gezeigt, wenn ein echter, persistierter Sicherungsstand vorliegt (jeExportiert===true).
+  // {tage}/{aenderungen} werden ersetzt, wie bei shlGueltigBis. Vereinfachung, offen benannt:
+  // keine Einzahl/Mehrzahl-Unterscheidung für {aenderungen} — s. ADR.
+  exportErinnerungZustand: null,
   // Stück 4 (2=b): iOS-Install-Hinweis MIT konkretem Handgriff (einmal/Sitzung, wegklickbar).
   iosInstallHinweis: null,
   // D43 Etappe 5 — Konflikt-Auflösung (Wortlaut der Gründerin). KEIN voreingestellter Default.
@@ -7200,6 +7206,8 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'vorsorge.vorsorge_instrumente/organspende.label': 'Organspende',
   'vorsorge.vorsorge_instrumente/organspende_einschraenkung.label': 'Welche Einschränkung?',
   'vorsorge.vorsorge_instrumente/organspende_einschraenkung.beispiel': 'z. B. nur Herz und Nieren; keine Hornhaut; nur für Transplantation, nicht für Forschung',
+  'vorsorge.vorsorge_instrumente/organspenderegister_id.label': 'Organspende-Register — Erklärungs-ID',
+  'vorsorge.vorsorge_instrumente/organspenderegister_id.beispiel': 'A3K7B9X',
   'vorsorge.vorsorge_instrumente/erbfolge_hinweis.label': 'Gesetzliche Erbfolge oder abweichender Wille?',
   'vorsorge.vorsorge_instrumente/testament_bedachte.label': 'Im Testament bedachte Person(en)',
   'vorsorge.vorsorge_instrumente/testament_bedachte.hint': 'Freiwillig. Wenn Sie die Personen hier eintragen, meldet sich Vivodepot nach einer Heirat, Trennung oder einem Todesfall und schlägt vor, das Testament anzusehen. Der Inhalt des Testaments bleibt außerhalb von Vivodepot.',
@@ -8169,6 +8177,9 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:saveStatusUnbestaetigtBestaetigen.text': "Ja, angekommen",
   'strings:internSpeicherProbeFehlgeschlagen.text': "Automatisches Speichern ist auf diesem Gerät nicht verfügbar — sichern Sie Ihr Depot stattdessen selbst als Datei.",
   'strings:saveStatusJetztSichern.text': "Jetzt als Datei sichern",
+  // U2-ADR-212: eigenes Label für den Regelfall-Klick im internen Modus — "als Datei" wäre hier
+  // eine falsche Zusage, der Klick schreibt intern, keine Datei entsteht.
+  'strings:saveStatusJetztSichernIntern.text': "Jetzt sichern",
   'strings:saveStatusInternToast.text': "Gespeichert. Für eine Sicherung gelegentlich als Datei sichern.",
   'strings:feldAutosaveAnsage.text': "Gespeichert",
   'strings:feldAutosaveAnsageFeld.text': "Gespeichert: {feld}",
@@ -8580,6 +8591,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:akteurBootstrapFehlerOk.text': "Verstanden",
   'strings:exportErinnerung.text': "Tipp: Erstellen Sie ab und zu eine Sicherungskopie als Datei. So ist Ihr Depot auch dann sicher, wenn dieses Gerät einmal Speicher freiräumt.",
   'strings:exportErinnerungRisiko.text': "Dieses Gerät kann den internen Speicher jederzeit freiräumen — sichern Sie Ihr Depot als Datei, damit nichts verloren geht.",
+  'strings:exportErinnerungZustand.text': "Zuletzt als Datei gesichert vor {tage} Tagen — seitdem {aenderungen} Änderungen, noch nicht in einer Datei.",
   'strings:iosInstallHinweis.text': "Damit Ihr Depot zuverlässig erhalten bleibt: tippen Sie unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. So liegt Vivodepot als App auf Ihrem Gerät.",
   'strings:konfliktTitel.text': "Welchen Stand möchten Sie verwenden?",
   'strings:konfliktText.text': "Auf diesem Gerät ist ein Stand vom {geraet} gespeichert. Die geöffnete Datei ist vom {datei}. Welchen möchten Sie verwenden?",
@@ -8626,7 +8638,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:krisenvorsorgeBedarfPersonMehrzahl.text': "Personen",
   'strings:krisenvorsorgeBedarfHerkunftAbgeleitet.text': "Aus Ihren Angaben unter „Meine Menschen“ abgeleitet (Sie selbst, ggf. Ehepartnerin/Ehepartner oder Lebenspartnerin/Lebenspartner und Kinder) — unten überschreibbar, falls Ihr Haushalt anders zählt.",
   'strings:krisenvorsorgeBedarfHerkunftUeberschrieben.text': "Von Ihnen selbst eingetragen.",
-  'strings:krisenvorsorgeBedarfQuelle.text': "Quelle: BBK-Checkliste für den Notvorrat (bbk.bund.de). Empfehlung geprüft am 10.08.2026, unverändert seit der 7. Auflage (2019). Vivodepot rechnet diese Empfehlung nur aus — keine eigene Einschätzung darüber hinaus.",
+  'strings:krisenvorsorgeBedarfQuelle.text': "Quelle: BBK, „Vorsorgen für Krisen und Katastrophen“ (bbk.bund.de/vorsorge), Checklisten-PDF, Stand laut PDF-Metadaten 04.12.2025. Empfehlung zuletzt geprüft am 01.09.2026. Vivodepot rechnet diese Empfehlung nur aus — keine eigene Einschätzung darüber hinaus.",
   'strings:verwalteteTitel.text': "Verwaltete Depots",
   'strings:verwalteteIntro.text': "Hier verwalten Sie Depots von Personen, für die Sie sorgen — als Bevollmächtigte oder als gesetzliche Vertreterin. Sie können ein Depot ansehen, wieder versiegeln oder bei einer Übergabe weiterreichen.",
   'strings:verwalteteLeer.text': "Noch keine eingehängten Depots. Ein eingehängtes Depot hat ein eigenes Passwort und schützt seinen Inhalt unabhängig von Ihrem.",
@@ -9813,6 +9825,17 @@ function textsatzRegeln() {
   if (!nachSprache) return raus;
   const rechtsraum = textsatzRechtsraumAktiv();
   const modul = (rechtsraum && nachSprache[rechtsraum]) || nachSprache[''];
+  // U2-ADR-208 (02.09.2026, gemessen am ausgelieferten Englisch-Modul, v495): ein aktives
+  // Sprachmodul ohne eigene `sprachkennung`-Regel behielt bis hier den eingebauten Rückfall —
+  // IMMER Deutsch, unabhängig von der tatsächlich aktiven Sprache (`sprachkennung` steht in
+  // `TEXTSATZ_REGELN_EINGEBAUT`, keine sprachabhängige Fallback-Stufe dazwischen). Betraf JEDES
+  // Modul mit leerem oder unvollständigem `_regeln` — nicht nur das englische; das englische ist
+  // nur der Fund, an dem es gemessen wurde. Die bloße Sprachkennung ist der bessere Grundwert,
+  // bevor die Modul-Regeln (falls vorhanden) sie genauer überschreiben — `textsatzSprachkennungAnwenden()`
+  // setzt darüber `document.documentElement.lang` (WCAG 3.1.1: die Aussprache eines Vorlese-
+  // programms folgt `lang`, nicht dem sichtbaren Text). Nur bei einem echten Modultreffer gesetzt,
+  // der Fall „kein Modul für die aktive Sprache" (Zeile darüber) bleibt beim eingebauten Rückfall.
+  raus.sprachkennung = sprache;
   if (modul && modul._regeln) Object.assign(raus, modul._regeln);
   return raus;
 }
@@ -10287,6 +10310,11 @@ function vorDepotText(schluessel) {
 }
 function vorDepotSpracheUmschalten() {
   _vorDepotSprache = (_vorDepotSprache === 'en') ? 'de' : 'en';
+  // U2-ADR-208 (02.09.2026): eigener, von `textsatzSpracheAktiv()`/`textsatzRegeln()` unabhängiger
+  // Sprachweg (PRE_DEPOT_EN, `vorDepotText`) — läuft nie über `textsatzSprachkennungAnwenden()`
+  // und braucht darum einen eigenen Sync-Aufruf. WCAG 3.1.1: die Aussprache eines Vorleseprogramms
+  // folgt `lang`, nicht dem sichtbaren Text.
+  document.documentElement.lang = _vorDepotSprache;
 }
 
 /* Trägt die Texte in EINEN Knoten ein. Feldweise still: was schon inline dasteht, bleibt.
@@ -12047,6 +12075,9 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
               ] },
             { id: 'organspende_einschraenkung', sensibel: true, typ: 'textarea',
               sichtbarWenn: { feld: 'organspende', wert: 'teil' },
+              },
+            { id: 'organspenderegister_id', sensibel: true, typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' },
               },
             // ── Testament (typ='testament') — `erben` bleibt bewusst ein EIGENES Sektorfeld
             // (4497), weil es auch bei gesetzlicher Erbfolge gilt, nicht nur bei vorhandenem Testament ──
@@ -17097,11 +17128,11 @@ async function depotHerunterladen() {
   // Datei auf der Platte ankam. Vorher fielen alle drei in denselben Zweig; ein blockierter oder
   // vom Nutzer verworfener Anker-Download meldete damit „gespeichert". Das war der Zustand am Abend
   // des 08.08., in dem das Passwort-Erinnerungsblatt gedruckt wurde und beim Wiedereinstieg nichts
-  // vorlag. `_letzteSicherungskopieISO`/`_aktuellerStandGespeichertAm` speisen ebenfalls nur den
-  // bestätigten Zweig — sie würden sonst der Boot-Konflikterkennung eine Zeitmarke vorspiegeln, die
-  // die Datei nie bekommen hat.
+  // vorlag. `_aktuellerStandGespeichertAm` speist ebenfalls nur den bestätigten Zweig — sonst
+  // würde der Boot-Konflikterkennung eine Zeitmarke vorgespiegelt, die die Datei nie bekommen hat.
+  // U2-ADR-211: `data.sicherungsStand` (der persistierte Sicherungsstand) wird gleich in
+  // markiereAlsDateiGesichert() gesetzt, unten — derselbe bestätigte Zweig, eine Stelle.
   if (weg === 'datei' || weg === 'geteilt') {
-    _letzteSicherungskopieISO = new Date().toISOString();
     _aktuellerStandGespeichertAm = ts;
     /* B7a (29.07.2026) — HIER, und nicht nur `_aktuelleDateiSicherung = true`.
        GEMESSEN: `markiereAlsDateiGesichert` hatte NULL Aufrufer im Produkt, obwohl ihr
@@ -17460,6 +17491,42 @@ var VdStore = {
   liste: function () { return this._backend().liste(); },
 };
 
+/* ── Produkt-Trennung im geteilten internen Speicher (CC-Auftrag, 02.09.2026,
+   KOORD2-Fund) ──────────────────────────────────────────────────────────────
+   Wurzel-App und jede Modul-App (module-apps/<slug>/) laufen unter DERSELBEN Origin,
+   DERSELBEN VDSTORE_DB — IndexedDB kennt nur Origin, kein Produkt. GEMESSEN (Firefox,
+   echter gehosteter Klon, 02.09.2026): ein in der Wurzel-App intern gesichertes Depot
+   erschien nach dem Öffnen der englischen Modul-App SOFORT als deren eigener interner
+   Stand — kein Datenverlust (jedes Depot behält seine eigene UUID im Store), aber der
+   Wiedereinstieg zeigte auf das jeweils fremde Produkt.
+   DIE FALLE, die diesen Bau bestimmt: die Datenbank umzubenennen verwaist jeden Bestand,
+   der heute schon darin liegt — wer sein Depot vor diesem Fix intern gesichert hat, fände
+   es nach einem Namenswechsel nicht mehr, ohne Fehler, ohne Hinweis. Darum liegt die
+   Trennung am RECORD, nicht am Datenbanknamen: `_speicherProduktKennung()` liest den
+   einzigen zur Laufzeit verfügbaren, nicht im (überall byte-identisch kopierten, s.
+   tools/modul-app-packen.js DATEISATZ) Kern selbst stehenden Unterschied — den Pfad,
+   unter dem DIESE Instanz ausgeliefert wurde. Ein Record OHNE `produkt`-Feld ist
+   Altbestand (vor diesem Fix geschrieben) und gehört dem Produkt, das ihn findet —
+   sonst verwaist er auf demselben Weg, den dieser Fix gerade vermeiden soll. */
+function _speicherProduktKennung(pfad) {
+  const p = (typeof pfad === 'string') ? pfad : ((typeof location !== 'undefined' && location && location.pathname) || '');
+  const m = /\/module-apps\/([a-z0-9-]+)\//.exec(p);
+  return m ? m[1] : '';   // '' = Wurzel-App (kein module-apps-Segment im Pfad)
+}
+function _speicherEigenerRecord(record, kennung) {
+  return !!record && (record.produkt === undefined || record.produkt === kennung);
+}
+// Gefilterte, sortierte Sicht auf `depots` — nur Records dieses Produkts (plus Altbestand
+// ohne Kennung), neuester zuerst. EIN Ort statt drei unabhängig kopierter sort+pick-Stellen
+// (internerStandMeta, depotAusIdbLaden, _internerUmschlagRoh) — dieselbe Logik, dieselbe Probe.
+async function _eigeneInterneListe() {
+  const liste = await VdStore.liste();
+  const kennung = _speicherProduktKennung();
+  const eigene = (liste || []).filter((r) => _speicherEigenerRecord(r, kennung));
+  eigene.sort((a, b) => String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')));
+  return eigene;
+}
+
 /* ── D43 / U2-ADR-015 — Etappe 1: IDB-Persistenz-Schicht (v3-only) ──────────
    Schreibt/liest den laufenden Arbeitsstand intern, verschlüsselt. Der gespeicherte
    `cipherBlob` ist BYTE-IDENTISCH der v3-Umschlag aus depotSerialisieren() — die
@@ -17483,6 +17550,7 @@ async function depotInIdbSichern() {
     id: aktuelleDepotUUID,
     cipherBlob: JSON.stringify(umschlag),                   // byte-identischer v3-Umschlag
     gespeichert_am: new Date().toISOString(),               // Klartext-Metadatum, außerhalb der AAD
+    produkt: _speicherProduktKennung(),                     // Produkt-Trennung (02.09.2026), s. Kommentar dort
   };
   await VdStore.setzen(record);
   _aktuellerStandGespeichertAm = record.gespeichert_am;     // Etappe 5: Stand trägt jetzt diese Marke
@@ -17495,9 +17563,8 @@ async function depotInIdbSichern() {
 async function internerStandMeta() {
   if (!internerSpeicherModus()) return null;
   let liste;
-  try { liste = await VdStore.liste(); } catch (_) { return null; }
+  try { liste = await _eigeneInterneListe(); } catch (_) { return null; }
   if (!liste || !liste.length) return null;
-  liste.sort(function (a, b) { return String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')); });
   return { id: liste[0].id, gespeichert_am: liste[0].gespeichert_am || null, anzahl: liste.length };
 }
 async function internerStandVorhanden() {
@@ -17508,9 +17575,8 @@ async function internerStandVorhanden() {
 // Lädt den internen Stand und entschlüsselt ihn mit dem Passwort. v3-only-Gate VOR
 // depotLaden (LEGACY-Beschluss); depotLaden gated zusätzlich + entschlüsselt.
 async function depotAusIdbLaden(password) {
-  const liste = await VdStore.liste();
+  const liste = await _eigeneInterneListe();
   if (!liste || !liste.length) return null;                 // kein interner Stand
-  liste.sort(function (a, b) { return String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')); });
   const record = liste[0];
   let umschlag;
   try { umschlag = JSON.parse(record.cipherBlob); }
@@ -17652,24 +17718,32 @@ function sitzungEtablieren() {
   try { iosInstallHinweisVielleichtZeigen(); } catch (_) {}
 }
 
-// Letzte als Datei erstellte Sicherungskopie (Klartext-Zeitmarke, RAM) — speist die
-// Export-Erinnerung. Wird in depotHerunterladen bei Erfolg gesetzt.
-var _letzteSicherungskopieISO = null;
 var EXPORT_ERINNERUNG_SCHWELLE_TAGE = 14;
 var _exportErinnerungGezeigt = false;
 
-// Reines Modell (sync, testbar): Ist eine Sicherungskopie-Erinnerung fällig?
+// U2-ADR-211: Reines Modell (sync, testbar): Ist eine Sicherungskopie-Erinnerung fällig, und
+// was ist der tatsächliche, PERSISTIERTE Sicherungsstand (data.sicherungsStand)? Vorher stand
+// hier eine reine Arbeitsspeicher-Variable, die bei jedem Sitzungsstart neu bei null begann —
+// die Erinnerung konnte darum eine Bürgerin, die gestern gesichert hatte, nicht von einer
+// unterscheiden, die es nie getan hatte. `data.sicherungsStand` fehlt an jedem heute
+// bestehenden Depot (Migrationsstufe, additiv) — genau dieser Fall (kein Objekt, kein Feld)
+// muss sauber als "unbekannt" gelten, nicht als Fehler; das ist die Gegenprobe zu diesem ADR.
 function exportErinnerungModell(jetzt) {
   var d = (jetzt && typeof jetzt.getTime === 'function' && !isNaN(jetzt)) ? jetzt : new Date();
-  var jeExportiert = !!_letzteSicherungskopieISO;
+  var stand = (data && data.sicherungsStand && typeof data.sicherungsStand === 'object') ? data.sicherungsStand : null;
+  var jeExportiert = !!(stand && typeof stand.letzteDateiIso === 'string' && stand.letzteDateiIso);
   var tageHer = null;
   if (jeExportiert) {
-    var t = Date.parse(_letzteSicherungskopieISO);
+    var t = Date.parse(stand.letzteDateiIso);
     if (!isNaN(t)) tageHer = Math.floor((d.getTime() - t) / 86400000);
   }
+  var aenderungenSeither = (jeExportiert && typeof stand.aenderungenDanach === 'number') ? stand.aenderungenDanach : null;
   var faellig = internerSpeicherModus()
     && (!jeExportiert || (tageHer != null && tageHer >= EXPORT_ERINNERUNG_SCHWELLE_TAGE));
-  return { faellig: faellig, jeExportiert: jeExportiert, tageHer: tageHer, schwelleTage: EXPORT_ERINNERUNG_SCHWELLE_TAGE };
+  return {
+    faellig: faellig, jeExportiert: jeExportiert, tageHer: tageHer,
+    schwelleTage: EXPORT_ERINNERUNG_SCHWELLE_TAGE, aenderungenSeither: aenderungenSeither,
+  };
 }
 
 // Einmal pro Sitzung, sanft und nicht-blockierend. WORTLAUT (Entwurf) — die Gründerin darf
@@ -17683,8 +17757,18 @@ function exportErinnerungVielleichtZeigen() {
     if (typeof ui !== 'undefined' && ui.toast && STRINGS) {
       // Stück 4 (1=a): bei erhöhtem Verlust-Risiko (persist nicht gewährt, nicht installiert) den SELBEN
       // Nudge mit schärferem Wortlaut — kein neuer Alarm, nur ehrlicher.
-      var txt = (typeof erhoehtesVerlustRisiko === 'function' && erhoehtesVerlustRisiko() && STRINGS.exportErinnerungRisiko)
-        ? STRINGS.exportErinnerungRisiko : STRINGS.exportErinnerung;
+      // U2-ADR-211: liegt ein echter, persistierter Sicherungsstand vor (jeExportiert), sagt der
+      // Hinweis einen ZUSTAND statt einer Frist — "vor X Tagen, N Änderungen seither" statt
+      // "bitte ab und zu sichern". Ohne Stand (kein bisheriges Depot, oder ein Depot von vor
+      // diesem ADR) bleibt der alte, unbedingte Hinweis — er trifft dort ohnehin zu.
+      var txt;
+      if (m.jeExportiert && m.tageHer != null && m.aenderungenSeither != null && STRINGS.exportErinnerungZustand) {
+        txt = String(STRINGS.exportErinnerungZustand)
+          .replace('{tage}', String(m.tageHer)).replace('{aenderungen}', String(m.aenderungenSeither));
+      } else {
+        txt = (typeof erhoehtesVerlustRisiko === 'function' && erhoehtesVerlustRisiko() && STRINGS.exportErinnerungRisiko)
+          ? STRINGS.exportErinnerungRisiko : STRINGS.exportErinnerung;
+      }
       if (txt) ui.toast(txt, 'info');
     }
   } catch (_) { /* Hinweis ist optional, nie blockierend */ }
@@ -25877,8 +25961,12 @@ async function subKontextVerlassen() {
 }
 
 /* ── D42 — EINE context-aware Datei-Sicherung für ALLE Aufrufer ────────────────────
-   Genutzt von: Sichern-Knopf (Topbar-Status-Pille #tb-save-knopf), Schließen-Schutz, Moduswechsel
-   und Sub-Anlegen — alle über kernAPI.speichern, das hierauf delegiert (eine Quelle, kein Drift).
+   Genutzt von: Schließen-Schutz (primärer Weg, U2-ADR-031), Moduswechsel-Konfliktdialog
+   ("Erst als Datei sichern"), Sub-Anlegen, und der Sichern-Knopf (Topbar-Status-Pille
+   #tb-save-knopf) — dort NUR noch in zwei Fällen (U2-ADR-212): 'keine-datei' (bewusster
+   Export, Ebene 2) und wiederholter Fehlschlag (Eskalationsweg). Der Regelfall-Klick im
+   internen Modus geht seit U2-ADR-212 über kernAPI.speichern()/depotPersistieren() nach
+   depotInternSichern() — keine Datei je Klick mehr (Firefox/Safari-Befund).
    • Anker-Kontext: der normale Weg (depotSerialisieren `data`=Anker mit Anker-Globals).
    • Sub-Kontext: die Krypto-Globals zeigen ohnehin auf den ANKER, nur `data` auf den Sub. Darum
      erst die Sub-Edits mit dem SUB-Key in den Anker-Umschlag versiegeln (subDepotNeuVersiegeln),
@@ -29608,9 +29696,8 @@ async function cryptoOverlayOeffnen() {
 // Roh-Umschlag des neuesten internen Stands (OHNE Entschlüsselung). null, wenn keiner da ist.
 async function _internerUmschlagRoh() {
   try {
-    const liste = await VdStore.liste();
+    const liste = await _eigeneInterneListe();
     if (!liste || !liste.length) return null;
-    liste.sort((a, b) => String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')));
     return JSON.parse(liste[0].cipherBlob);
   } catch (e) { return null; }
 }
@@ -31011,12 +31098,17 @@ function flowDepotListe() {
   const wieGesichertText = hatDateiSpeichernPicker() ? STRINGS.wieGesichertFassungA
     : _teilenBevorzugt() ? STRINGS.wieGesichertFassungC
     : STRINGS.wieGesichertFassungB;
+  // U2-ADR-211: liest den persistierten Sicherungsstand (data.sicherungsStand), nicht mehr die
+  // tote Arbeitsspeicher-Variable — überlebt jetzt einen Wiedereinstieg/Gerätewechsel. Fehlt das
+  // Feld (jedes Depot von vor diesem ADR), bleibt die Zeile schlicht weg, wie bisher auch.
+  const zuletztGesichertIso = (data && data.sicherungsStand && typeof data.sicherungsStand.letzteDateiIso === 'string')
+    ? data.sicherungsStand.letzteDateiIso : null;
   const dateiZeile = _dateiName
     ? '<p class="depot-datei-info">' +
         '<strong>' + escapeHTML(STRINGS.depotListeDateiLabel) + ':</strong> ' + escapeHTML(_dateiName) +
-        (_letzteSicherungskopieISO
+        (zuletztGesichertIso
           ? '<br><strong>' + escapeHTML(STRINGS.depotListeZuletztGespeichertLabel) + ':</strong> ' +
-            escapeHTML(_konfliktZeitLesbar(_letzteSicherungskopieISO) || STRINGS.konfliktDatumUnbekannt)
+            escapeHTML(_konfliktZeitLesbar(zuletztGesichertIso) || STRINGS.konfliktDatumUnbekannt)
           : '') +
         '<br><span class="depot-datei-hinweis">' + escapeHTML(wieGesichertText) + '</span>' +
       '</p>'
@@ -35306,10 +35398,18 @@ let _letzterSpeicherFehlschlagGrund = null;
 function istUngespeichert() { return _ungespeicherteAenderungen > 0; }
 function ungespeichertAnzahl() { return _ungespeicherteAenderungen; }
 function markiereUngespeichert(n) {
-  _ungespeicherteAenderungen += (typeof n === 'number' && n > 0) ? n : 1;
+  const anzahl = (typeof n === 'number' && n > 0) ? n : 1;
+  _ungespeicherteAenderungen += anzahl;
   _aktuelleDateiSicherung = false;                         // jede Änderung entwertet die Sicherungsdatei
   _dateiVerlustQuittiert = false;                          // neue Arbeit → die Warnung ist wieder berechtigt
   _letzteDateiSicherungUnbestaetigt = false;               // neue Arbeit entwertet die offene Frage von vorhin
+  // U2-ADR-211: "Änderungen seit der letzten Datei-Sicherung" zaehlt nur weiter, wenn es
+  // ueberhaupt einen Sicherungsstand gibt — ein Depot ohne `sicherungsStand` (jedes heute
+  // bestehende) hat nichts, wovon aus zu zaehlen waere. Kein Fehler, einfach nichts zu tun.
+  if (data && data.sicherungsStand && typeof data.sicherungsStand === 'object') {
+    data.sicherungsStand.aenderungenDanach = (typeof data.sicherungsStand.aenderungenDanach === 'number'
+      ? data.sicherungsStand.aenderungenDanach : 0) + anzahl;
+  }
   try { renderSaveStatus(); } catch (_) {}
 }
 // CC-Auftrag „Das Datei-Signal" (10.08.2026) — betreteApp() rief bisher markiereGespeichert()
@@ -35361,6 +35461,10 @@ function markiereAlsDateiGesichert() {
   _letzterSpeicherFehlschlagGrund = null;
   _letzteDateiSicherungUnbestaetigt = false;               // ein bestätigter Erfolg löst die offene Frage auf
   _speicherFehlschlagAnzahlInFolge = 0;                    // Erfolg unterbricht die Fehlschlags-Folge
+  // U2-ADR-211: der Zeitpunkt reist im Depot selbst mit (data), nicht nur im Arbeitsspeicher —
+  // sonst ist er nach einem Gerätewechsel weg, genau dort, wo man ihn braucht. Der Zähler
+  // "Änderungen seither" beginnt hier neu bei 0 — die gerade gesicherte Datei trägt sie ja.
+  if (data) data.sicherungsStand = { letzteDateiIso: new Date().toISOString(), aenderungenDanach: 0 };
   try { renderSaveStatus(); } catch (_) {}
 }
 // Persistenz Nachtrag (Auftrag „Erfolg ohne Wirkung", 08.08.2026, Zug 1) — DRITTER Zustand: ein
@@ -35434,6 +35538,18 @@ function saveStatusModell() {
   if (_aktuelleDateiSicherung)        return { zustand: 'als-datei',     anzahl: 0, knopfAktiv: false };
   return { zustand: 'keine-datei', anzahl: 0, knopfAktiv: true };
 }
+// U2-ADR-212 (02.09.2026) — reine, testbare Entscheidung: geht der Sichern-Pillen-Klick über die
+// Datei? Der Regelfall (etwas Offenes zu falten) geht seit diesem ADR über depotPersistieren() —
+// intern, wenn intern möglich (kein Datei-Wachstum bei jedem Klick, s. Firefox/Safari-Befund:
+// bislang eine neue zeitgestempelte Datei je Klick). Der Datei-Weg bleibt für zwei Fälle bewusst
+// der alte: 'keine-datei' (nichts Offenes zu falten, aber noch keine/keine aktuelle Datei — der
+// Klick kann hier nur „jetzt eine Datei" meinen, das ist der bewusste Export, Ebene 2) und ein
+// WIEDERHOLTER Fehlschlag (der Pillentext verspricht bereits „Als Datei sichern" — der Klick muss
+// das einlösen, sonst lügt das Label). Im Datei-Modus (internerSpeicherModus()===false) IMMER
+// wahr — unverändertes Verhalten, keine Verzweigung nötig.
+function saveKnopfDateiWeg(m) {
+  return !internerSpeicherModus() || m.zustand === 'keine-datei' || !!m.wiederholt;
+}
 // Persistenz Stück 2 (U2-ADR-031, Verlust laut machen) — soll das Schließen warnen? Variante B:
 // ungespeicherte Edits IMMER; sonst (echte Sitzung mit Inhalt) wenn KEINE aktuelle Sicherungsdatei
 // vorliegt und die Nutzerin den Verlust noch nicht quittiert hat. Reines, testbares Modell.
@@ -35486,14 +35602,15 @@ function renderSaveStatus() {
   // Zug 1 — im vierten Zustand fragt der Knopf NICHT erneut „jetzt sichern" (das stieße einen
   // weiteren unbestätigten Download an, ohne die offene Frage zu lösen), sondern lässt die
   // Bürgerin die Frage selbst auflösen: die Datei ist angekommen.
-  const knopfLabel = (m.zustand === 'unbestaetigt') ? STRINGS.saveStatusUnbestaetigtBestaetigen : STRINGS.saveStatusJetztSichern;
+  const dateiWeg = saveKnopfDateiWeg(m);
+  const knopfLabel = (m.zustand === 'unbestaetigt') ? STRINGS.saveStatusUnbestaetigtBestaetigen
+    : dateiWeg ? STRINGS.saveStatusJetztSichern : STRINGS.saveStatusJetztSichernIntern;
   if (knopf) {
     knopf.hidden = !m.knopfAktiv;
     if (knopf.style) knopf.style.display = m.knopfAktiv ? '' : 'none';
     // A2 (2026-06-10): Icon IM Knopf, damit die Pille bei Enge (tb-eng-1) auf ein tappbares Icon kollabieren kann.
     knopf.innerHTML = svgIcon(ICONS.save, 16) + '<span class="tb-save-knopf-text">' + escapeHTML(knopfLabel) + '</span>';
     knopf.setAttribute('aria-label', knopfLabel);
-    // Aktion = die bewusste .vivodepot-Datei (im internen Modus hält depotInDateiSichern den IDB-Cache mit aktuell).
     // Persistenz Stück 5 — Regel: kein bare catch(_){} auf einem Schreibpfad. Erfolg und Fehlschlag
     // laufen beide auf ein sichtbares Signal hinaus, nie auf stillschweigendes Nichts.
     knopf.onclick = (m.zustand === 'unbestaetigt') ? () => {
@@ -35501,8 +35618,12 @@ function renderSaveStatus() {
       try { renderSaveStatus(); } catch (_) {}
     } : async () => {
       bearbeitungSpeichern();
-      if (!(await _dateiNameSicherstellen())) return;   // Nicht-FSA: Name erfragt; Abbruch → nicht speichern
-      try { await depotInDateiSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(_); }
+      if (dateiWeg) {
+        if (!(await _dateiNameSicherstellen())) return;   // Nicht-FSA: Name erfragt; Abbruch → nicht speichern
+        try { await depotInDateiSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(_); }
+      } else {
+        await speichernOderFehlschlagMarkieren();          // depotPersistieren() → intern (U2-ADR-212)
+      }
       try { renderSaveStatus(); } catch (_) {}
     };
   }
@@ -49094,8 +49215,10 @@ function bestaetigeEinhaengen(datei) {
 
 /* ── Verdrahtung ────────────────────────────────────────────────────────── */
 // A1/D46 (2026-06-09): Der freistehende #tb-speichern-Knopf ist entfernt. Das eine
-// „Sichern" verdrahtet renderSaveStatus() am Pillen-Knopf #tb-save-knopf (gleicher
-// Pfad: bearbeitungSpeichern() + kernAPI.speichern() → depotInDateiSichern()).
+// „Sichern" verdrahtet renderSaveStatus() am Pillen-Knopf #tb-save-knopf. Seit U2-ADR-212
+// (02.09.2026) NICHT mehr ein einziger Pfad: bearbeitungSpeichern() + Klick-Weiche nach
+// Zustand — Regelfall intern → kernAPI.speichern()/depotPersistieren(); 'keine-datei' und
+// wiederholter Fehlschlag bewusst weiter → depotInDateiSichern() (s. Kommentar dort).
 
 // Auto-Save pro Feld (Umbau „immer editierbar"): EIN delegierter Listener auf #content.
 // blur bubbelt nicht → capture=true, damit Feld-für-Feld-blur greift; change deckt

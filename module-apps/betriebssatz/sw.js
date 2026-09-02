@@ -230,7 +230,19 @@
 // Bytes geändert.
 // v494 → v495 (02.09.2026): U2-ADR-207, Vor-Depot-Sprachmodul übersteht fremdes Depot. Shell-
 // Bytes geändert.
-const CACHE = 'vivodepot-shell-v495';
+// v495 → v496 (02.09.2026): U2-ADR-193 (BBK-Quellenangabe aktueller Stand) + U2-ADR-199
+// (Organspende-Register-Feld). Shell-Bytes geändert (vivodepot.html + vivodepot-lesen.html).
+// v496 → v497 (02.09.2026): U2-ADR-208, Sprachkennung fällt auf aktive Sprache zurück. Shell-
+// Bytes geändert.
+// v497 → v498 (02.09.2026): U2-ADR-209, Produkt-Trennung im geteilten internen Speicher —
+// Auftrag KOORD2, Vorrang. Shell-Bytes geändert (vivodepot.html).
+// v498 → v499 (02.09.2026): zweiter Rebase dieses Zweigs auf v498. Landepunkt-Marke auf
+// Anweisung VD KOORD 2.
+// v499 → v500 (02.09.2026): U2-ADR-211, Sicherungsstand bekannt — persistiert statt
+// Arbeitsspeicher-Variable. Rebase auf v499. Shell-Bytes geändert (vivodepot.html).
+// v500 → v501 (02.09.2026): U2-ADR-212, Sichern-Knopf folgt Speicher-Modus — der Regelfall-Klick
+// faltet im internen Modus intern, keine Datei mehr je Klick. Shell-Bytes geändert (vivodepot.html).
+const CACHE = 'vivodepot-shell-v501';
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT — z. B. wenn die Manifest-Entscheidung „inline" lautet und es
