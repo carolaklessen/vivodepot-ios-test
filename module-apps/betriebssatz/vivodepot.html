@@ -3374,8 +3374,10 @@
   <div class="banner-stapel">
     <!-- 1F/b1: persistenter Ablauf-Vorwarn-Banner — gefüllt/gezeigt von _basisAblaufBannerVielleicht (Boot). -->
     <div id="basis-ablauf-banner" class="basis-ablauf-banner" role="status" hidden><span class="bab-text"></span><button type="button" class="bab-x" id="basis-ablauf-x">×</button></div>
-    <!-- CC-Bauauftrag Service-Worker-Update (16.07.2026), Stufe 2: Hinweis statt Zwangs-Reload —
-         gefüllt/gezeigt von _swUpdateHinweisZeigen() bei erkanntem Worker-Wechsel (controllerchange). -->
+    <!-- Mit U2-ADR-190 (01.09.2026) inert: kein Skript befüllt/zeigt diese Fläche mehr —
+         Entscheidung der Gründerin, automatische Aktualisierung ohne jeden Hinweis. Bleibt als
+         Fläche im banner-stapel stehen, ein Entfernen wäre eine eigene, hier nicht verlangte
+         Änderung am geteilten Layout (s. ADR). -->
     <div id="sw-update-banner" class="sw-update-banner" role="status" hidden><span class="swb-text"></span><button type="button" class="banner-knopf-hell" id="sw-update-neu">Neu laden</button><button type="button" class="swb-x" id="sw-update-x">×</button></div>
     <!-- Nachtrag 08.08.2026: persistenter Wiedereinstiegs-Weg für die Marke 'interner-wiedereinstieg'
          (kein Datei-Weg im Spiel) — gefüllt/gezeigt von zeigeInternerWiedereinstiegBanner(). Ersetzt
@@ -3930,7 +3932,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v489';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-189: Sprachmodul wird vererbt, 01.09.2026
+const SCHALEN_STAND = 'v495';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-202: Kinder-Liste, verborgenWenn-Live-Verdrahtung (v494) + U2-ADR-207: Vor-Depot-Sprachmodul übersteht fremdes Depot (v495) — Landepunkt-Marken auf Anweisung VD KOORD 2, 02.09.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -3965,7 +3967,7 @@ function heuteLokal(d = new Date()) {
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-09-01';
+const BUILD_DATUM = '2026-09-02';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -4376,6 +4378,13 @@ const _STRINGS_EINGEBAUT = ({
   modulPruefstufeUnsigniertZusatz: null,
   modulPruefstufeGeprueftZusatz: null,
   modulPruefstufeUngeprueftZusatz: null,
+  // U2-ADR-186 (01.09.2026) — dieselbe Regel wie bei den importierten Vorlagen weiter unten:
+  // „eine Erweiterung, die stillschweigend weiter aussieht wie eingelassen, ist schlimmer als
+  // eine, die als ausgefallen gezeigt wird". Der Grund selbst (z. B. welches Datenfeld die
+  // Prüfung nicht mehr besteht) bleibt Technik und wird bewusst nicht ausformuliert — die
+  // Bürgerin braucht die Zusage „nichts ist verloren", nicht die Fehlermeldung.
+  modulAusgefallenHinweis: null,
+  modulAusgefallenZusatz: null,
   // D.4 (Rest-Sichten, 26.08.2026) — Kurzstatus in der <summary>, wenn der Abschnitt selbst hinter
   // <details> wandert (der Abschnitt bleibt IMMER sichtbar — anders als Vorlagen/PWA oben — weil
   // der Einlass-Weg selbst immer da sein muss, auch ohne ein einziges eingelassenes Modul).
@@ -5088,7 +5097,11 @@ const _STRINGS_EINGEBAUT = ({
   // ZUSTAND: _veralteteBasisVorlagen
   amtlicheVorlageVeraltet: null,   // 1F/b2: Marker an abgelaufen-aber-gültiger Basis-Vorlage
   amtlicheVorlagenAblaufWarnung: null,  // 1F/b1: Vorwarnung < 90 Tage
-  swUpdateVerfuegbar: null,  // CC-Bauauftrag Service-Worker-Update, 16.07.2026, Stufe 2
+  // Die beiden Stufe-2-Texte (Hinweis-Banner bei Worker-Wechsel, 16.07.2026) sind mit U2-ADR-190
+  // (01.09.2026) entfallen — Entscheidung der Gründerin: automatische Aktualisierung, kein
+  // ungefragter Hinweis über Versionen/Neuladen, auch nicht nachträglich. Das Banner-Markup
+  // (#sw-update-banner) bleibt als inerte Fläche stehen (Teil des banner-stapel-Systems mit
+  // #basis-ablauf-banner/#wiedereinstieg-banner), wird für diesen Zweck aber nie mehr befüllt.
   // ── Erkennung bestehender Standard-Dokumente (U2-ADR-014) — Vorschlag, nie Auto-Anlegen ──
   dokumentErkanntTitel: null,
   dokumentErkanntTextVorsorgevollmacht: null,
@@ -7992,6 +8005,8 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:modulPruefstufeUnsigniertZusatz.text': "unsigniert",
   'strings:modulPruefstufeGeprueftZusatz.text': "geprüft ({rolle})",
   'strings:modulPruefstufeUngeprueftZusatz.text': "signiert, nicht anerkannt",
+  'strings:modulAusgefallenHinweis.text': "Manche Erweiterungen liest diese Fassung von Vivodepot gerade nicht ein. Nichts geht dadurch verloren — Ihre Angaben bleiben in der Datei erhalten. Melden Sie sich bei der Anbieterin, wenn Sie die Erweiterung wieder nutzen möchten.",
+  'strings:modulAusgefallenZusatz.text': "wird gerade nicht eingelesen — Ihre Angaben bleiben erhalten",
   'strings:einstModuleKurzstatus.text': "{n} eingelassen",
   'strings:einstModuleKurzstatusLeer.text': "keine eingelassen",
   'strings:einstAbschnittVorlagen.text': "Importierte Vorlagen",
@@ -8016,7 +8031,12 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:fussVersionLabel.text': "Version",
   'strings:fussStandLabel.text': "Stand",
   'strings:fussAktualisierungenLabel.text': "Aktualisierungen",
-  'strings:fussStaleCacheWarnung.text': "Bei der letzten Verbindung wurde eine neuere Version gefunden. Sichern Sie zuerst Ihre Eingaben und laden Sie die Seite erst danach neu — sonst gehen sie verloren.",
+  // U2-ADR-190 (01.09.2026): die Aufforderung „sichern Sie zuerst, dann neu laden" ist entfallen —
+  // die Aktivierung übernimmt jetzt von selbst, sobald nichts offen ist, kein Reload mehr nötig.
+  // Der Satz muss in BEIDEN Zuständen wahr sein (schon still umgeschaltet ODER noch wartend auf
+  // das nächste Sichern) — darum ohne Zeitpunkt: „von selbst" trägt beides, ein „beim nächsten
+  // Öffnen" oder „nach dem Sichern" wäre im jeweils anderen Zustand falsch.
+  'strings:fussStaleCacheWarnung.text': "Bei der letzten Verbindung wurde eine neuere Version gefunden. Diese wird von selbst übernommen.",
   'strings:anlassFrage.text': "Was möchten Sie erledigen?",
   'strings:anlassFrageHerausholen.text': "Welchen Anlass möchten Sie vorbereiten?",
   'strings:klasse1.text': "Lebensereignisse",
@@ -8397,7 +8417,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:einstSwPruefenKnopf.text': "App-Update jetzt prüfen",
   'strings:einstSwPruefenHinweis.text': "Nur wirksam, wenn Sie Vivodepot als installierte App nutzen. Prüft im Hintergrund, ob eine neue Schale bereitsteht — Ihre Daten bleiben dabei unberührt.",
   'strings:einstSwPruefenLaeuft.text': "Suche nach einer neuen App-Version …",
-  'strings:einstSwPruefenGefunden.text': "Eine neue Version liegt bereit. Sie wird aktiv, sobald Sie die App vollständig schließen und neu öffnen.",
+  'strings:einstSwPruefenGefunden.text': "Eine neue Version wurde gefunden. Sie wird geladen, sobald nichts mehr zu sichern ist.",
   'strings:einstSwPruefenAktuell.text': "Keine neue Version gefunden — Sie haben vermutlich schon den aktuellen Stand.",
   'strings:einstSwPruefenNichtVerfuegbar.text': "Diese Prüfung ist hier nicht verfügbar.",
   'strings:einstSwPruefenFehler.text': "Die Prüfung ist fehlgeschlagen. Bitte später erneut versuchen.",
@@ -8448,7 +8468,6 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:eigenhaendigBadge.text': "eigenhändig",
   'strings:amtlicheVorlageVeraltet.text': "veraltet — App aktualisieren",
   'strings:amtlicheVorlagenAblaufWarnung.text': "Die amtlichen Vorlagen sind noch bis {datum} signiert. Bitte aktualisieren Sie die App rechtzeitig.",
-  'strings:swUpdateVerfuegbar.text': "Eine neue Version ist verfügbar.",
   'strings:dokumentErkanntTitel.text': "Aus Ihren Angaben erkannt",
   'strings:dokumentErkanntTextVorsorgevollmacht.text': "Sie haben eine Vorsorgevollmacht hinterlegt. Möchten Sie an die regelmäßige Auffrischung erinnert werden?",
   'strings:dokumentErkanntTextPatientenverfuegung.text': "Sie haben eine Patientenverfügung hinterlegt. Möchten Sie an die regelmäßige Überprüfung erinnert werden?",
@@ -8905,7 +8924,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:exportAllesWaehlen.text': "Alles auswählen",
   'strings:exportAuswahlAria.text': "Mitgeben",
   'strings:exportAuswahlFortfahren.text': "Ausgewähltes herausgeben",
-  'strings:exportNichtsGehtMitHinweis.text': "Alles Eingetragene in diesem Bereich ist besonders geschützt — es geht nur mit, wenn Sie es unter „Etwas zurückhalten“ freigeben.",
+  'strings:exportNichtsGehtMitHinweis.text': "Alles Eingetragene in diesem Bereich ist besonders geschützt — es geht nur mit, wenn Sie es unter „Zurückhalten“ freigeben.",
   'strings:exportNichtMitgeschicktLabel.text': "Nicht mitgeschickt",
   'strings:exportNichtMitgeschicktSchutzSuffix.text': " — besonders geschützt, bleiben hier.",
   'strings:exportNichtMitgeschicktFormatSuffix.text': " — dieses Format kann sie nicht abbilden.",
@@ -8930,7 +8949,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:kiDokumentKnopf.text': "Verfügung zur digitalen Nachbildung als Testament-Anlage ansehen / drucken",
   'strings:vmDokumentKnopf.text': "Vollmacht als Dokument ansehen / drucken",
   'strings:bvDokumentKnopf.text': "Betreuungsverfügung als Dokument ansehen / drucken",
-  'strings:identitaetKernFehltHinweis.text': "Für dieses Dokument fehlen in Ihren Identitätsangaben Name und/oder Geburtsdatum — ohne diese Angaben verliert das Blatt seine Aussage. Bitte ergänzen Sie sie unter „Meine Identität“, dann können Sie das Dokument erzeugen.",
+  'strings:identitaetKernFehltHinweis.text': "Für dieses Dokument fehlen in Ihren Identitätsangaben Name und/oder Geburtsdatum — ohne diese Angaben verliert das Blatt seine Aussage. Bitte ergänzen Sie sie unter „Identität & Person“, dann können Sie das Dokument erzeugen.",
   'strings:dokumentInMappeAbgelegt.text': "Abgelegt.",
   'strings:k9VorlageHerkunftText.text': "Der folgende Wortlaut stammt von {anbieter} — nicht von Vivodepot verfasst oder geprüft.",
   'strings:k9VorlageFussText.text': " · Wortlaut eingebracht von {anbieter}, signaturgeprüft übernommen",
@@ -10007,9 +10026,15 @@ function _textsatzModuleAusDepotAnmelden(d) {
   const liste = (ziel && Array.isArray(ziel.textsatzModule)) ? ziel.textsatzModule : [];
   const registry = Object.create(null);
   let n = 0;
-  for (const m of liste) {
+  // Trägt ein geprüftes Modul ins Register ein, sofern das [sprache][rechtsraum]-Fach noch frei
+  // ist. `ueberschreiben` gilt nur für den ersten (Depot-)Durchlauf: mehrere depot-eigene Module
+  // desselben Fachs dürfen sich wie bisher gegenseitig überschreiben (letztes gewinnt); im
+  // zweiten Durchlauf (Vor-Depot-Modul) NIE — ein Depot-eigenes Modul geht immer vor.
+  const eintragen = (m, ueberschreiben) => {
     const geprueft = textsatzModulPruefen(m);
-    if (!geprueft.gueltig) continue;
+    if (!geprueft.gueltig) return;
+    const rechtsraum = geprueft.rechtsraum || '';
+    if (!ueberschreiben && registry[m.sprache] && registry[m.sprache][rechtsraum]) return;
     /* DIE REGELN REISEN AM TEXT-OBJEKT MIT, nicht daneben — und zwar NICHT AUFZAEHLBAR.
        `textLesen` liest diese Registry mit `[kennung]`; ein zusaetzlicher aufzaehlbarer
        Schluessel waere fuer jede Kennungssuche ein Treffer und wuerde als Text ausgeliefert.
@@ -10023,9 +10048,23 @@ function _textsatzModuleAusDepotAnmelden(d) {
     // Module derselben Sprache, verschiedenen Rechtsraums, stehen jetzt NEBENEINANDER statt
     // sich zu überschreiben (Prüfstein 5).
     if (!registry[m.sprache]) registry[m.sprache] = Object.create(null);
-    registry[m.sprache][geprueft.rechtsraum || ''] = geprueft.texte;
+    registry[m.sprache][rechtsraum] = geprueft.texte;
     n++;
-  }
+  };
+  for (const m of liste) eintragen(m, true);
+  /* U2-ADR-189-Nachtrag (VD KOORD 2, 02.09.2026, Fund CC: "Vor-Depot-Modul überlebt fremdes
+     Depot nicht"): diese Funktion war bis hierher eine reine ZUWEISUNG aus `ziel.textsatzModule`
+     — korrekt für die vier GESCHWISTER-Register (Bereichs-/Code-/Rechtsraum-/Institutionsarten-
+     Module, U2-ADR-188), wo "folgt data ausschliesslich" die Sicherheitszusage GEGEN ein Leck
+     IST. Für die Textsatz-Registry ist das zu eng: ein VOR dem Depot angedocktes Sprachmodul
+     (`_vorDepotTextsatzModule`, App-Schale, nicht Depot-Inhalt) kommt nicht aus `data` und darf
+     darum auch nicht verschwinden, nur weil `data` gerade auf ein Depot zeigt, das (wie JEDES
+     normal in der deutschen App angelegte) kein eigenes Modul mitbringt. Die Unterscheidung:
+     Übersetzungstexte sind App-Beschriftung, keine Bürgerinnen-Daten — U2-ADR-188s Leck-Sorge
+     (ein PERSONENBEZOGENES Feld verlässt den Export im Klartext) betrifft sie nicht. Darum hier,
+     NUR bei Textsatz, NUR ergänzend (Depot-eigenes Modul gewinnt immer, `ueberschreiben=false`),
+     kein Rückbau der Zuweisungs-Regel für die anderen vier Register. */
+  for (const m of _vorDepotTextsatzModule) eintragen(m, false);
   _TEXTSATZ_MODUL_REGISTRY = registry;
   return n;
 }
@@ -10206,12 +10245,12 @@ const STRINGS = new Proxy(_STRINGS_EINGEBAUT, {
    `tools/textsatz-en-vollabdeckung-daten.js` — dieselbe Übersetzung taucht später im
    echten Modul wieder auf, kein zweiter, abweichender Text für denselben Satz. */
 const PRE_DEPOT_EN = Object.freeze({
-  appTagline: 'Your digital vault — offline, encrypted, in your hands.',
+  appTagline: 'Your digital depot — offline, encrypted, in your hands.',
   welcomeUnterzeile: 'Contacts, health, finances and provisions — kept with you, accessible to you and, in an emergency, to family or your doctor.',
   welcomeWeiter: 'What would you like to do?',
   welcomeHierAnfangen: 'Start here — no fixed goal',
   welcomeDateiOeffnen: 'Already have a Vivodepot? Open file',
-  anlegenFehler: 'The vault could not be created. Please try again.',
+  anlegenFehler: 'The depot could not be created. Please try again.',
   cryptoPwAufforderung: 'Enter the password for your Vivodepot',
   cryptoInternAufforderung: 'Your Vivodepot is stored on this device. Enter your password to open it.',
   btnDepotOeffnen: 'Open my Vivodepot',
@@ -10226,9 +10265,9 @@ const PRE_DEPOT_EN = Object.freeze({
      sind bewusst KEIN anerkannter Ausnahmegrund (erste Fassung dieses Kommentars nahm das
      irrtümlich an, s. Bericht). Kein Modul-Neubau, keine Neu-Signatur nötig: die Quelldaten
      zu ändern bereitet nur den NÄCHSTEN echten Modul-Build vor. */
-  wipeSperrschirmHinweis: 'Your Vivodepot was closed because it had not been visible for half an hour. Nothing has been lost.',
+  wipeSperrschirmHinweis: 'Your depot was closed because Vivodepot had not been visible for half an hour. Nothing has been lost.',
   cryptoDateiGewaehlt: 'Selected file',
-  dateiLabel: 'Vault file',
+  dateiLabel: 'Depot file',
   dateiAuswaehlenKnopf: 'Choose file',
   dateiKeineGewaehlt: 'No file selected',
   dateiNichtLesbar: "This file can't be read — it's corrupted or not a Vivodepot file.",
@@ -12661,8 +12700,28 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
    bleibt eingefroren — geändert wird die Bindung, nicht ein Objekt in der Hand eines
    Lesers. */
 let SEKTOR_BY_ID = Object.freeze(Object.fromEntries(SEKTOREN.map(s => [s.id, s])));
+/* U2-ADR-187 (01.09.2026) — Bereichs-Identität überlebt ihren Bereich, wie Feld-Beschriftungen es
+   schon tun. Vorher lebten `label`/`icon` eines angedockten Bereichs AUSSCHLIESSLICH als Getter
+   am Registry-Objekt (`bereichsModulPruefen`) — verschwindet das Modul, verschwindet der Getter
+   mit, und es gibt KEINE Kopie in `data`. Anders als bei `feldDefinitionenVerwaist` lässt sich das
+   nicht im Moment des Verwaisens nachholen: die Quelle (das Modul) ist dann schon weg. Der
+   Schnappschuss muss darum LAUFEND stehen, solange der Bereich noch bekannt ist — hier, beim
+   einzigen Ort, der bei jedem Andocken UND bei jedem Laden neu aufgebaut wird.
+   Nur `angedockt`e Bereiche: die eingebauten zwölf können nie verwaisen (reservierte IDs,
+   `BEREICH_IDS_EINGEBAUT`), ihre Beschriftung kommt ohnehin über den Textsatz, kein Schnappschuss
+   nötig. Eigener Namensraum, additiv, keine Schema-Anhebung — dieselbe Bauart wie
+   `feldGueltigkeit`/`bereichsModule` (Existenz-Zusicherung in `depotNormalisieren`).
+   Rot-Beleg: tests/bereich-identitaet-verwaist.test.js */
 function _sektorIndexNeuBauen() {
   SEKTOR_BY_ID = Object.freeze(Object.fromEntries(bereicheAlle().map(s => [s.id, s])));
+  try {
+    if (data && typeof data === 'object') {
+      if (!data.bereichsIdentitaeten || typeof data.bereichsIdentitaeten !== 'object') data.bereichsIdentitaeten = {};
+      for (const s of bereicheAlle()) {
+        if (s && s.angedockt) data.bereichsIdentitaeten[s.id] = { label: s.label, icon: s.icon };
+      }
+    }
+  } catch (_) { /* defensiv, wie die Rettung selbst — darf den Index-Aufbau nie brechen */ }
   return SEKTOR_BY_ID;
 }
 
@@ -13056,7 +13115,14 @@ function _bereichsModuleAusDepotAnmelden(d) {
   let n = 0;
   for (const m of liste) {
     const geprueft = bereichsModulPruefen(m);
-    if (!geprueft.gueltig) continue;
+    /* U2-ADR-186 — die Protokoll-Zeile stand bislang HINTER dem `continue`: ein Modul, das die
+       Strukturprüfung als Ganzes nicht bestand, hinterließ nicht einmal einen internen Eintrag,
+       nur Stille. Jetzt zuerst benennen (Kennung + Grund, so weit vorhanden), dann erst
+       überspringen — dieselbe Reihenfolge wie beim Doppel-Fall zwei Zeilen weiter unten. */
+    if (!geprueft.gueltig) {
+      BEREICHS_MODUL_VERWORFEN.push({ herkunft: (m && m.herkunft) || null, grund: geprueft.grund || 'ungueltig' });
+      continue;
+    }
     for (const v of geprueft.verworfene) BEREICHS_MODUL_VERWORFEN.push(v);
     for (const b of geprueft.bereiche) {
       // Zwei Module, dieselbe ID: der erste gewinnt. Der zweite wird BENANNT, nicht
@@ -15841,6 +15907,13 @@ function leeresDepot() {
        `bereicheVerwaist` zusammen: der Wert allein, ohne die Definition, wäre gerettet und
        trotzdem unlesbar — niemand wüsste mehr, welches Feld das war. */
     feldDefinitionenVerwaist: [],
+    /* U2-ADR-187 (01.09.2026) — Name/Icon eines angedockten Bereichs, laufend geschrieben von
+       `_sektorIndexNeuBauen`. Anders als bei Feld-Beschriftungen lässt sich das beim Verwaisen
+       selbst nicht mehr beschaffen; der Schnappschuss muss vorher schon dagestanden haben. */
+    bereichsIdentitaeten: {},
+    /* Derselbe Schnappschuss, mitgewandert, wenn der Bereich verwaist (`_bereicheVerwaisteRetten`)
+       — eigener Namensraum, kein Zusatzschlüssel im flachen `bereicheVerwaist`-Raum. */
+    bereicheVerwaistIdentitaet: {},
     // „Ausdrücklich keine" (CC-Auftrag 12.08.2026) — Form: { sektorId: { feldId: { datum } } }.
     // Nur für die fünf IPS-Pflichtbereiche in Gesundheit belegbar (s. AUSDRUECKLICH_KEINE_FELDER).
     ausdruecklichKeine: {},
@@ -18583,7 +18656,7 @@ const VOLLEXPORT_ZURUECKHALTEN_SCHLUESSEL = Object.freeze([
      laufenden Liste unbekannt ist, kann `feldIstSensibel` sie GAR NICHT klassifizieren; genau
      darum gehören sie hierher und nicht in die strukturelle Liste.
      Der Umzugsfall bleibt möglich: `{sensibel: true}` gibt sie vollständig mit. */
-  'bereicheVerwaist', 'feldDefinitionenVerwaist',
+  'bereicheVerwaist', 'feldDefinitionenVerwaist', 'bereicheVerwaistIdentitaet', // U2-ADR-187: dieselbe Sperre wie die Werte, die sie benennt
   /* M1 Zug 5/Zug 2 (18.08.2026): dasselbe Material wie `feldGueltigkeit`, nur der beim Umzug
      überstimmte Bereichswert. Er wird nirgends gelesen und nirgends angezeigt; ihn mitzugeben
      hiesse, einen überholten Wert in eine Übergabe zu schreiben, die niemand erwartet. */
@@ -18649,6 +18722,12 @@ const VOLLEXPORT_STRUKTURELL_SCHLUESSEL = Object.freeze([
      ohne ihn käme in einem Depot an, in dem die Hälfte der eigenen Einträge im Rettungsslot
      läge, weil ihr Bereich fehlt. */
   'bereichsModule',
+  /* U2-ADR-187 (01.09.2026): dieselbe Einordnung wie `bereichsModule` direkt darüber, aus
+     demselben Grund — Name/Icon eines angedockten Bereichs sind eine Beschreibung, kein Wert
+     über die Bürgerin (so wenig sensibel wie der Rubrikname in der Seitenleiste selbst). Das
+     verwaiste Gegenstück `bereicheVerwaistIdentitaet` steht dagegen in
+     VOLLEXPORT_ZURUECKHALTEN_SCHLUESSEL — es benennt Werte, die diese Liste bereits zurückhält. */
+  'bereichsIdentitaeten',
   /* Etappe 2g (U2-ADR-160): dieselbe Einordnung, aus demselben Grund wie `bereichsModule` direkt
      darüber — welche eingebauten Bereiche dieses Depot führt, ist eine Beschreibung der Datei,
      kein Wert über die Bürgerin. Ein Umzug ohne ihn käme in einem Depot an, das plötzlich wieder
@@ -22368,7 +22447,7 @@ const EMPFAENGER_NIE = Object.freeze(new Set([
      gerade NICHT bekommen hat. Der Preis ist benannt und nicht klein: kein Stempel, kein
      Gültigkeitsdatum, keine Sensibel-Markierung auf dem Ausschnitt. */
   'urheberschaft', 'feldGueltigkeit', 'feldGueltigkeitGerettet', 'sensibelFelder',
-  'bereicheVerwaist', 'feldDefinitionenVerwaist',
+  'bereicheVerwaist', 'feldDefinitionenVerwaist', 'bereicheVerwaistIdentitaet', // U2-ADR-187: dieselbe Sperre wie die Werte, die sie benennt
   '_letzterAnlass', '_wiedereinstiegHinweisGezeigt',
 ]));
 
@@ -24364,6 +24443,18 @@ async function modulEinlassenGeprueft(rohBundleText, ziel, opts) {
    für JEDES signierte Modul auf `false` gesetzt, unabhängig von `pruefstufe` — der alte
    Filter verlor diesen Fall komplett. `pruefstufe:'intern'` bleibt bewusst draußen:
    Vivodepots eigene signierte Inhalte brauchen kein Fremd-Signal. */
+/* U2-ADR-186 (01.09.2026) — bis dahin las diese Funktion die ROHEN Depot-Slots und rief
+   `reg.pruefen` nie: ein Modul, das die Strukturprüfung beim Laden nicht mehr besteht (z. B.
+   weil eine neuere App-Fassung den Kontrakt verschärft hat, s. Bruch 1 im zugehörigen Bericht),
+   verschwand aus der Navigation/den Bereichen, stand hier aber unverändert als „eingelassen,
+   geprüft" — die Bürgerin konnte den Widerspruch nicht bemerken. Jetzt wird jedes Modul GENAU
+   mit demselben Prüfer erneut geprüft, den auch der Ladeweg für dieses Register nutzt
+   (`reg.pruefen`, dieselbe Funktion, kein zweiter Prüfweg) — ein Register unterscheidet sich in
+   seiner Prüfung, nicht im Weg hierher (U2-ADR-145 Punkt 1). Fällt die Prüfung durch, erscheint
+   das Modul als AUSGEFALLEN statt als eingelassen; der `grund` reist mit, wird aber bewusst NICHT
+   wörtlich in der Bürgertext-Zeile gezeigt (kein Technik-Jargon wie „bereiche" oder
+   „moduleVersion", U2-ADR-095) — eine Sitzung, die den technischen Grund braucht, findet ihn hier
+   im Rückgabewert. */
 function eingelasseneModule(ziel) {
   const d = (ziel && typeof ziel === 'object') ? ziel : (typeof data !== 'undefined' ? data : null);
   const raus = [];
@@ -24372,9 +24463,16 @@ function eingelasseneModule(ziel) {
     for (const reg of EINLASS_REGISTER) {
       for (const m of (Array.isArray(d[reg.slot]) ? d[reg.slot] : [])) {
         if (!m) continue;
+        let geprueft = null;
+        try { geprueft = reg.pruefen(m); } catch (e) { geprueft = { gueltig: false, grund: 'fehler' }; }
+        if (!geprueft || !geprueft.gueltig) {
+          raus.push({ typ: reg.typ, kennung: reg.kennung(m), eingelassenAm: m.eingelassenAm || null,
+            pruefstufe: null, ausgefallen: true, grund: (geprueft && geprueft.grund) || 'ungueltig' });
+          continue;
+        }
         const fremd = m.ungeprueft === true || (typeof m.pruefstufe === 'string' && m.pruefstufe !== 'intern');
         if (fremd) raus.push({ typ: reg.typ, kennung: reg.kennung(m), eingelassenAm: m.eingelassenAm || null,
-          pruefstufe: (typeof m.pruefstufe === 'string' ? m.pruefstufe : null) });
+          pruefstufe: (typeof m.pruefstufe === 'string' ? m.pruefstufe : null), ausgefallen: false, grund: null });
       }
     }
   } catch (e) { /* defensiv */ }
@@ -32706,6 +32804,11 @@ function _bereicheVerwaisteRetten(ziel) {
     }
     if (!ziel.sektoren || typeof ziel.sektoren !== 'object') ziel.sektoren = {};
     if (!ziel.bereicheVerwaist || typeof ziel.bereicheVerwaist !== 'object') ziel.bereicheVerwaist = {};
+    // U2-ADR-187: die Identität reist mit, gleiches Umzugsmuster wie bei den Felddefinitionen
+    // (`feldDefinitionenVerwaist`) — eigener Namensraum, kein Zusatzschlüssel in `bereicheVerwaist`
+    // selbst (das ist ein FLACHER `{feldId: wert}`-Raum; ein Schlüssel wie `label` dort wäre von
+    // einem echten, gleichnamigen Feld nicht zu unterscheiden).
+    if (!ziel.bereicheVerwaistIdentitaet || typeof ziel.bereicheVerwaistIdentitaet !== 'object') ziel.bereicheVerwaistIdentitaet = {};
 
     const hatWert = (o) => o && typeof o === 'object'
       && Object.keys(o).some(k => { const v = o[k]; return v != null && v !== '' && !(Array.isArray(v) && !v.length); });
@@ -32720,6 +32823,12 @@ function _bereicheVerwaisteRetten(ziel) {
         ? Object.assign({}, inhalt, bisher)          // ein früher Geretteter behält Vorrang
         : inhalt;
       delete ziel.sektoren[id];
+      // Letzter bekannter Name/Icon, falls vorhanden — Bestandsdepots, die diesen Bereich schon
+      // vor U2-ADR-187 verloren haben, tragen hier nichts nach; das ist der ehrlich benannte,
+      // rückwirkende Rest (s. Bericht/ADR), nicht stillschweigend aufgefüllt.
+      if (ziel.bereichsIdentitaeten && ziel.bereichsIdentitaeten[id] && !ziel.bereicheVerwaistIdentitaet[id]) {
+        ziel.bereicheVerwaistIdentitaet[id] = ziel.bereichsIdentitaeten[id];
+      }
     }
 
     /* DER FREMDSCHLÜSSEL (Zug 4) — `data.feldDefinitionen[].sektorId` war ein FREIER WERT.
@@ -32771,9 +32880,60 @@ function _bereicheVerwaisteRetten(ziel) {
       }
       if (Object.keys(rest).length) ziel.bereicheVerwaist[id] = rest;
       else delete ziel.bereicheVerwaist[id];
+      // Der Slot räumt sich mit — `_sektorIndexNeuBauen` schreibt für einen wieder bekannten,
+      // angedockten Bereich ohnehin sofort einen frischen `bereichsIdentitaeten`-Eintrag.
+      if (ziel.bereicheVerwaistIdentitaet) delete ziel.bereicheVerwaistIdentitaet[id];
     }
   } catch (e) { /* defensiv: eine Rettung darf das Laden nie brechen */ }
   return ziel;
+}
+
+/* ── U2-ADR-187 — verwaiste Bereiche lesbar zusammenführen, OHNE `bereicheAlle()` zu erweitern ──
+   Bewusst eine EIGENE Funktion, kein Zusatz an `bereicheAlle()`: der Kommentar über
+   `_bereicheVerwaisteRetten` macht „gilt nicht als gültiger Bereich" ausdrücklich zur
+   Zusicherung — Zähler, Export-Mapping und Vollständigkeits-Prüfungen hängen an `bereicheAlle()`
+   und dürfen einen verwaisten Bereich weiterhin nicht mitzählen. Wer ihn ANZEIGEN will (Sidebar,
+   Gesamt-PDF, Herausgeben-Weg — Entscheidung je Aufrufstelle liegt noch bei der Gründerin, s. ADR),
+   liest hier.
+
+   Fehlt die Identität (Bestandsdepot, verwaist VOR U2-ADR-187 — gemessen heute: kein einziger
+   Fall, s. ADR), wird ein Anzeigename aus der ID selbst abgeleitet — Notlösung, ausdrücklich als
+   solche markiert (`identitaetRekonstruiert: true`), niemals als der ursprüngliche Name
+   ausgegeben. */
+function _bereichAnzeigenameAusId(id) {
+  return String(id || '').split(/[-_]+/).filter(Boolean)
+    .map((teil) => teil.charAt(0).toUpperCase() + teil.slice(1)).join(' ') || String(id || '');
+}
+function bereicheVerwaisteAlle() {
+  const out = [];
+  const verwaist = (data && data.bereicheVerwaist && typeof data.bereicheVerwaist === 'object') ? data.bereicheVerwaist : {};
+  const identitaeten = (data && data.bereicheVerwaistIdentitaet && typeof data.bereicheVerwaistIdentitaet === 'object')
+    ? data.bereicheVerwaistIdentitaet : {};
+  const defsVerwaist = (data && Array.isArray(data.feldDefinitionenVerwaist)) ? data.feldDefinitionenVerwaist : [];
+  for (const id of Object.keys(verwaist)) {
+    const werte = verwaist[id];
+    if (!werte || typeof werte !== 'object') continue;
+    const idNoch = identitaeten[id];
+    const felder = defsVerwaist.filter((def) => def && def.sektorId === id).map((def) => ({
+      feldId: def.feldId,
+      label: (typeof def.label === 'string' && def.label.trim()) || def.feldId,
+      wert: Object.prototype.hasOwnProperty.call(werte, def.feldId) ? werte[def.feldId] : undefined,
+    }));
+    // Werte ohne bekannte Felddefinition (sollte der Fremdschlüssel-Umzug nicht zulassen,
+    // defensiv trotzdem behandelt — nichts an der Anzeige darf an einer Lücke scheitern):
+    const bekannteFeldIds = new Set(felder.map((f) => f.feldId));
+    for (const feldId of Object.keys(werte)) {
+      if (!bekannteFeldIds.has(feldId)) felder.push({ feldId, label: feldId, wert: werte[feldId] });
+    }
+    out.push({
+      id,
+      label: (idNoch && typeof idNoch.label === 'string' && idNoch.label.trim()) || _bereichAnzeigenameAusId(id),
+      icon: (idNoch && typeof idNoch.icon === 'string' && idNoch.icon.trim()) || 'folder',
+      identitaetRekonstruiert: !(idNoch && typeof idNoch.label === 'string' && idNoch.label.trim()),
+      felder,
+    });
+  }
+  return out;
 }
 
 /* ── M1 generisch: die Gültigkeit EINES Werts, unabhängig davon, wer das Feld gebaut hat ──
@@ -34065,6 +34225,15 @@ function depotNormalisieren(d) {
   if (!ziel.bereicheVerwaist || typeof ziel.bereicheVerwaist !== 'object' || Array.isArray(ziel.bereicheVerwaist)) {
     ziel.bereicheVerwaist = {};
   }
+  // U2-ADR-187 (01.09.2026) — Existenz-Zusicherung wie oben, keine Migration des Inhalts: ein
+  // Bestandsdepot hat hier schlicht nichts, `_sektorIndexNeuBauen`/`_bereicheVerwaisteRetten`
+  // füllen laufend nach.
+  if (!ziel.bereichsIdentitaeten || typeof ziel.bereichsIdentitaeten !== 'object' || Array.isArray(ziel.bereichsIdentitaeten)) {
+    ziel.bereichsIdentitaeten = {};
+  }
+  if (!ziel.bereicheVerwaistIdentitaet || typeof ziel.bereicheVerwaistIdentitaet !== 'object' || Array.isArray(ziel.bereicheVerwaistIdentitaet)) {
+    ziel.bereicheVerwaistIdentitaet = {};
+  }
   if (!ziel.feldGueltigkeit || typeof ziel.feldGueltigkeit !== 'object' || Array.isArray(ziel.feldGueltigkeit)) {
     ziel.feldGueltigkeit = {};
   }
@@ -35160,12 +35329,27 @@ function markiereBasislinieOhneVorherigeSitzung() {
   _speicherFehlschlagAnzahlInFolge = 0;
   try { renderSaveStatus(); } catch (_) {}
 }
+// U2-ADR-190: löst „sichern Sie, dann wird sie übernommen" tatsächlich EIN — ohne diesen Zusatz
+// bliebe ein bereits erkannter, wartender Worker bis zum nächsten Fokus-/Sichtbarkeits-Tick
+// liegen, obwohl der Zähler jetzt schon bei null steht. Best-effort, nie blockierend: Sichern
+// darf nie an einer SW-Abfrage hängen. Eigene, benannte Funktion (statt Inline-Code in
+// markiereGespeichert()) — derselbe Grund wie bei _swSofortPruefen: jeder
+// navigator.serviceWorker-Zugriff bleibt so innerhalb der bekannten, benannten SW-Funktionen
+// (U2-ADR-097 §10, s. tests/mit-modul/b-zug1-s10-rotmachbarkeit.test.js).
+function _swNeuPruefenNachSpeichern() {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+      navigator.serviceWorker.getRegistration().then(function (reg) { _swAktivierenWennMoeglich(reg); }).catch(function () {});
+    }
+  } catch (_) {}
+}
 function markiereGespeichert() {
   _ungespeicherteAenderungen = 0;                          // interner Stand gesichert; Datei-Signal UNBERÜHRT
   _letzterSpeicherFehlgeschlagen = false;                  // ein Erfolg räumt einen vorherigen Fehlschlag ab
   _letzterSpeicherFehlschlagGrund = null;
   _letzteDateiSicherungUnbestaetigt = false;               // ein bestätigter Erfolg löst die offene Frage auf
   _speicherFehlschlagAnzahlInFolge = 0;                    // Erfolg unterbricht die Fehlschlags-Folge
+  _swNeuPruefenNachSpeichern();
   try { renderSaveStatus(); } catch (_) {}
 }
 // Eine aktuelle Datei-Sicherung wurde erstellt: Zähler 0 UND Datei-Signal gesetzt. Aufgerufen vom
@@ -36222,7 +36406,11 @@ function einstellungenHTML() {
   // (pruefstufe gesetzt), nicht mehr nur unsignierte. Der "niemand hat geprüft"-Hinweis darf dann
   // nur noch stehen, wenn WENIGSTENS EIN Eintrag wirklich unsigniert ist (kein pruefstufe-Feld) —
   // sonst behauptet er das Gegenteil von dem, was die eigene Zeile direkt darunter zeigt.
-  const _hatUngeprueftes = _eingelassen.some((m) => !m.pruefstufe);
+  // U2-ADR-186: ein ausgefallenes Modul trägt ebenfalls kein `pruefstufe` (die Prüfung kam gar
+  // nicht bis dahin) — darum hier ausdrücklich ausgenommen, sonst zählte ein Ausfall fälschlich
+  // als "unsigniert selbst eingelassen".
+  const _hatUngeprueftes = _eingelassen.some((m) => !m.ausgefallen && !m.pruefstufe);
+  const _hatAusgefallene = _eingelassen.some((m) => m.ausgefallen);
   const _rolleLabel = (rolle) => (rolle === 'pruefer' ? 'Prüfstelle' : 'Herausgeber');
   // Auffindbarkeits-Fund (27.08.2026): der Modul-Abschnitt hieß bislang, zugeklappt wie
   // aufgeklappt, nur „Erweiterung" — kein Wort, kein Icon verriet, dass hier ein SPRACHMODUL
@@ -36239,14 +36427,17 @@ function einstellungenHTML() {
       '<input id="einst-modul-datei" type="file" accept="application/json,.json" hidden>' +
       // Der HINWEIS nur, wenn es etwas zu sagen gibt.
       (_eingelassen.length ? (
+        (_hatAusgefallene ? '<p class="einst-hint">' + escapeHTML(STRINGS.modulAusgefallenHinweis) + '</p>' : '') +
         (_hatUngeprueftes ? '<p class="einst-hint">' + escapeHTML(STRINGS.moduleUngeprueftHinweis) + '</p>' : '') +
         '<ul class="einst-modulliste">' + _eingelassen.map((m) => {
-          const zusatz = !m.pruefstufe
-            ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUnsigniertZusatz) + '</span>'
-            : m.pruefstufe.indexOf('extern-geprueft:') === 0
-              ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeGeprueftZusatz
-                  .replace('{rolle}', _rolleLabel(m.pruefstufe.slice('extern-geprueft:'.length)))) + '</span>'
-              : ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUngeprueftZusatz) + '</span>';
+          const zusatz = m.ausgefallen
+            ? ' <span class="modul-ausgefallen">· ' + escapeHTML(STRINGS.modulAusgefallenZusatz) + '</span>'
+            : !m.pruefstufe
+              ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUnsigniertZusatz) + '</span>'
+              : m.pruefstufe.indexOf('extern-geprueft:') === 0
+                ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeGeprueftZusatz
+                    .replace('{rolle}', _rolleLabel(m.pruefstufe.slice('extern-geprueft:'.length)))) + '</span>'
+                : ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUngeprueftZusatz) + '</span>';
           return '<li>' + escapeHTML(STRINGS.moduleUngeprueftZeile
             .replace('{typ}', String(m.typ))
             .replace('{kennung}', String(m.kennung || '—'))
@@ -47060,14 +47251,23 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
 }
 
 // U2-ADR-064 · Reaktive Modal-Schicht (Muster: _refSubPickerVerdrahten). Blendet Unterfelder mit
-// sichtbarWenn live ein/aus, WÄHREND der Eintrag im Modal bearbeitet wird — ohne Neu-Render, damit
-// bereits getippte Eingaben nicht verloren gehen. Wertet feldSichtbar gegen die AKTUELLEN DOM-Werte
-// des Eintrags aus (nicht gegen den Sektor). Ohne bedingtes Unterfeld tut die Funktion nichts.
+// sichtbarWenn ODER verborgenWenn live ein/aus, WÄHREND der Eintrag im Modal bearbeitet wird — ohne
+// Neu-Render, damit bereits getippte Eingaben nicht verloren gehen. Wertet feldSichtbar gegen die
+// AKTUELLEN DOM-Werte des Eintrags aus (nicht gegen den Sektor). Ohne bedingtes Unterfeld tut die
+// Funktion nichts.
+// U2-ADR-202 (01.09.2026): der Guard prüfte bis hierher NUR sichtbarWenn — verborgenWenn (U2-ADR-109,
+// negatives Gate) kam später dazu und wurde hier vergessen. Betroffen war exakt eine Liste
+// (`meine-menschen.kinder`, gemessen gegen den ganzen Feldbaum, s. ADR): ihre Unterfelder tragen
+// AUSSCHLIESSLICH verborgenWenn, der Guard kehrte darum sofort zurück, verdrahtete nichts, rief nicht
+// einmal `neuBewerten()` initial auf — bei einer neuen Zeile blieben alle Unterfelder sichtbar, und
+// `liesEintragAusDOM` (das nur `zeile.hidden` respektiert) sammelte, was sichtbar aussah, tatsächlich
+// mit. `feldSichtbar()` selbst behandelt beide Gate-Formen korrekt (unverändert) — nur dieser Guard
+// kannte die zweite Form nicht.
 function _listenEintragBedingungVerdrahten(feld) {
   const modalEl = document.getElementById('modal-inhalt');
   if (!modalEl || !modalEl.querySelectorAll) return;
   const unterFelder = (feld && feld.unterFelder) || [];
-  if (!unterFelder.some(uf => uf.sichtbarWenn)) return;   // nichts Bedingtes → keine Verdrahtung
+  if (!unterFelder.some(uf => uf.sichtbarWenn || uf.verborgenWenn)) return;   // nichts Bedingtes → keine Verdrahtung
   const werteAusDOM = () => {
     const w = {};
     for (const uf of unterFelder) {
@@ -49275,21 +49475,26 @@ function _swRegistrierenErlaubt() {
 }
 // CC-Bauauftrag Service-Worker-Update (16.07.2026): Stufe 1 (aktiv auf sw.js-Änderung prüfen,
 // wenn die Seite wieder Fokus bekommt — sonst kann der Browser lange am HTTP-Cache der sw.js-
-// Datei selbst hängen bleiben) + Stufe 2 (Hinweis statt Zwangs-Reload bei Worker-Wechsel).
-// Stufe 3 (skipWaiting) bleibt ausdrücklich AUS — der bewusste Schnitt (Aktivierung erst, wenn
-// alle Tabs/die App zu sind) bleibt der sichere Pfad gegen ein Umschalten mitten in einer
-// offenen, ungespeicherten Depot-Sitzung (CC-Bericht Stufe 1 Service-Worker-Update, F3).
-var _swUpdateHinweisGezeigt = false;
-function _swUpdateHinweisZeigen() {
+// Datei selbst hängen bleiben). Stufe 2 (Hinweis-Banner bei controllerchange) ist mit U2-ADR-190
+// (01.09.2026) ZURÜCKGEBAUT — Entscheidung der Gründerin: automatische Aktualisierung, KEIN
+// ungefragter Hinweis über Versionen/Neuladen an jemanden, der nur ihr Depot öffnen wollte, auch
+// nicht nachträglich. Stufe 3 (skipWaiting) ist damit nicht mehr pauschal AUS, sondern PRÄZISE an
+// `_ungespeicherteAenderungen === 0` gebunden (Begründung an `_swAktivierenWennMoeglich` unten).
+// U2-ADR-190 (01.09.2026) — genaue statt pauschale Anwendung von U2-ADR-015 Etappe 8: ein
+// wartender Worker (`reg.waiting`) wird NUR aktiviert, wenn `_ungespeicherteAenderungen === 0` —
+// derselbe Zähler, der Politik A/U2-ADR-103 trägt, empirisch belegt (der Feld-Autosave faltet nur
+// ins RAM; er bleibt bei blosser Eingabe verlässlich über null). Steht er darüber, wird NICHT
+// umgeschaltet — sondern still gewartet: markiereGespeichert() stößt denselben Check beim
+// nächsten Sichern erneut an (s. dort), kein Fokus-/Sichtbarkeits-Tick nötig. In BEIDEN Fällen
+// bleibt es OHNE jedes Anzeichen für die Bürgerin — kein Toast, kein Banner, kein „Neu laden",
+// weder sofort noch später (Entscheidung der Gründerin, 01.09.2026): sie soll ihr Depot in der
+// richtigen Umgebung sehen und die aktuelle Version bekommen, nicht erfahren, dass es dafür einen
+// Service Worker gibt. Die Seite entscheidet (sie kennt den Zähler), der Worker gehorcht nur
+// (message-Handler in sw.js) — kein automatisches skipWaiting im Worker selbst, nirgends.
+function _swAktivierenWennMoeglich(reg) {
   try {
-    var el = document.getElementById('sw-update-banner'); if (!el) return;
-    var t = el.querySelector('.swb-text'); if (t) t.textContent = STRINGS.swUpdateVerfuegbar;
-    var neu = document.getElementById('sw-update-neu');
-    if (neu && !neu._gebunden) { neu._gebunden = true; neu.addEventListener('click', function () { location.reload(); }); }
-    var x = document.getElementById('sw-update-x');
-    if (x) x.setAttribute('aria-label', STRINGS.d37NamenlosWeg);   // A2/U2-ADR-112: aria-label aus STRINGS statt statischem Markup
-    if (x && !x._gebunden) { x._gebunden = true; x.addEventListener('click', function () { el.hidden = true; }); }
-    el.hidden = false;
+    if (!reg || !reg.waiting) return;
+    if (_ungespeicherteAenderungen === 0) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
   } catch (_) {}
 }
 function serviceWorkerRegistrieren() {
@@ -49297,22 +49502,29 @@ function serviceWorkerRegistrieren() {
     if (!_swRegistrierenErlaubt()) return;
     var reg = function () {
       try {
-        // Schon vor dem (erneuten) register() gemerkt: hatte diese Seite bereits einen aktiven
-        // Controller? Wenn nein, ist der erste 'controllerchange' nur der Erst-Erwerb der
-        // Kontrolle (clients.claim() beim allerersten Laden) — KEINE „neue Version", also kein
-        // Hinweis dafür. Erst ein SPÄTERER Wechsel ist ein echtes Update.
-        var hatteBereitsController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
-        if (navigator.serviceWorker.addEventListener) {
-          navigator.serviceWorker.addEventListener('controllerchange', function () {
-            if (!hatteBereitsController) { hatteBereitsController = true; return; }
-            if (_swUpdateHinweisGezeigt) return;
-            _swUpdateHinweisGezeigt = true;
-            _swUpdateHinweisZeigen();
-          });
-        }
         navigator.serviceWorker.register('sw.js').then(function (registrierung) {
           if (!registrierung) return;
-          var pruefen = function () { try { registrierung.update(); } catch (_) {} };
+          // U2-ADR-190: sofort prüfen, falls beim Registrieren schon ein Worker wartet (z. B. nach
+          // einem vorherigen Besuch, der die Aktivierung nicht erreichte) — nicht erst beim
+          // nächsten Fokus-Wechsel.
+          _swAktivierenWennMoeglich(registrierung);
+          // U2-ADR-190: EIGENER, sofortiger Auslöser statt nur auf den nächsten Fokus-/Sichtbarkeits-
+          // Tick zu warten — sobald ein neuer Worker den Zustand „installed" erreicht (während
+          // schon ein Controller aktiv ist, also wirklich „waiting", nicht der Erst-Erwerb),
+          // entscheidet die Seite sofort statt erst irgendwann später zufällig nachzuschauen.
+          if (registrierung.addEventListener) {
+            registrierung.addEventListener('updatefound', function () {
+              var neuerWorker = registrierung.installing;
+              if (!neuerWorker || !neuerWorker.addEventListener) return;
+              neuerWorker.addEventListener('statechange', function () {
+                if (neuerWorker.state === 'installed') _swAktivierenWennMoeglich(registrierung);
+              });
+            });
+          }
+          var pruefen = function () {
+            try { registrierung.update(); } catch (_) {}
+            _swAktivierenWennMoeglich(registrierung);   // U2-ADR-190: derselbe Check bei jedem Tick
+          };
           if (typeof document !== 'undefined' && document.addEventListener) {
             document.addEventListener('visibilitychange', function () {
               if (document.visibilityState === 'visible') pruefen();
@@ -49351,6 +49563,7 @@ async function _swSofortPruefen() {
     }
     await reg.update();
     var gefunden = !!(reg.installing || reg.waiting);
+    _swAktivierenWennMoeglich(reg);   // U2-ADR-190: derselbe Check, jetzt auch beim Sofort-Knopf
     if (typeof ui !== 'undefined' && ui.toast) {
       ui.toast(gefunden ? STRINGS.einstSwPruefenGefunden : STRINGS.einstSwPruefenAktuell, 'success');
     }

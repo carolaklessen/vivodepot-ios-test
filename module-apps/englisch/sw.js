@@ -224,7 +224,13 @@
 // vergeben) änderte vivodepot.html-Kommentare inhaltlich (Testtitel-/ADR-Verweise) — kein
 // Verhaltens-, nur ein Beschriftungswechsel. Rebase auf u2-kanon v491 (VD KOORD 2, 01.09.2026)
 // — v488/v489 lokal übersprungen, direkt v491→v492 im Lockstep. Shell-Bytes geändert.
-const CACHE = 'vivodepot-shell-v492';
+// v492 → v493 (02.09.2026): U2-ADR-206, Signier-Werkzeug merkt sich stehende Pfade — reiner
+// tools/tests-Zug, keine Shell-Bytes geändert. Landepunkt-Marke auf Anweisung VD KOORD 2.
+// v493 → v494 (02.09.2026): U2-ADR-202, Kinder-Liste — verborgenWenn-Live-Verdrahtung. Shell-
+// Bytes geändert.
+// v494 → v495 (02.09.2026): U2-ADR-207, Vor-Depot-Sprachmodul übersteht fremdes Depot. Shell-
+// Bytes geändert.
+const CACHE = 'vivodepot-shell-v495';
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT — z. B. wenn die Manifest-Entscheidung „inline" lautet und es

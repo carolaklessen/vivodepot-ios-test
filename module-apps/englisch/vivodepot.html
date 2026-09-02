@@ -3932,7 +3932,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v492';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-190: bedingtes skipWaiting (Aktivierung nur bei _ungespeicherteAenderungen===0) + nachträgliche ADR-Umbenennung (Nummernkollision dreier paralleler Sitzungen), Rebase auf u2-kanon v491 (U2-ADR-187/195/196), 01.09.2026
+const SCHALEN_STAND = 'v495';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-202: Kinder-Liste, verborgenWenn-Live-Verdrahtung (v494) + U2-ADR-207: Vor-Depot-Sprachmodul übersteht fremdes Depot (v495) — Landepunkt-Marken auf Anweisung VD KOORD 2, 02.09.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -3967,7 +3967,7 @@ function heuteLokal(d = new Date()) {
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-09-01';
+const BUILD_DATUM = '2026-09-02';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -10026,9 +10026,15 @@ function _textsatzModuleAusDepotAnmelden(d) {
   const liste = (ziel && Array.isArray(ziel.textsatzModule)) ? ziel.textsatzModule : [];
   const registry = Object.create(null);
   let n = 0;
-  for (const m of liste) {
+  // Trägt ein geprüftes Modul ins Register ein, sofern das [sprache][rechtsraum]-Fach noch frei
+  // ist. `ueberschreiben` gilt nur für den ersten (Depot-)Durchlauf: mehrere depot-eigene Module
+  // desselben Fachs dürfen sich wie bisher gegenseitig überschreiben (letztes gewinnt); im
+  // zweiten Durchlauf (Vor-Depot-Modul) NIE — ein Depot-eigenes Modul geht immer vor.
+  const eintragen = (m, ueberschreiben) => {
     const geprueft = textsatzModulPruefen(m);
-    if (!geprueft.gueltig) continue;
+    if (!geprueft.gueltig) return;
+    const rechtsraum = geprueft.rechtsraum || '';
+    if (!ueberschreiben && registry[m.sprache] && registry[m.sprache][rechtsraum]) return;
     /* DIE REGELN REISEN AM TEXT-OBJEKT MIT, nicht daneben — und zwar NICHT AUFZAEHLBAR.
        `textLesen` liest diese Registry mit `[kennung]`; ein zusaetzlicher aufzaehlbarer
        Schluessel waere fuer jede Kennungssuche ein Treffer und wuerde als Text ausgeliefert.
@@ -10042,9 +10048,23 @@ function _textsatzModuleAusDepotAnmelden(d) {
     // Module derselben Sprache, verschiedenen Rechtsraums, stehen jetzt NEBENEINANDER statt
     // sich zu überschreiben (Prüfstein 5).
     if (!registry[m.sprache]) registry[m.sprache] = Object.create(null);
-    registry[m.sprache][geprueft.rechtsraum || ''] = geprueft.texte;
+    registry[m.sprache][rechtsraum] = geprueft.texte;
     n++;
-  }
+  };
+  for (const m of liste) eintragen(m, true);
+  /* U2-ADR-189-Nachtrag (VD KOORD 2, 02.09.2026, Fund CC: "Vor-Depot-Modul überlebt fremdes
+     Depot nicht"): diese Funktion war bis hierher eine reine ZUWEISUNG aus `ziel.textsatzModule`
+     — korrekt für die vier GESCHWISTER-Register (Bereichs-/Code-/Rechtsraum-/Institutionsarten-
+     Module, U2-ADR-188), wo "folgt data ausschliesslich" die Sicherheitszusage GEGEN ein Leck
+     IST. Für die Textsatz-Registry ist das zu eng: ein VOR dem Depot angedocktes Sprachmodul
+     (`_vorDepotTextsatzModule`, App-Schale, nicht Depot-Inhalt) kommt nicht aus `data` und darf
+     darum auch nicht verschwinden, nur weil `data` gerade auf ein Depot zeigt, das (wie JEDES
+     normal in der deutschen App angelegte) kein eigenes Modul mitbringt. Die Unterscheidung:
+     Übersetzungstexte sind App-Beschriftung, keine Bürgerinnen-Daten — U2-ADR-188s Leck-Sorge
+     (ein PERSONENBEZOGENES Feld verlässt den Export im Klartext) betrifft sie nicht. Darum hier,
+     NUR bei Textsatz, NUR ergänzend (Depot-eigenes Modul gewinnt immer, `ueberschreiben=false`),
+     kein Rückbau der Zuweisungs-Regel für die anderen vier Register. */
+  for (const m of _vorDepotTextsatzModule) eintragen(m, false);
   _TEXTSATZ_MODUL_REGISTRY = registry;
   return n;
 }
@@ -47231,14 +47251,23 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
 }
 
 // U2-ADR-064 · Reaktive Modal-Schicht (Muster: _refSubPickerVerdrahten). Blendet Unterfelder mit
-// sichtbarWenn live ein/aus, WÄHREND der Eintrag im Modal bearbeitet wird — ohne Neu-Render, damit
-// bereits getippte Eingaben nicht verloren gehen. Wertet feldSichtbar gegen die AKTUELLEN DOM-Werte
-// des Eintrags aus (nicht gegen den Sektor). Ohne bedingtes Unterfeld tut die Funktion nichts.
+// sichtbarWenn ODER verborgenWenn live ein/aus, WÄHREND der Eintrag im Modal bearbeitet wird — ohne
+// Neu-Render, damit bereits getippte Eingaben nicht verloren gehen. Wertet feldSichtbar gegen die
+// AKTUELLEN DOM-Werte des Eintrags aus (nicht gegen den Sektor). Ohne bedingtes Unterfeld tut die
+// Funktion nichts.
+// U2-ADR-202 (01.09.2026): der Guard prüfte bis hierher NUR sichtbarWenn — verborgenWenn (U2-ADR-109,
+// negatives Gate) kam später dazu und wurde hier vergessen. Betroffen war exakt eine Liste
+// (`meine-menschen.kinder`, gemessen gegen den ganzen Feldbaum, s. ADR): ihre Unterfelder tragen
+// AUSSCHLIESSLICH verborgenWenn, der Guard kehrte darum sofort zurück, verdrahtete nichts, rief nicht
+// einmal `neuBewerten()` initial auf — bei einer neuen Zeile blieben alle Unterfelder sichtbar, und
+// `liesEintragAusDOM` (das nur `zeile.hidden` respektiert) sammelte, was sichtbar aussah, tatsächlich
+// mit. `feldSichtbar()` selbst behandelt beide Gate-Formen korrekt (unverändert) — nur dieser Guard
+// kannte die zweite Form nicht.
 function _listenEintragBedingungVerdrahten(feld) {
   const modalEl = document.getElementById('modal-inhalt');
   if (!modalEl || !modalEl.querySelectorAll) return;
   const unterFelder = (feld && feld.unterFelder) || [];
-  if (!unterFelder.some(uf => uf.sichtbarWenn)) return;   // nichts Bedingtes → keine Verdrahtung
+  if (!unterFelder.some(uf => uf.sichtbarWenn || uf.verborgenWenn)) return;   // nichts Bedingtes → keine Verdrahtung
   const werteAusDOM = () => {
     const w = {};
     for (const uf of unterFelder) {

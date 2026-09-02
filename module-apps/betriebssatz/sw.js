@@ -211,7 +211,26 @@
 // den nächsten Fokus-Wechsel zu warten. Kein Zwangs-Reload, keine IndexedDB-Berührung — derselbe
 // Hinweis-statt-Zwang-Pfad wie bisher (skipWaiting bleibt aus). Shell-Bytes (vivodepot.html)
 // geändert → Lockstep-Bump.
-const CACHE = 'vivodepot-shell-v489';
+// v492 (2026-09-01): U2-ADR-190 — die Sackgasse aus v482 war Erkennung UND Aktivierung; v482 löste
+// nur Erkennung. Aktivierung blieb an „null offene Clients" gebunden (skipWaiting nie gerufen,
+// U2-ADR-015 Etappe 8) — ein neuer Worker wartet damit, solange irgendein Tab offen ist, selbst
+// wenn nichts Ungespeichertes im Spiel ist. NEU: ein `message`-Handler ruft skipWaiting() — aber
+// NUR auf ausdrückliche Anweisung der Seite, nie von selbst. Die Seite kennt
+// `_ungespeicherteAenderungen` (derselbe Zähler, der Politik A/U2-ADR-103 trägt), der Worker
+// nicht — darum entscheidet die Seite, der Worker gehorcht nur. Der Schutzgrund von U2-ADR-015
+// Etappe 8 bleibt exakt erhalten: „skipWaiting bleibt aus" gilt weiter als DEFAULT, jetzt mit einer
+// benannten, geprüften Ausnahme statt einer pauschalen Sperre. Nachträgliche ADR-Umbenennung
+// (Nummernkollision dreier paralleler Sitzungen, von VD KOORD 2 nach Landereihenfolge neu
+// vergeben) änderte vivodepot.html-Kommentare inhaltlich (Testtitel-/ADR-Verweise) — kein
+// Verhaltens-, nur ein Beschriftungswechsel. Rebase auf u2-kanon v491 (VD KOORD 2, 01.09.2026)
+// — v488/v489 lokal übersprungen, direkt v491→v492 im Lockstep. Shell-Bytes geändert.
+// v492 → v493 (02.09.2026): U2-ADR-206, Signier-Werkzeug merkt sich stehende Pfade — reiner
+// tools/tests-Zug, keine Shell-Bytes geändert. Landepunkt-Marke auf Anweisung VD KOORD 2.
+// v493 → v494 (02.09.2026): U2-ADR-202, Kinder-Liste — verborgenWenn-Live-Verdrahtung. Shell-
+// Bytes geändert.
+// v494 → v495 (02.09.2026): U2-ADR-207, Vor-Depot-Sprachmodul übersteht fremdes Depot. Shell-
+// Bytes geändert.
+const CACHE = 'vivodepot-shell-v495';
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT — z. B. wenn die Manifest-Entscheidung „inline" lautet und es
@@ -230,6 +249,16 @@ self.addEventListener('install', (e) => {
   );
   // KEIN automatisches skipWaiting — der Schalen-Wechsel ist ein bewusster Schnitt
   // (kein Datenbruch; IndexedDB bleibt ohnehin unberührt). Aktivierung über activate.
+  // U2-ADR-190: die einzige Ausnahme läuft über den `message`-Handler unten, NIE von hier aus.
+});
+
+// U2-ADR-190 (2026-09-01) — bedingte Aktivierung: der Worker selbst kennt weder offene Tabs noch
+// ungesicherte Änderungen — er gehorcht nur. Die Seite (kennt `_ungespeicherteAenderungen`,
+// vivodepot.html) entscheidet, WANN diese Nachricht überhaupt gesendet wird; hier wird sie nur
+// noch ausgeführt. Kein anderer Aufrufer als die Seite selbst — nichts im Netz/Cache-Pfad sendet
+// diese Nachricht. Berührt weder Cache- noch IndexedDB-Logik.
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
