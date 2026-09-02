@@ -3374,8 +3374,10 @@
   <div class="banner-stapel">
     <!-- 1F/b1: persistenter Ablauf-Vorwarn-Banner — gefüllt/gezeigt von _basisAblaufBannerVielleicht (Boot). -->
     <div id="basis-ablauf-banner" class="basis-ablauf-banner" role="status" hidden><span class="bab-text"></span><button type="button" class="bab-x" id="basis-ablauf-x">×</button></div>
-    <!-- CC-Bauauftrag Service-Worker-Update (16.07.2026), Stufe 2: Hinweis statt Zwangs-Reload —
-         gefüllt/gezeigt von _swUpdateHinweisZeigen() bei erkanntem Worker-Wechsel (controllerchange). -->
+    <!-- Mit U2-ADR-190 (01.09.2026) inert: kein Skript befüllt/zeigt diese Fläche mehr —
+         Entscheidung der Gründerin, automatische Aktualisierung ohne jeden Hinweis. Bleibt als
+         Fläche im banner-stapel stehen, ein Entfernen wäre eine eigene, hier nicht verlangte
+         Änderung am geteilten Layout (s. ADR). -->
     <div id="sw-update-banner" class="sw-update-banner" role="status" hidden><span class="swb-text"></span><button type="button" class="banner-knopf-hell" id="sw-update-neu">Neu laden</button><button type="button" class="swb-x" id="sw-update-x">×</button></div>
     <!-- Nachtrag 08.08.2026: persistenter Wiedereinstiegs-Weg für die Marke 'interner-wiedereinstieg'
          (kein Datei-Weg im Spiel) — gefüllt/gezeigt von zeigeInternerWiedereinstiegBanner(). Ersetzt
@@ -3930,7 +3932,7 @@ const BUILD_SHA256 = '';   // beim Release setzen: SHA-256 der finalen vivodepot
 // aus, zeigt der Fuß-Stempel den ALTEN Stand — der SW-Cache-Stale-Fehler wird in einer Sekunde
 // sichtbar (mehrfach am 12./13.07. aufgetreten). Zusammen mit dem live gelesenen SW-Cache-Namen
 // beantwortet der Stempel: welche Bytes sind geladen (SCHALEN_STAND) und was hält der SW (SW-Cache).
-const SCHALEN_STAND = 'v489';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-189: Sprachmodul wird vererbt, 01.09.2026
+const SCHALEN_STAND = 'v501';   // ⚠ mit sw.js CACHE gemeinsam hochzählen — U2-ADR-202: Kinder-Liste, verborgenWenn-Live-Verdrahtung (v494) + U2-ADR-207: Vor-Depot-Sprachmodul übersteht fremdes Depot (v495) + U2-ADR-193: BBK-Quellenangabe aktueller Stand + U2-ADR-199: Organspende-Register-Feld (v496) + U2-ADR-208: Sprachkennung fällt auf aktive Sprache zurück (v497) + U2-ADR-209: Produkt-Trennung im geteilten internen Speicher (v498) + zweiter Rebase dieses Zweigs auf v498 (v499) + U2-ADR-211: Sicherungsstand bekannt, Rebase auf v499 (v500) + U2-ADR-212: Sichern-Knopf folgt Speicher-Modus (v501) — Landepunkt-Marken auf Anweisung VD KOORD 2, 02.09.2026
 
 /* ── heuteLokal — die eine Zeitquelle für Kalendertage ────────────────────────
    REGEL: Ein Kalendertag für Menschen ist LOKAL. Nur Zeitpunkt-Vergleiche gehören
@@ -3965,7 +3967,7 @@ function heuteLokal(d = new Date()) {
 // Konstanten waren nie aneinander gebunden. Jetzt erzwungen: tests/build-datum-lockstep.test.js
 // vergleicht diese Zeile gegen die vorige Commit-Fassung und schlägt fehl, wenn SCHALEN_STAND
 // sich geändert hat, ohne dass BUILD_DATUM ebenfalls angefasst wurde. IMMER gemeinsam bumpen.
-const BUILD_DATUM = '2026-09-01';
+const BUILD_DATUM = '2026-09-02';
 // Schwelle (Tage), ab der der Versions-Hinweis erscheint. ~6 Monate.
 const VERSION_HINWEIS_SCHWELLE_TAGE = 183;
 // AKTUALISIERUNGEN_LINK — wo Aktualisierungen zu finden sind (CC-Bauauftrag Versionsanzeige,
@@ -4376,6 +4378,13 @@ const _STRINGS_EINGEBAUT = ({
   modulPruefstufeUnsigniertZusatz: null,
   modulPruefstufeGeprueftZusatz: null,
   modulPruefstufeUngeprueftZusatz: null,
+  // U2-ADR-186 (01.09.2026) — dieselbe Regel wie bei den importierten Vorlagen weiter unten:
+  // „eine Erweiterung, die stillschweigend weiter aussieht wie eingelassen, ist schlimmer als
+  // eine, die als ausgefallen gezeigt wird". Der Grund selbst (z. B. welches Datenfeld die
+  // Prüfung nicht mehr besteht) bleibt Technik und wird bewusst nicht ausformuliert — die
+  // Bürgerin braucht die Zusage „nichts ist verloren", nicht die Fehlermeldung.
+  modulAusgefallenHinweis: null,
+  modulAusgefallenZusatz: null,
   // D.4 (Rest-Sichten, 26.08.2026) — Kurzstatus in der <summary>, wenn der Abschnitt selbst hinter
   // <details> wandert (der Abschnitt bleibt IMMER sichtbar — anders als Vorlagen/PWA oben — weil
   // der Einlass-Weg selbst immer da sein muss, auch ohne ein einziges eingelassenes Modul).
@@ -4684,6 +4693,7 @@ const _STRINGS_EINGEBAUT = ({
   saveStatusUnbestaetigtBestaetigen: null,
   internSpeicherProbeFehlgeschlagen: null,
   saveStatusJetztSichern: null,             // Knopf-Aktion (führt zum .vivodepot-Export)
+  saveStatusJetztSichernIntern: null,       // U2-ADR-212: dieselbe Knopf-Aktion, interner Modus (kein Datei-Export)
   saveStatusInternToast: null,   // interner IDB-Save
   // CC-Auftrag Sektorfeld-Autosave-Rückmeldung (03.08.2026): entprellte aria-live-Ansage nach
   // Sektor-Feld-Autosave, gebündelt bei schnellem Tab-Durchtippen — dasselbe Wort wie das
@@ -5088,7 +5098,11 @@ const _STRINGS_EINGEBAUT = ({
   // ZUSTAND: _veralteteBasisVorlagen
   amtlicheVorlageVeraltet: null,   // 1F/b2: Marker an abgelaufen-aber-gültiger Basis-Vorlage
   amtlicheVorlagenAblaufWarnung: null,  // 1F/b1: Vorwarnung < 90 Tage
-  swUpdateVerfuegbar: null,  // CC-Bauauftrag Service-Worker-Update, 16.07.2026, Stufe 2
+  // Die beiden Stufe-2-Texte (Hinweis-Banner bei Worker-Wechsel, 16.07.2026) sind mit U2-ADR-190
+  // (01.09.2026) entfallen — Entscheidung der Gründerin: automatische Aktualisierung, kein
+  // ungefragter Hinweis über Versionen/Neuladen, auch nicht nachträglich. Das Banner-Markup
+  // (#sw-update-banner) bleibt als inerte Fläche stehen (Teil des banner-stapel-Systems mit
+  // #basis-ablauf-banner/#wiedereinstieg-banner), wird für diesen Zweck aber nie mehr befüllt.
   // ── Erkennung bestehender Standard-Dokumente (U2-ADR-014) — Vorschlag, nie Auto-Anlegen ──
   dokumentErkanntTitel: null,
   dokumentErkanntTextVorsorgevollmacht: null,
@@ -5241,6 +5255,11 @@ const _STRINGS_EINGEBAUT = ({
   exportErinnerung: null,
   // Stück 4 (1=a): schärfere Fassung desselben Nudge bei erhöhtem Verlust-Risiko (persist nicht gewährt, nicht installiert).
   exportErinnerungRisiko: null,
+  // U2-ADR-211 (ENTWURF-Wortlaut, die Gründerin darf verfeinern): Zustand statt Frist — nur
+  // gezeigt, wenn ein echter, persistierter Sicherungsstand vorliegt (jeExportiert===true).
+  // {tage}/{aenderungen} werden ersetzt, wie bei shlGueltigBis. Vereinfachung, offen benannt:
+  // keine Einzahl/Mehrzahl-Unterscheidung für {aenderungen} — s. ADR.
+  exportErinnerungZustand: null,
   // Stück 4 (2=b): iOS-Install-Hinweis MIT konkretem Handgriff (einmal/Sitzung, wegklickbar).
   iosInstallHinweis: null,
   // D43 Etappe 5 — Konflikt-Auflösung (Wortlaut der Gründerin). KEIN voreingestellter Default.
@@ -7187,6 +7206,8 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'vorsorge.vorsorge_instrumente/organspende.label': 'Organspende',
   'vorsorge.vorsorge_instrumente/organspende_einschraenkung.label': 'Welche Einschränkung?',
   'vorsorge.vorsorge_instrumente/organspende_einschraenkung.beispiel': 'z. B. nur Herz und Nieren; keine Hornhaut; nur für Transplantation, nicht für Forschung',
+  'vorsorge.vorsorge_instrumente/organspenderegister_id.label': 'Organspende-Register — Erklärungs-ID',
+  'vorsorge.vorsorge_instrumente/organspenderegister_id.beispiel': 'A3K7B9X',
   'vorsorge.vorsorge_instrumente/erbfolge_hinweis.label': 'Gesetzliche Erbfolge oder abweichender Wille?',
   'vorsorge.vorsorge_instrumente/testament_bedachte.label': 'Im Testament bedachte Person(en)',
   'vorsorge.vorsorge_instrumente/testament_bedachte.hint': 'Freiwillig. Wenn Sie die Personen hier eintragen, meldet sich Vivodepot nach einer Heirat, Trennung oder einem Todesfall und schlägt vor, das Testament anzusehen. Der Inhalt des Testaments bleibt außerhalb von Vivodepot.',
@@ -7992,6 +8013,8 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:modulPruefstufeUnsigniertZusatz.text': "unsigniert",
   'strings:modulPruefstufeGeprueftZusatz.text': "geprüft ({rolle})",
   'strings:modulPruefstufeUngeprueftZusatz.text': "signiert, nicht anerkannt",
+  'strings:modulAusgefallenHinweis.text': "Manche Erweiterungen liest diese Fassung von Vivodepot gerade nicht ein. Nichts geht dadurch verloren — Ihre Angaben bleiben in der Datei erhalten. Melden Sie sich bei der Anbieterin, wenn Sie die Erweiterung wieder nutzen möchten.",
+  'strings:modulAusgefallenZusatz.text': "wird gerade nicht eingelesen — Ihre Angaben bleiben erhalten",
   'strings:einstModuleKurzstatus.text': "{n} eingelassen",
   'strings:einstModuleKurzstatusLeer.text': "keine eingelassen",
   'strings:einstAbschnittVorlagen.text': "Importierte Vorlagen",
@@ -8016,7 +8039,12 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:fussVersionLabel.text': "Version",
   'strings:fussStandLabel.text': "Stand",
   'strings:fussAktualisierungenLabel.text': "Aktualisierungen",
-  'strings:fussStaleCacheWarnung.text': "Bei der letzten Verbindung wurde eine neuere Version gefunden. Sichern Sie zuerst Ihre Eingaben und laden Sie die Seite erst danach neu — sonst gehen sie verloren.",
+  // U2-ADR-190 (01.09.2026): die Aufforderung „sichern Sie zuerst, dann neu laden" ist entfallen —
+  // die Aktivierung übernimmt jetzt von selbst, sobald nichts offen ist, kein Reload mehr nötig.
+  // Der Satz muss in BEIDEN Zuständen wahr sein (schon still umgeschaltet ODER noch wartend auf
+  // das nächste Sichern) — darum ohne Zeitpunkt: „von selbst" trägt beides, ein „beim nächsten
+  // Öffnen" oder „nach dem Sichern" wäre im jeweils anderen Zustand falsch.
+  'strings:fussStaleCacheWarnung.text': "Bei der letzten Verbindung wurde eine neuere Version gefunden. Diese wird von selbst übernommen.",
   'strings:anlassFrage.text': "Was möchten Sie erledigen?",
   'strings:anlassFrageHerausholen.text': "Welchen Anlass möchten Sie vorbereiten?",
   'strings:klasse1.text': "Lebensereignisse",
@@ -8149,6 +8177,9 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:saveStatusUnbestaetigtBestaetigen.text': "Ja, angekommen",
   'strings:internSpeicherProbeFehlgeschlagen.text': "Automatisches Speichern ist auf diesem Gerät nicht verfügbar — sichern Sie Ihr Depot stattdessen selbst als Datei.",
   'strings:saveStatusJetztSichern.text': "Jetzt als Datei sichern",
+  // U2-ADR-212: eigenes Label für den Regelfall-Klick im internen Modus — "als Datei" wäre hier
+  // eine falsche Zusage, der Klick schreibt intern, keine Datei entsteht.
+  'strings:saveStatusJetztSichernIntern.text': "Jetzt sichern",
   'strings:saveStatusInternToast.text': "Gespeichert. Für eine Sicherung gelegentlich als Datei sichern.",
   'strings:feldAutosaveAnsage.text': "Gespeichert",
   'strings:feldAutosaveAnsageFeld.text': "Gespeichert: {feld}",
@@ -8397,7 +8428,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:einstSwPruefenKnopf.text': "App-Update jetzt prüfen",
   'strings:einstSwPruefenHinweis.text': "Nur wirksam, wenn Sie Vivodepot als installierte App nutzen. Prüft im Hintergrund, ob eine neue Schale bereitsteht — Ihre Daten bleiben dabei unberührt.",
   'strings:einstSwPruefenLaeuft.text': "Suche nach einer neuen App-Version …",
-  'strings:einstSwPruefenGefunden.text': "Eine neue Version liegt bereit. Sie wird aktiv, sobald Sie die App vollständig schließen und neu öffnen.",
+  'strings:einstSwPruefenGefunden.text': "Eine neue Version wurde gefunden. Sie wird geladen, sobald nichts mehr zu sichern ist.",
   'strings:einstSwPruefenAktuell.text': "Keine neue Version gefunden — Sie haben vermutlich schon den aktuellen Stand.",
   'strings:einstSwPruefenNichtVerfuegbar.text': "Diese Prüfung ist hier nicht verfügbar.",
   'strings:einstSwPruefenFehler.text': "Die Prüfung ist fehlgeschlagen. Bitte später erneut versuchen.",
@@ -8448,7 +8479,6 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:eigenhaendigBadge.text': "eigenhändig",
   'strings:amtlicheVorlageVeraltet.text': "veraltet — App aktualisieren",
   'strings:amtlicheVorlagenAblaufWarnung.text': "Die amtlichen Vorlagen sind noch bis {datum} signiert. Bitte aktualisieren Sie die App rechtzeitig.",
-  'strings:swUpdateVerfuegbar.text': "Eine neue Version ist verfügbar.",
   'strings:dokumentErkanntTitel.text': "Aus Ihren Angaben erkannt",
   'strings:dokumentErkanntTextVorsorgevollmacht.text': "Sie haben eine Vorsorgevollmacht hinterlegt. Möchten Sie an die regelmäßige Auffrischung erinnert werden?",
   'strings:dokumentErkanntTextPatientenverfuegung.text': "Sie haben eine Patientenverfügung hinterlegt. Möchten Sie an die regelmäßige Überprüfung erinnert werden?",
@@ -8561,6 +8591,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:akteurBootstrapFehlerOk.text': "Verstanden",
   'strings:exportErinnerung.text': "Tipp: Erstellen Sie ab und zu eine Sicherungskopie als Datei. So ist Ihr Depot auch dann sicher, wenn dieses Gerät einmal Speicher freiräumt.",
   'strings:exportErinnerungRisiko.text': "Dieses Gerät kann den internen Speicher jederzeit freiräumen — sichern Sie Ihr Depot als Datei, damit nichts verloren geht.",
+  'strings:exportErinnerungZustand.text': "Zuletzt als Datei gesichert vor {tage} Tagen — seitdem {aenderungen} Änderungen, noch nicht in einer Datei.",
   'strings:iosInstallHinweis.text': "Damit Ihr Depot zuverlässig erhalten bleibt: tippen Sie unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm“. So liegt Vivodepot als App auf Ihrem Gerät.",
   'strings:konfliktTitel.text': "Welchen Stand möchten Sie verwenden?",
   'strings:konfliktText.text': "Auf diesem Gerät ist ein Stand vom {geraet} gespeichert. Die geöffnete Datei ist vom {datei}. Welchen möchten Sie verwenden?",
@@ -8607,7 +8638,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:krisenvorsorgeBedarfPersonMehrzahl.text': "Personen",
   'strings:krisenvorsorgeBedarfHerkunftAbgeleitet.text': "Aus Ihren Angaben unter „Meine Menschen“ abgeleitet (Sie selbst, ggf. Ehepartnerin/Ehepartner oder Lebenspartnerin/Lebenspartner und Kinder) — unten überschreibbar, falls Ihr Haushalt anders zählt.",
   'strings:krisenvorsorgeBedarfHerkunftUeberschrieben.text': "Von Ihnen selbst eingetragen.",
-  'strings:krisenvorsorgeBedarfQuelle.text': "Quelle: BBK-Checkliste für den Notvorrat (bbk.bund.de). Empfehlung geprüft am 10.08.2026, unverändert seit der 7. Auflage (2019). Vivodepot rechnet diese Empfehlung nur aus — keine eigene Einschätzung darüber hinaus.",
+  'strings:krisenvorsorgeBedarfQuelle.text': "Quelle: BBK, „Vorsorgen für Krisen und Katastrophen“ (bbk.bund.de/vorsorge), Checklisten-PDF, Stand laut PDF-Metadaten 04.12.2025. Empfehlung zuletzt geprüft am 01.09.2026. Vivodepot rechnet diese Empfehlung nur aus — keine eigene Einschätzung darüber hinaus.",
   'strings:verwalteteTitel.text': "Verwaltete Depots",
   'strings:verwalteteIntro.text': "Hier verwalten Sie Depots von Personen, für die Sie sorgen — als Bevollmächtigte oder als gesetzliche Vertreterin. Sie können ein Depot ansehen, wieder versiegeln oder bei einer Übergabe weiterreichen.",
   'strings:verwalteteLeer.text': "Noch keine eingehängten Depots. Ein eingehängtes Depot hat ein eigenes Passwort und schützt seinen Inhalt unabhängig von Ihrem.",
@@ -8905,7 +8936,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:exportAllesWaehlen.text': "Alles auswählen",
   'strings:exportAuswahlAria.text': "Mitgeben",
   'strings:exportAuswahlFortfahren.text': "Ausgewähltes herausgeben",
-  'strings:exportNichtsGehtMitHinweis.text': "Alles Eingetragene in diesem Bereich ist besonders geschützt — es geht nur mit, wenn Sie es unter „Etwas zurückhalten“ freigeben.",
+  'strings:exportNichtsGehtMitHinweis.text': "Alles Eingetragene in diesem Bereich ist besonders geschützt — es geht nur mit, wenn Sie es unter „Zurückhalten“ freigeben.",
   'strings:exportNichtMitgeschicktLabel.text': "Nicht mitgeschickt",
   'strings:exportNichtMitgeschicktSchutzSuffix.text': " — besonders geschützt, bleiben hier.",
   'strings:exportNichtMitgeschicktFormatSuffix.text': " — dieses Format kann sie nicht abbilden.",
@@ -8930,7 +8961,7 @@ const TEXTSATZ_EINGEBAUT = Object.freeze({
   'strings:kiDokumentKnopf.text': "Verfügung zur digitalen Nachbildung als Testament-Anlage ansehen / drucken",
   'strings:vmDokumentKnopf.text': "Vollmacht als Dokument ansehen / drucken",
   'strings:bvDokumentKnopf.text': "Betreuungsverfügung als Dokument ansehen / drucken",
-  'strings:identitaetKernFehltHinweis.text': "Für dieses Dokument fehlen in Ihren Identitätsangaben Name und/oder Geburtsdatum — ohne diese Angaben verliert das Blatt seine Aussage. Bitte ergänzen Sie sie unter „Meine Identität“, dann können Sie das Dokument erzeugen.",
+  'strings:identitaetKernFehltHinweis.text': "Für dieses Dokument fehlen in Ihren Identitätsangaben Name und/oder Geburtsdatum — ohne diese Angaben verliert das Blatt seine Aussage. Bitte ergänzen Sie sie unter „Identität & Person“, dann können Sie das Dokument erzeugen.",
   'strings:dokumentInMappeAbgelegt.text': "Abgelegt.",
   'strings:k9VorlageHerkunftText.text': "Der folgende Wortlaut stammt von {anbieter} — nicht von Vivodepot verfasst oder geprüft.",
   'strings:k9VorlageFussText.text': " · Wortlaut eingebracht von {anbieter}, signaturgeprüft übernommen",
@@ -9794,6 +9825,17 @@ function textsatzRegeln() {
   if (!nachSprache) return raus;
   const rechtsraum = textsatzRechtsraumAktiv();
   const modul = (rechtsraum && nachSprache[rechtsraum]) || nachSprache[''];
+  // U2-ADR-208 (02.09.2026, gemessen am ausgelieferten Englisch-Modul, v495): ein aktives
+  // Sprachmodul ohne eigene `sprachkennung`-Regel behielt bis hier den eingebauten Rückfall —
+  // IMMER Deutsch, unabhängig von der tatsächlich aktiven Sprache (`sprachkennung` steht in
+  // `TEXTSATZ_REGELN_EINGEBAUT`, keine sprachabhängige Fallback-Stufe dazwischen). Betraf JEDES
+  // Modul mit leerem oder unvollständigem `_regeln` — nicht nur das englische; das englische ist
+  // nur der Fund, an dem es gemessen wurde. Die bloße Sprachkennung ist der bessere Grundwert,
+  // bevor die Modul-Regeln (falls vorhanden) sie genauer überschreiben — `textsatzSprachkennungAnwenden()`
+  // setzt darüber `document.documentElement.lang` (WCAG 3.1.1: die Aussprache eines Vorlese-
+  // programms folgt `lang`, nicht dem sichtbaren Text). Nur bei einem echten Modultreffer gesetzt,
+  // der Fall „kein Modul für die aktive Sprache" (Zeile darüber) bleibt beim eingebauten Rückfall.
+  raus.sprachkennung = sprache;
   if (modul && modul._regeln) Object.assign(raus, modul._regeln);
   return raus;
 }
@@ -10007,9 +10049,15 @@ function _textsatzModuleAusDepotAnmelden(d) {
   const liste = (ziel && Array.isArray(ziel.textsatzModule)) ? ziel.textsatzModule : [];
   const registry = Object.create(null);
   let n = 0;
-  for (const m of liste) {
+  // Trägt ein geprüftes Modul ins Register ein, sofern das [sprache][rechtsraum]-Fach noch frei
+  // ist. `ueberschreiben` gilt nur für den ersten (Depot-)Durchlauf: mehrere depot-eigene Module
+  // desselben Fachs dürfen sich wie bisher gegenseitig überschreiben (letztes gewinnt); im
+  // zweiten Durchlauf (Vor-Depot-Modul) NIE — ein Depot-eigenes Modul geht immer vor.
+  const eintragen = (m, ueberschreiben) => {
     const geprueft = textsatzModulPruefen(m);
-    if (!geprueft.gueltig) continue;
+    if (!geprueft.gueltig) return;
+    const rechtsraum = geprueft.rechtsraum || '';
+    if (!ueberschreiben && registry[m.sprache] && registry[m.sprache][rechtsraum]) return;
     /* DIE REGELN REISEN AM TEXT-OBJEKT MIT, nicht daneben — und zwar NICHT AUFZAEHLBAR.
        `textLesen` liest diese Registry mit `[kennung]`; ein zusaetzlicher aufzaehlbarer
        Schluessel waere fuer jede Kennungssuche ein Treffer und wuerde als Text ausgeliefert.
@@ -10023,9 +10071,23 @@ function _textsatzModuleAusDepotAnmelden(d) {
     // Module derselben Sprache, verschiedenen Rechtsraums, stehen jetzt NEBENEINANDER statt
     // sich zu überschreiben (Prüfstein 5).
     if (!registry[m.sprache]) registry[m.sprache] = Object.create(null);
-    registry[m.sprache][geprueft.rechtsraum || ''] = geprueft.texte;
+    registry[m.sprache][rechtsraum] = geprueft.texte;
     n++;
-  }
+  };
+  for (const m of liste) eintragen(m, true);
+  /* U2-ADR-189-Nachtrag (VD KOORD 2, 02.09.2026, Fund CC: "Vor-Depot-Modul überlebt fremdes
+     Depot nicht"): diese Funktion war bis hierher eine reine ZUWEISUNG aus `ziel.textsatzModule`
+     — korrekt für die vier GESCHWISTER-Register (Bereichs-/Code-/Rechtsraum-/Institutionsarten-
+     Module, U2-ADR-188), wo "folgt data ausschliesslich" die Sicherheitszusage GEGEN ein Leck
+     IST. Für die Textsatz-Registry ist das zu eng: ein VOR dem Depot angedocktes Sprachmodul
+     (`_vorDepotTextsatzModule`, App-Schale, nicht Depot-Inhalt) kommt nicht aus `data` und darf
+     darum auch nicht verschwinden, nur weil `data` gerade auf ein Depot zeigt, das (wie JEDES
+     normal in der deutschen App angelegte) kein eigenes Modul mitbringt. Die Unterscheidung:
+     Übersetzungstexte sind App-Beschriftung, keine Bürgerinnen-Daten — U2-ADR-188s Leck-Sorge
+     (ein PERSONENBEZOGENES Feld verlässt den Export im Klartext) betrifft sie nicht. Darum hier,
+     NUR bei Textsatz, NUR ergänzend (Depot-eigenes Modul gewinnt immer, `ueberschreiben=false`),
+     kein Rückbau der Zuweisungs-Regel für die anderen vier Register. */
+  for (const m of _vorDepotTextsatzModule) eintragen(m, false);
   _TEXTSATZ_MODUL_REGISTRY = registry;
   return n;
 }
@@ -10206,12 +10268,12 @@ const STRINGS = new Proxy(_STRINGS_EINGEBAUT, {
    `tools/textsatz-en-vollabdeckung-daten.js` — dieselbe Übersetzung taucht später im
    echten Modul wieder auf, kein zweiter, abweichender Text für denselben Satz. */
 const PRE_DEPOT_EN = Object.freeze({
-  appTagline: 'Your digital vault — offline, encrypted, in your hands.',
+  appTagline: 'Your digital depot — offline, encrypted, in your hands.',
   welcomeUnterzeile: 'Contacts, health, finances and provisions — kept with you, accessible to you and, in an emergency, to family or your doctor.',
   welcomeWeiter: 'What would you like to do?',
   welcomeHierAnfangen: 'Start here — no fixed goal',
   welcomeDateiOeffnen: 'Already have a Vivodepot? Open file',
-  anlegenFehler: 'The vault could not be created. Please try again.',
+  anlegenFehler: 'The depot could not be created. Please try again.',
   cryptoPwAufforderung: 'Enter the password for your Vivodepot',
   cryptoInternAufforderung: 'Your Vivodepot is stored on this device. Enter your password to open it.',
   btnDepotOeffnen: 'Open my Vivodepot',
@@ -10226,9 +10288,9 @@ const PRE_DEPOT_EN = Object.freeze({
      sind bewusst KEIN anerkannter Ausnahmegrund (erste Fassung dieses Kommentars nahm das
      irrtümlich an, s. Bericht). Kein Modul-Neubau, keine Neu-Signatur nötig: die Quelldaten
      zu ändern bereitet nur den NÄCHSTEN echten Modul-Build vor. */
-  wipeSperrschirmHinweis: 'Your Vivodepot was closed because it had not been visible for half an hour. Nothing has been lost.',
+  wipeSperrschirmHinweis: 'Your depot was closed because Vivodepot had not been visible for half an hour. Nothing has been lost.',
   cryptoDateiGewaehlt: 'Selected file',
-  dateiLabel: 'Vault file',
+  dateiLabel: 'Depot file',
   dateiAuswaehlenKnopf: 'Choose file',
   dateiKeineGewaehlt: 'No file selected',
   dateiNichtLesbar: "This file can't be read — it's corrupted or not a Vivodepot file.",
@@ -10248,6 +10310,11 @@ function vorDepotText(schluessel) {
 }
 function vorDepotSpracheUmschalten() {
   _vorDepotSprache = (_vorDepotSprache === 'en') ? 'de' : 'en';
+  // U2-ADR-208 (02.09.2026): eigener, von `textsatzSpracheAktiv()`/`textsatzRegeln()` unabhängiger
+  // Sprachweg (PRE_DEPOT_EN, `vorDepotText`) — läuft nie über `textsatzSprachkennungAnwenden()`
+  // und braucht darum einen eigenen Sync-Aufruf. WCAG 3.1.1: die Aussprache eines Vorleseprogramms
+  // folgt `lang`, nicht dem sichtbaren Text.
+  document.documentElement.lang = _vorDepotSprache;
 }
 
 /* Trägt die Texte in EINEN Knoten ein. Feldweise still: was schon inline dasteht, bleibt.
@@ -12009,6 +12076,9 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
             { id: 'organspende_einschraenkung', sensibel: true, typ: 'textarea',
               sichtbarWenn: { feld: 'organspende', wert: 'teil' },
               },
+            { id: 'organspenderegister_id', sensibel: true, typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' },
+              },
             // ── Testament (typ='testament') — `erben` bleibt bewusst ein EIGENES Sektorfeld
             // (4497), weil es auch bei gesetzlicher Erbfolge gilt, nicht nur bei vorhandenem Testament ──
             { id: 'erbfolge_hinweis', typ: 'auswahl',
@@ -12661,8 +12731,28 @@ const SEKTOREN = Object.freeze(_textsatzAufSektorenAnwenden([
    bleibt eingefroren — geändert wird die Bindung, nicht ein Objekt in der Hand eines
    Lesers. */
 let SEKTOR_BY_ID = Object.freeze(Object.fromEntries(SEKTOREN.map(s => [s.id, s])));
+/* U2-ADR-187 (01.09.2026) — Bereichs-Identität überlebt ihren Bereich, wie Feld-Beschriftungen es
+   schon tun. Vorher lebten `label`/`icon` eines angedockten Bereichs AUSSCHLIESSLICH als Getter
+   am Registry-Objekt (`bereichsModulPruefen`) — verschwindet das Modul, verschwindet der Getter
+   mit, und es gibt KEINE Kopie in `data`. Anders als bei `feldDefinitionenVerwaist` lässt sich das
+   nicht im Moment des Verwaisens nachholen: die Quelle (das Modul) ist dann schon weg. Der
+   Schnappschuss muss darum LAUFEND stehen, solange der Bereich noch bekannt ist — hier, beim
+   einzigen Ort, der bei jedem Andocken UND bei jedem Laden neu aufgebaut wird.
+   Nur `angedockt`e Bereiche: die eingebauten zwölf können nie verwaisen (reservierte IDs,
+   `BEREICH_IDS_EINGEBAUT`), ihre Beschriftung kommt ohnehin über den Textsatz, kein Schnappschuss
+   nötig. Eigener Namensraum, additiv, keine Schema-Anhebung — dieselbe Bauart wie
+   `feldGueltigkeit`/`bereichsModule` (Existenz-Zusicherung in `depotNormalisieren`).
+   Rot-Beleg: tests/bereich-identitaet-verwaist.test.js */
 function _sektorIndexNeuBauen() {
   SEKTOR_BY_ID = Object.freeze(Object.fromEntries(bereicheAlle().map(s => [s.id, s])));
+  try {
+    if (data && typeof data === 'object') {
+      if (!data.bereichsIdentitaeten || typeof data.bereichsIdentitaeten !== 'object') data.bereichsIdentitaeten = {};
+      for (const s of bereicheAlle()) {
+        if (s && s.angedockt) data.bereichsIdentitaeten[s.id] = { label: s.label, icon: s.icon };
+      }
+    }
+  } catch (_) { /* defensiv, wie die Rettung selbst — darf den Index-Aufbau nie brechen */ }
   return SEKTOR_BY_ID;
 }
 
@@ -13056,7 +13146,14 @@ function _bereichsModuleAusDepotAnmelden(d) {
   let n = 0;
   for (const m of liste) {
     const geprueft = bereichsModulPruefen(m);
-    if (!geprueft.gueltig) continue;
+    /* U2-ADR-186 — die Protokoll-Zeile stand bislang HINTER dem `continue`: ein Modul, das die
+       Strukturprüfung als Ganzes nicht bestand, hinterließ nicht einmal einen internen Eintrag,
+       nur Stille. Jetzt zuerst benennen (Kennung + Grund, so weit vorhanden), dann erst
+       überspringen — dieselbe Reihenfolge wie beim Doppel-Fall zwei Zeilen weiter unten. */
+    if (!geprueft.gueltig) {
+      BEREICHS_MODUL_VERWORFEN.push({ herkunft: (m && m.herkunft) || null, grund: geprueft.grund || 'ungueltig' });
+      continue;
+    }
     for (const v of geprueft.verworfene) BEREICHS_MODUL_VERWORFEN.push(v);
     for (const b of geprueft.bereiche) {
       // Zwei Module, dieselbe ID: der erste gewinnt. Der zweite wird BENANNT, nicht
@@ -15841,6 +15938,13 @@ function leeresDepot() {
        `bereicheVerwaist` zusammen: der Wert allein, ohne die Definition, wäre gerettet und
        trotzdem unlesbar — niemand wüsste mehr, welches Feld das war. */
     feldDefinitionenVerwaist: [],
+    /* U2-ADR-187 (01.09.2026) — Name/Icon eines angedockten Bereichs, laufend geschrieben von
+       `_sektorIndexNeuBauen`. Anders als bei Feld-Beschriftungen lässt sich das beim Verwaisen
+       selbst nicht mehr beschaffen; der Schnappschuss muss vorher schon dagestanden haben. */
+    bereichsIdentitaeten: {},
+    /* Derselbe Schnappschuss, mitgewandert, wenn der Bereich verwaist (`_bereicheVerwaisteRetten`)
+       — eigener Namensraum, kein Zusatzschlüssel im flachen `bereicheVerwaist`-Raum. */
+    bereicheVerwaistIdentitaet: {},
     // „Ausdrücklich keine" (CC-Auftrag 12.08.2026) — Form: { sektorId: { feldId: { datum } } }.
     // Nur für die fünf IPS-Pflichtbereiche in Gesundheit belegbar (s. AUSDRUECKLICH_KEINE_FELDER).
     ausdruecklichKeine: {},
@@ -17024,11 +17128,11 @@ async function depotHerunterladen() {
   // Datei auf der Platte ankam. Vorher fielen alle drei in denselben Zweig; ein blockierter oder
   // vom Nutzer verworfener Anker-Download meldete damit „gespeichert". Das war der Zustand am Abend
   // des 08.08., in dem das Passwort-Erinnerungsblatt gedruckt wurde und beim Wiedereinstieg nichts
-  // vorlag. `_letzteSicherungskopieISO`/`_aktuellerStandGespeichertAm` speisen ebenfalls nur den
-  // bestätigten Zweig — sie würden sonst der Boot-Konflikterkennung eine Zeitmarke vorspiegeln, die
-  // die Datei nie bekommen hat.
+  // vorlag. `_aktuellerStandGespeichertAm` speist ebenfalls nur den bestätigten Zweig — sonst
+  // würde der Boot-Konflikterkennung eine Zeitmarke vorgespiegelt, die die Datei nie bekommen hat.
+  // U2-ADR-211: `data.sicherungsStand` (der persistierte Sicherungsstand) wird gleich in
+  // markiereAlsDateiGesichert() gesetzt, unten — derselbe bestätigte Zweig, eine Stelle.
   if (weg === 'datei' || weg === 'geteilt') {
-    _letzteSicherungskopieISO = new Date().toISOString();
     _aktuellerStandGespeichertAm = ts;
     /* B7a (29.07.2026) — HIER, und nicht nur `_aktuelleDateiSicherung = true`.
        GEMESSEN: `markiereAlsDateiGesichert` hatte NULL Aufrufer im Produkt, obwohl ihr
@@ -17387,6 +17491,42 @@ var VdStore = {
   liste: function () { return this._backend().liste(); },
 };
 
+/* ── Produkt-Trennung im geteilten internen Speicher (CC-Auftrag, 02.09.2026,
+   KOORD2-Fund) ──────────────────────────────────────────────────────────────
+   Wurzel-App und jede Modul-App (module-apps/<slug>/) laufen unter DERSELBEN Origin,
+   DERSELBEN VDSTORE_DB — IndexedDB kennt nur Origin, kein Produkt. GEMESSEN (Firefox,
+   echter gehosteter Klon, 02.09.2026): ein in der Wurzel-App intern gesichertes Depot
+   erschien nach dem Öffnen der englischen Modul-App SOFORT als deren eigener interner
+   Stand — kein Datenverlust (jedes Depot behält seine eigene UUID im Store), aber der
+   Wiedereinstieg zeigte auf das jeweils fremde Produkt.
+   DIE FALLE, die diesen Bau bestimmt: die Datenbank umzubenennen verwaist jeden Bestand,
+   der heute schon darin liegt — wer sein Depot vor diesem Fix intern gesichert hat, fände
+   es nach einem Namenswechsel nicht mehr, ohne Fehler, ohne Hinweis. Darum liegt die
+   Trennung am RECORD, nicht am Datenbanknamen: `_speicherProduktKennung()` liest den
+   einzigen zur Laufzeit verfügbaren, nicht im (überall byte-identisch kopierten, s.
+   tools/modul-app-packen.js DATEISATZ) Kern selbst stehenden Unterschied — den Pfad,
+   unter dem DIESE Instanz ausgeliefert wurde. Ein Record OHNE `produkt`-Feld ist
+   Altbestand (vor diesem Fix geschrieben) und gehört dem Produkt, das ihn findet —
+   sonst verwaist er auf demselben Weg, den dieser Fix gerade vermeiden soll. */
+function _speicherProduktKennung(pfad) {
+  const p = (typeof pfad === 'string') ? pfad : ((typeof location !== 'undefined' && location && location.pathname) || '');
+  const m = /\/module-apps\/([a-z0-9-]+)\//.exec(p);
+  return m ? m[1] : '';   // '' = Wurzel-App (kein module-apps-Segment im Pfad)
+}
+function _speicherEigenerRecord(record, kennung) {
+  return !!record && (record.produkt === undefined || record.produkt === kennung);
+}
+// Gefilterte, sortierte Sicht auf `depots` — nur Records dieses Produkts (plus Altbestand
+// ohne Kennung), neuester zuerst. EIN Ort statt drei unabhängig kopierter sort+pick-Stellen
+// (internerStandMeta, depotAusIdbLaden, _internerUmschlagRoh) — dieselbe Logik, dieselbe Probe.
+async function _eigeneInterneListe() {
+  const liste = await VdStore.liste();
+  const kennung = _speicherProduktKennung();
+  const eigene = (liste || []).filter((r) => _speicherEigenerRecord(r, kennung));
+  eigene.sort((a, b) => String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')));
+  return eigene;
+}
+
 /* ── D43 / U2-ADR-015 — Etappe 1: IDB-Persistenz-Schicht (v3-only) ──────────
    Schreibt/liest den laufenden Arbeitsstand intern, verschlüsselt. Der gespeicherte
    `cipherBlob` ist BYTE-IDENTISCH der v3-Umschlag aus depotSerialisieren() — die
@@ -17410,6 +17550,7 @@ async function depotInIdbSichern() {
     id: aktuelleDepotUUID,
     cipherBlob: JSON.stringify(umschlag),                   // byte-identischer v3-Umschlag
     gespeichert_am: new Date().toISOString(),               // Klartext-Metadatum, außerhalb der AAD
+    produkt: _speicherProduktKennung(),                     // Produkt-Trennung (02.09.2026), s. Kommentar dort
   };
   await VdStore.setzen(record);
   _aktuellerStandGespeichertAm = record.gespeichert_am;     // Etappe 5: Stand trägt jetzt diese Marke
@@ -17422,9 +17563,8 @@ async function depotInIdbSichern() {
 async function internerStandMeta() {
   if (!internerSpeicherModus()) return null;
   let liste;
-  try { liste = await VdStore.liste(); } catch (_) { return null; }
+  try { liste = await _eigeneInterneListe(); } catch (_) { return null; }
   if (!liste || !liste.length) return null;
-  liste.sort(function (a, b) { return String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')); });
   return { id: liste[0].id, gespeichert_am: liste[0].gespeichert_am || null, anzahl: liste.length };
 }
 async function internerStandVorhanden() {
@@ -17435,9 +17575,8 @@ async function internerStandVorhanden() {
 // Lädt den internen Stand und entschlüsselt ihn mit dem Passwort. v3-only-Gate VOR
 // depotLaden (LEGACY-Beschluss); depotLaden gated zusätzlich + entschlüsselt.
 async function depotAusIdbLaden(password) {
-  const liste = await VdStore.liste();
+  const liste = await _eigeneInterneListe();
   if (!liste || !liste.length) return null;                 // kein interner Stand
-  liste.sort(function (a, b) { return String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')); });
   const record = liste[0];
   let umschlag;
   try { umschlag = JSON.parse(record.cipherBlob); }
@@ -17579,24 +17718,32 @@ function sitzungEtablieren() {
   try { iosInstallHinweisVielleichtZeigen(); } catch (_) {}
 }
 
-// Letzte als Datei erstellte Sicherungskopie (Klartext-Zeitmarke, RAM) — speist die
-// Export-Erinnerung. Wird in depotHerunterladen bei Erfolg gesetzt.
-var _letzteSicherungskopieISO = null;
 var EXPORT_ERINNERUNG_SCHWELLE_TAGE = 14;
 var _exportErinnerungGezeigt = false;
 
-// Reines Modell (sync, testbar): Ist eine Sicherungskopie-Erinnerung fällig?
+// U2-ADR-211: Reines Modell (sync, testbar): Ist eine Sicherungskopie-Erinnerung fällig, und
+// was ist der tatsächliche, PERSISTIERTE Sicherungsstand (data.sicherungsStand)? Vorher stand
+// hier eine reine Arbeitsspeicher-Variable, die bei jedem Sitzungsstart neu bei null begann —
+// die Erinnerung konnte darum eine Bürgerin, die gestern gesichert hatte, nicht von einer
+// unterscheiden, die es nie getan hatte. `data.sicherungsStand` fehlt an jedem heute
+// bestehenden Depot (Migrationsstufe, additiv) — genau dieser Fall (kein Objekt, kein Feld)
+// muss sauber als "unbekannt" gelten, nicht als Fehler; das ist die Gegenprobe zu diesem ADR.
 function exportErinnerungModell(jetzt) {
   var d = (jetzt && typeof jetzt.getTime === 'function' && !isNaN(jetzt)) ? jetzt : new Date();
-  var jeExportiert = !!_letzteSicherungskopieISO;
+  var stand = (data && data.sicherungsStand && typeof data.sicherungsStand === 'object') ? data.sicherungsStand : null;
+  var jeExportiert = !!(stand && typeof stand.letzteDateiIso === 'string' && stand.letzteDateiIso);
   var tageHer = null;
   if (jeExportiert) {
-    var t = Date.parse(_letzteSicherungskopieISO);
+    var t = Date.parse(stand.letzteDateiIso);
     if (!isNaN(t)) tageHer = Math.floor((d.getTime() - t) / 86400000);
   }
+  var aenderungenSeither = (jeExportiert && typeof stand.aenderungenDanach === 'number') ? stand.aenderungenDanach : null;
   var faellig = internerSpeicherModus()
     && (!jeExportiert || (tageHer != null && tageHer >= EXPORT_ERINNERUNG_SCHWELLE_TAGE));
-  return { faellig: faellig, jeExportiert: jeExportiert, tageHer: tageHer, schwelleTage: EXPORT_ERINNERUNG_SCHWELLE_TAGE };
+  return {
+    faellig: faellig, jeExportiert: jeExportiert, tageHer: tageHer,
+    schwelleTage: EXPORT_ERINNERUNG_SCHWELLE_TAGE, aenderungenSeither: aenderungenSeither,
+  };
 }
 
 // Einmal pro Sitzung, sanft und nicht-blockierend. WORTLAUT (Entwurf) — die Gründerin darf
@@ -17610,8 +17757,18 @@ function exportErinnerungVielleichtZeigen() {
     if (typeof ui !== 'undefined' && ui.toast && STRINGS) {
       // Stück 4 (1=a): bei erhöhtem Verlust-Risiko (persist nicht gewährt, nicht installiert) den SELBEN
       // Nudge mit schärferem Wortlaut — kein neuer Alarm, nur ehrlicher.
-      var txt = (typeof erhoehtesVerlustRisiko === 'function' && erhoehtesVerlustRisiko() && STRINGS.exportErinnerungRisiko)
-        ? STRINGS.exportErinnerungRisiko : STRINGS.exportErinnerung;
+      // U2-ADR-211: liegt ein echter, persistierter Sicherungsstand vor (jeExportiert), sagt der
+      // Hinweis einen ZUSTAND statt einer Frist — "vor X Tagen, N Änderungen seither" statt
+      // "bitte ab und zu sichern". Ohne Stand (kein bisheriges Depot, oder ein Depot von vor
+      // diesem ADR) bleibt der alte, unbedingte Hinweis — er trifft dort ohnehin zu.
+      var txt;
+      if (m.jeExportiert && m.tageHer != null && m.aenderungenSeither != null && STRINGS.exportErinnerungZustand) {
+        txt = String(STRINGS.exportErinnerungZustand)
+          .replace('{tage}', String(m.tageHer)).replace('{aenderungen}', String(m.aenderungenSeither));
+      } else {
+        txt = (typeof erhoehtesVerlustRisiko === 'function' && erhoehtesVerlustRisiko() && STRINGS.exportErinnerungRisiko)
+          ? STRINGS.exportErinnerungRisiko : STRINGS.exportErinnerung;
+      }
       if (txt) ui.toast(txt, 'info');
     }
   } catch (_) { /* Hinweis ist optional, nie blockierend */ }
@@ -18583,7 +18740,7 @@ const VOLLEXPORT_ZURUECKHALTEN_SCHLUESSEL = Object.freeze([
      laufenden Liste unbekannt ist, kann `feldIstSensibel` sie GAR NICHT klassifizieren; genau
      darum gehören sie hierher und nicht in die strukturelle Liste.
      Der Umzugsfall bleibt möglich: `{sensibel: true}` gibt sie vollständig mit. */
-  'bereicheVerwaist', 'feldDefinitionenVerwaist',
+  'bereicheVerwaist', 'feldDefinitionenVerwaist', 'bereicheVerwaistIdentitaet', // U2-ADR-187: dieselbe Sperre wie die Werte, die sie benennt
   /* M1 Zug 5/Zug 2 (18.08.2026): dasselbe Material wie `feldGueltigkeit`, nur der beim Umzug
      überstimmte Bereichswert. Er wird nirgends gelesen und nirgends angezeigt; ihn mitzugeben
      hiesse, einen überholten Wert in eine Übergabe zu schreiben, die niemand erwartet. */
@@ -18649,6 +18806,12 @@ const VOLLEXPORT_STRUKTURELL_SCHLUESSEL = Object.freeze([
      ohne ihn käme in einem Depot an, in dem die Hälfte der eigenen Einträge im Rettungsslot
      läge, weil ihr Bereich fehlt. */
   'bereichsModule',
+  /* U2-ADR-187 (01.09.2026): dieselbe Einordnung wie `bereichsModule` direkt darüber, aus
+     demselben Grund — Name/Icon eines angedockten Bereichs sind eine Beschreibung, kein Wert
+     über die Bürgerin (so wenig sensibel wie der Rubrikname in der Seitenleiste selbst). Das
+     verwaiste Gegenstück `bereicheVerwaistIdentitaet` steht dagegen in
+     VOLLEXPORT_ZURUECKHALTEN_SCHLUESSEL — es benennt Werte, die diese Liste bereits zurückhält. */
+  'bereichsIdentitaeten',
   /* Etappe 2g (U2-ADR-160): dieselbe Einordnung, aus demselben Grund wie `bereichsModule` direkt
      darüber — welche eingebauten Bereiche dieses Depot führt, ist eine Beschreibung der Datei,
      kein Wert über die Bürgerin. Ein Umzug ohne ihn käme in einem Depot an, das plötzlich wieder
@@ -22368,7 +22531,7 @@ const EMPFAENGER_NIE = Object.freeze(new Set([
      gerade NICHT bekommen hat. Der Preis ist benannt und nicht klein: kein Stempel, kein
      Gültigkeitsdatum, keine Sensibel-Markierung auf dem Ausschnitt. */
   'urheberschaft', 'feldGueltigkeit', 'feldGueltigkeitGerettet', 'sensibelFelder',
-  'bereicheVerwaist', 'feldDefinitionenVerwaist',
+  'bereicheVerwaist', 'feldDefinitionenVerwaist', 'bereicheVerwaistIdentitaet', // U2-ADR-187: dieselbe Sperre wie die Werte, die sie benennt
   '_letzterAnlass', '_wiedereinstiegHinweisGezeigt',
 ]));
 
@@ -24364,6 +24527,18 @@ async function modulEinlassenGeprueft(rohBundleText, ziel, opts) {
    für JEDES signierte Modul auf `false` gesetzt, unabhängig von `pruefstufe` — der alte
    Filter verlor diesen Fall komplett. `pruefstufe:'intern'` bleibt bewusst draußen:
    Vivodepots eigene signierte Inhalte brauchen kein Fremd-Signal. */
+/* U2-ADR-186 (01.09.2026) — bis dahin las diese Funktion die ROHEN Depot-Slots und rief
+   `reg.pruefen` nie: ein Modul, das die Strukturprüfung beim Laden nicht mehr besteht (z. B.
+   weil eine neuere App-Fassung den Kontrakt verschärft hat, s. Bruch 1 im zugehörigen Bericht),
+   verschwand aus der Navigation/den Bereichen, stand hier aber unverändert als „eingelassen,
+   geprüft" — die Bürgerin konnte den Widerspruch nicht bemerken. Jetzt wird jedes Modul GENAU
+   mit demselben Prüfer erneut geprüft, den auch der Ladeweg für dieses Register nutzt
+   (`reg.pruefen`, dieselbe Funktion, kein zweiter Prüfweg) — ein Register unterscheidet sich in
+   seiner Prüfung, nicht im Weg hierher (U2-ADR-145 Punkt 1). Fällt die Prüfung durch, erscheint
+   das Modul als AUSGEFALLEN statt als eingelassen; der `grund` reist mit, wird aber bewusst NICHT
+   wörtlich in der Bürgertext-Zeile gezeigt (kein Technik-Jargon wie „bereiche" oder
+   „moduleVersion", U2-ADR-095) — eine Sitzung, die den technischen Grund braucht, findet ihn hier
+   im Rückgabewert. */
 function eingelasseneModule(ziel) {
   const d = (ziel && typeof ziel === 'object') ? ziel : (typeof data !== 'undefined' ? data : null);
   const raus = [];
@@ -24372,9 +24547,16 @@ function eingelasseneModule(ziel) {
     for (const reg of EINLASS_REGISTER) {
       for (const m of (Array.isArray(d[reg.slot]) ? d[reg.slot] : [])) {
         if (!m) continue;
+        let geprueft = null;
+        try { geprueft = reg.pruefen(m); } catch (e) { geprueft = { gueltig: false, grund: 'fehler' }; }
+        if (!geprueft || !geprueft.gueltig) {
+          raus.push({ typ: reg.typ, kennung: reg.kennung(m), eingelassenAm: m.eingelassenAm || null,
+            pruefstufe: null, ausgefallen: true, grund: (geprueft && geprueft.grund) || 'ungueltig' });
+          continue;
+        }
         const fremd = m.ungeprueft === true || (typeof m.pruefstufe === 'string' && m.pruefstufe !== 'intern');
         if (fremd) raus.push({ typ: reg.typ, kennung: reg.kennung(m), eingelassenAm: m.eingelassenAm || null,
-          pruefstufe: (typeof m.pruefstufe === 'string' ? m.pruefstufe : null) });
+          pruefstufe: (typeof m.pruefstufe === 'string' ? m.pruefstufe : null), ausgefallen: false, grund: null });
       }
     }
   } catch (e) { /* defensiv */ }
@@ -25779,8 +25961,12 @@ async function subKontextVerlassen() {
 }
 
 /* ── D42 — EINE context-aware Datei-Sicherung für ALLE Aufrufer ────────────────────
-   Genutzt von: Sichern-Knopf (Topbar-Status-Pille #tb-save-knopf), Schließen-Schutz, Moduswechsel
-   und Sub-Anlegen — alle über kernAPI.speichern, das hierauf delegiert (eine Quelle, kein Drift).
+   Genutzt von: Schließen-Schutz (primärer Weg, U2-ADR-031), Moduswechsel-Konfliktdialog
+   ("Erst als Datei sichern"), Sub-Anlegen, und der Sichern-Knopf (Topbar-Status-Pille
+   #tb-save-knopf) — dort NUR noch in zwei Fällen (U2-ADR-212): 'keine-datei' (bewusster
+   Export, Ebene 2) und wiederholter Fehlschlag (Eskalationsweg). Der Regelfall-Klick im
+   internen Modus geht seit U2-ADR-212 über kernAPI.speichern()/depotPersistieren() nach
+   depotInternSichern() — keine Datei je Klick mehr (Firefox/Safari-Befund).
    • Anker-Kontext: der normale Weg (depotSerialisieren `data`=Anker mit Anker-Globals).
    • Sub-Kontext: die Krypto-Globals zeigen ohnehin auf den ANKER, nur `data` auf den Sub. Darum
      erst die Sub-Edits mit dem SUB-Key in den Anker-Umschlag versiegeln (subDepotNeuVersiegeln),
@@ -29510,9 +29696,8 @@ async function cryptoOverlayOeffnen() {
 // Roh-Umschlag des neuesten internen Stands (OHNE Entschlüsselung). null, wenn keiner da ist.
 async function _internerUmschlagRoh() {
   try {
-    const liste = await VdStore.liste();
+    const liste = await _eigeneInterneListe();
     if (!liste || !liste.length) return null;
-    liste.sort((a, b) => String(b.gespeichert_am || '').localeCompare(String(a.gespeichert_am || '')));
     return JSON.parse(liste[0].cipherBlob);
   } catch (e) { return null; }
 }
@@ -30913,12 +31098,17 @@ function flowDepotListe() {
   const wieGesichertText = hatDateiSpeichernPicker() ? STRINGS.wieGesichertFassungA
     : _teilenBevorzugt() ? STRINGS.wieGesichertFassungC
     : STRINGS.wieGesichertFassungB;
+  // U2-ADR-211: liest den persistierten Sicherungsstand (data.sicherungsStand), nicht mehr die
+  // tote Arbeitsspeicher-Variable — überlebt jetzt einen Wiedereinstieg/Gerätewechsel. Fehlt das
+  // Feld (jedes Depot von vor diesem ADR), bleibt die Zeile schlicht weg, wie bisher auch.
+  const zuletztGesichertIso = (data && data.sicherungsStand && typeof data.sicherungsStand.letzteDateiIso === 'string')
+    ? data.sicherungsStand.letzteDateiIso : null;
   const dateiZeile = _dateiName
     ? '<p class="depot-datei-info">' +
         '<strong>' + escapeHTML(STRINGS.depotListeDateiLabel) + ':</strong> ' + escapeHTML(_dateiName) +
-        (_letzteSicherungskopieISO
+        (zuletztGesichertIso
           ? '<br><strong>' + escapeHTML(STRINGS.depotListeZuletztGespeichertLabel) + ':</strong> ' +
-            escapeHTML(_konfliktZeitLesbar(_letzteSicherungskopieISO) || STRINGS.konfliktDatumUnbekannt)
+            escapeHTML(_konfliktZeitLesbar(zuletztGesichertIso) || STRINGS.konfliktDatumUnbekannt)
           : '') +
         '<br><span class="depot-datei-hinweis">' + escapeHTML(wieGesichertText) + '</span>' +
       '</p>'
@@ -32706,6 +32896,11 @@ function _bereicheVerwaisteRetten(ziel) {
     }
     if (!ziel.sektoren || typeof ziel.sektoren !== 'object') ziel.sektoren = {};
     if (!ziel.bereicheVerwaist || typeof ziel.bereicheVerwaist !== 'object') ziel.bereicheVerwaist = {};
+    // U2-ADR-187: die Identität reist mit, gleiches Umzugsmuster wie bei den Felddefinitionen
+    // (`feldDefinitionenVerwaist`) — eigener Namensraum, kein Zusatzschlüssel in `bereicheVerwaist`
+    // selbst (das ist ein FLACHER `{feldId: wert}`-Raum; ein Schlüssel wie `label` dort wäre von
+    // einem echten, gleichnamigen Feld nicht zu unterscheiden).
+    if (!ziel.bereicheVerwaistIdentitaet || typeof ziel.bereicheVerwaistIdentitaet !== 'object') ziel.bereicheVerwaistIdentitaet = {};
 
     const hatWert = (o) => o && typeof o === 'object'
       && Object.keys(o).some(k => { const v = o[k]; return v != null && v !== '' && !(Array.isArray(v) && !v.length); });
@@ -32720,6 +32915,12 @@ function _bereicheVerwaisteRetten(ziel) {
         ? Object.assign({}, inhalt, bisher)          // ein früher Geretteter behält Vorrang
         : inhalt;
       delete ziel.sektoren[id];
+      // Letzter bekannter Name/Icon, falls vorhanden — Bestandsdepots, die diesen Bereich schon
+      // vor U2-ADR-187 verloren haben, tragen hier nichts nach; das ist der ehrlich benannte,
+      // rückwirkende Rest (s. Bericht/ADR), nicht stillschweigend aufgefüllt.
+      if (ziel.bereichsIdentitaeten && ziel.bereichsIdentitaeten[id] && !ziel.bereicheVerwaistIdentitaet[id]) {
+        ziel.bereicheVerwaistIdentitaet[id] = ziel.bereichsIdentitaeten[id];
+      }
     }
 
     /* DER FREMDSCHLÜSSEL (Zug 4) — `data.feldDefinitionen[].sektorId` war ein FREIER WERT.
@@ -32771,9 +32972,60 @@ function _bereicheVerwaisteRetten(ziel) {
       }
       if (Object.keys(rest).length) ziel.bereicheVerwaist[id] = rest;
       else delete ziel.bereicheVerwaist[id];
+      // Der Slot räumt sich mit — `_sektorIndexNeuBauen` schreibt für einen wieder bekannten,
+      // angedockten Bereich ohnehin sofort einen frischen `bereichsIdentitaeten`-Eintrag.
+      if (ziel.bereicheVerwaistIdentitaet) delete ziel.bereicheVerwaistIdentitaet[id];
     }
   } catch (e) { /* defensiv: eine Rettung darf das Laden nie brechen */ }
   return ziel;
+}
+
+/* ── U2-ADR-187 — verwaiste Bereiche lesbar zusammenführen, OHNE `bereicheAlle()` zu erweitern ──
+   Bewusst eine EIGENE Funktion, kein Zusatz an `bereicheAlle()`: der Kommentar über
+   `_bereicheVerwaisteRetten` macht „gilt nicht als gültiger Bereich" ausdrücklich zur
+   Zusicherung — Zähler, Export-Mapping und Vollständigkeits-Prüfungen hängen an `bereicheAlle()`
+   und dürfen einen verwaisten Bereich weiterhin nicht mitzählen. Wer ihn ANZEIGEN will (Sidebar,
+   Gesamt-PDF, Herausgeben-Weg — Entscheidung je Aufrufstelle liegt noch bei der Gründerin, s. ADR),
+   liest hier.
+
+   Fehlt die Identität (Bestandsdepot, verwaist VOR U2-ADR-187 — gemessen heute: kein einziger
+   Fall, s. ADR), wird ein Anzeigename aus der ID selbst abgeleitet — Notlösung, ausdrücklich als
+   solche markiert (`identitaetRekonstruiert: true`), niemals als der ursprüngliche Name
+   ausgegeben. */
+function _bereichAnzeigenameAusId(id) {
+  return String(id || '').split(/[-_]+/).filter(Boolean)
+    .map((teil) => teil.charAt(0).toUpperCase() + teil.slice(1)).join(' ') || String(id || '');
+}
+function bereicheVerwaisteAlle() {
+  const out = [];
+  const verwaist = (data && data.bereicheVerwaist && typeof data.bereicheVerwaist === 'object') ? data.bereicheVerwaist : {};
+  const identitaeten = (data && data.bereicheVerwaistIdentitaet && typeof data.bereicheVerwaistIdentitaet === 'object')
+    ? data.bereicheVerwaistIdentitaet : {};
+  const defsVerwaist = (data && Array.isArray(data.feldDefinitionenVerwaist)) ? data.feldDefinitionenVerwaist : [];
+  for (const id of Object.keys(verwaist)) {
+    const werte = verwaist[id];
+    if (!werte || typeof werte !== 'object') continue;
+    const idNoch = identitaeten[id];
+    const felder = defsVerwaist.filter((def) => def && def.sektorId === id).map((def) => ({
+      feldId: def.feldId,
+      label: (typeof def.label === 'string' && def.label.trim()) || def.feldId,
+      wert: Object.prototype.hasOwnProperty.call(werte, def.feldId) ? werte[def.feldId] : undefined,
+    }));
+    // Werte ohne bekannte Felddefinition (sollte der Fremdschlüssel-Umzug nicht zulassen,
+    // defensiv trotzdem behandelt — nichts an der Anzeige darf an einer Lücke scheitern):
+    const bekannteFeldIds = new Set(felder.map((f) => f.feldId));
+    for (const feldId of Object.keys(werte)) {
+      if (!bekannteFeldIds.has(feldId)) felder.push({ feldId, label: feldId, wert: werte[feldId] });
+    }
+    out.push({
+      id,
+      label: (idNoch && typeof idNoch.label === 'string' && idNoch.label.trim()) || _bereichAnzeigenameAusId(id),
+      icon: (idNoch && typeof idNoch.icon === 'string' && idNoch.icon.trim()) || 'folder',
+      identitaetRekonstruiert: !(idNoch && typeof idNoch.label === 'string' && idNoch.label.trim()),
+      felder,
+    });
+  }
+  return out;
 }
 
 /* ── M1 generisch: die Gültigkeit EINES Werts, unabhängig davon, wer das Feld gebaut hat ──
@@ -34065,6 +34317,15 @@ function depotNormalisieren(d) {
   if (!ziel.bereicheVerwaist || typeof ziel.bereicheVerwaist !== 'object' || Array.isArray(ziel.bereicheVerwaist)) {
     ziel.bereicheVerwaist = {};
   }
+  // U2-ADR-187 (01.09.2026) — Existenz-Zusicherung wie oben, keine Migration des Inhalts: ein
+  // Bestandsdepot hat hier schlicht nichts, `_sektorIndexNeuBauen`/`_bereicheVerwaisteRetten`
+  // füllen laufend nach.
+  if (!ziel.bereichsIdentitaeten || typeof ziel.bereichsIdentitaeten !== 'object' || Array.isArray(ziel.bereichsIdentitaeten)) {
+    ziel.bereichsIdentitaeten = {};
+  }
+  if (!ziel.bereicheVerwaistIdentitaet || typeof ziel.bereicheVerwaistIdentitaet !== 'object' || Array.isArray(ziel.bereicheVerwaistIdentitaet)) {
+    ziel.bereicheVerwaistIdentitaet = {};
+  }
   if (!ziel.feldGueltigkeit || typeof ziel.feldGueltigkeit !== 'object' || Array.isArray(ziel.feldGueltigkeit)) {
     ziel.feldGueltigkeit = {};
   }
@@ -35137,10 +35398,18 @@ let _letzterSpeicherFehlschlagGrund = null;
 function istUngespeichert() { return _ungespeicherteAenderungen > 0; }
 function ungespeichertAnzahl() { return _ungespeicherteAenderungen; }
 function markiereUngespeichert(n) {
-  _ungespeicherteAenderungen += (typeof n === 'number' && n > 0) ? n : 1;
+  const anzahl = (typeof n === 'number' && n > 0) ? n : 1;
+  _ungespeicherteAenderungen += anzahl;
   _aktuelleDateiSicherung = false;                         // jede Änderung entwertet die Sicherungsdatei
   _dateiVerlustQuittiert = false;                          // neue Arbeit → die Warnung ist wieder berechtigt
   _letzteDateiSicherungUnbestaetigt = false;               // neue Arbeit entwertet die offene Frage von vorhin
+  // U2-ADR-211: "Änderungen seit der letzten Datei-Sicherung" zaehlt nur weiter, wenn es
+  // ueberhaupt einen Sicherungsstand gibt — ein Depot ohne `sicherungsStand` (jedes heute
+  // bestehende) hat nichts, wovon aus zu zaehlen waere. Kein Fehler, einfach nichts zu tun.
+  if (data && data.sicherungsStand && typeof data.sicherungsStand === 'object') {
+    data.sicherungsStand.aenderungenDanach = (typeof data.sicherungsStand.aenderungenDanach === 'number'
+      ? data.sicherungsStand.aenderungenDanach : 0) + anzahl;
+  }
   try { renderSaveStatus(); } catch (_) {}
 }
 // CC-Auftrag „Das Datei-Signal" (10.08.2026) — betreteApp() rief bisher markiereGespeichert()
@@ -35160,12 +35429,27 @@ function markiereBasislinieOhneVorherigeSitzung() {
   _speicherFehlschlagAnzahlInFolge = 0;
   try { renderSaveStatus(); } catch (_) {}
 }
+// U2-ADR-190: löst „sichern Sie, dann wird sie übernommen" tatsächlich EIN — ohne diesen Zusatz
+// bliebe ein bereits erkannter, wartender Worker bis zum nächsten Fokus-/Sichtbarkeits-Tick
+// liegen, obwohl der Zähler jetzt schon bei null steht. Best-effort, nie blockierend: Sichern
+// darf nie an einer SW-Abfrage hängen. Eigene, benannte Funktion (statt Inline-Code in
+// markiereGespeichert()) — derselbe Grund wie bei _swSofortPruefen: jeder
+// navigator.serviceWorker-Zugriff bleibt so innerhalb der bekannten, benannten SW-Funktionen
+// (U2-ADR-097 §10, s. tests/mit-modul/b-zug1-s10-rotmachbarkeit.test.js).
+function _swNeuPruefenNachSpeichern() {
+  try {
+    if (typeof navigator !== 'undefined' && navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+      navigator.serviceWorker.getRegistration().then(function (reg) { _swAktivierenWennMoeglich(reg); }).catch(function () {});
+    }
+  } catch (_) {}
+}
 function markiereGespeichert() {
   _ungespeicherteAenderungen = 0;                          // interner Stand gesichert; Datei-Signal UNBERÜHRT
   _letzterSpeicherFehlgeschlagen = false;                  // ein Erfolg räumt einen vorherigen Fehlschlag ab
   _letzterSpeicherFehlschlagGrund = null;
   _letzteDateiSicherungUnbestaetigt = false;               // ein bestätigter Erfolg löst die offene Frage auf
   _speicherFehlschlagAnzahlInFolge = 0;                    // Erfolg unterbricht die Fehlschlags-Folge
+  _swNeuPruefenNachSpeichern();
   try { renderSaveStatus(); } catch (_) {}
 }
 // Eine aktuelle Datei-Sicherung wurde erstellt: Zähler 0 UND Datei-Signal gesetzt. Aufgerufen vom
@@ -35177,6 +35461,10 @@ function markiereAlsDateiGesichert() {
   _letzterSpeicherFehlschlagGrund = null;
   _letzteDateiSicherungUnbestaetigt = false;               // ein bestätigter Erfolg löst die offene Frage auf
   _speicherFehlschlagAnzahlInFolge = 0;                    // Erfolg unterbricht die Fehlschlags-Folge
+  // U2-ADR-211: der Zeitpunkt reist im Depot selbst mit (data), nicht nur im Arbeitsspeicher —
+  // sonst ist er nach einem Gerätewechsel weg, genau dort, wo man ihn braucht. Der Zähler
+  // "Änderungen seither" beginnt hier neu bei 0 — die gerade gesicherte Datei trägt sie ja.
+  if (data) data.sicherungsStand = { letzteDateiIso: new Date().toISOString(), aenderungenDanach: 0 };
   try { renderSaveStatus(); } catch (_) {}
 }
 // Persistenz Nachtrag (Auftrag „Erfolg ohne Wirkung", 08.08.2026, Zug 1) — DRITTER Zustand: ein
@@ -35250,6 +35538,18 @@ function saveStatusModell() {
   if (_aktuelleDateiSicherung)        return { zustand: 'als-datei',     anzahl: 0, knopfAktiv: false };
   return { zustand: 'keine-datei', anzahl: 0, knopfAktiv: true };
 }
+// U2-ADR-212 (02.09.2026) — reine, testbare Entscheidung: geht der Sichern-Pillen-Klick über die
+// Datei? Der Regelfall (etwas Offenes zu falten) geht seit diesem ADR über depotPersistieren() —
+// intern, wenn intern möglich (kein Datei-Wachstum bei jedem Klick, s. Firefox/Safari-Befund:
+// bislang eine neue zeitgestempelte Datei je Klick). Der Datei-Weg bleibt für zwei Fälle bewusst
+// der alte: 'keine-datei' (nichts Offenes zu falten, aber noch keine/keine aktuelle Datei — der
+// Klick kann hier nur „jetzt eine Datei" meinen, das ist der bewusste Export, Ebene 2) und ein
+// WIEDERHOLTER Fehlschlag (der Pillentext verspricht bereits „Als Datei sichern" — der Klick muss
+// das einlösen, sonst lügt das Label). Im Datei-Modus (internerSpeicherModus()===false) IMMER
+// wahr — unverändertes Verhalten, keine Verzweigung nötig.
+function saveKnopfDateiWeg(m) {
+  return !internerSpeicherModus() || m.zustand === 'keine-datei' || !!m.wiederholt;
+}
 // Persistenz Stück 2 (U2-ADR-031, Verlust laut machen) — soll das Schließen warnen? Variante B:
 // ungespeicherte Edits IMMER; sonst (echte Sitzung mit Inhalt) wenn KEINE aktuelle Sicherungsdatei
 // vorliegt und die Nutzerin den Verlust noch nicht quittiert hat. Reines, testbares Modell.
@@ -35302,14 +35602,15 @@ function renderSaveStatus() {
   // Zug 1 — im vierten Zustand fragt der Knopf NICHT erneut „jetzt sichern" (das stieße einen
   // weiteren unbestätigten Download an, ohne die offene Frage zu lösen), sondern lässt die
   // Bürgerin die Frage selbst auflösen: die Datei ist angekommen.
-  const knopfLabel = (m.zustand === 'unbestaetigt') ? STRINGS.saveStatusUnbestaetigtBestaetigen : STRINGS.saveStatusJetztSichern;
+  const dateiWeg = saveKnopfDateiWeg(m);
+  const knopfLabel = (m.zustand === 'unbestaetigt') ? STRINGS.saveStatusUnbestaetigtBestaetigen
+    : dateiWeg ? STRINGS.saveStatusJetztSichern : STRINGS.saveStatusJetztSichernIntern;
   if (knopf) {
     knopf.hidden = !m.knopfAktiv;
     if (knopf.style) knopf.style.display = m.knopfAktiv ? '' : 'none';
     // A2 (2026-06-10): Icon IM Knopf, damit die Pille bei Enge (tb-eng-1) auf ein tappbares Icon kollabieren kann.
     knopf.innerHTML = svgIcon(ICONS.save, 16) + '<span class="tb-save-knopf-text">' + escapeHTML(knopfLabel) + '</span>';
     knopf.setAttribute('aria-label', knopfLabel);
-    // Aktion = die bewusste .vivodepot-Datei (im internen Modus hält depotInDateiSichern den IDB-Cache mit aktuell).
     // Persistenz Stück 5 — Regel: kein bare catch(_){} auf einem Schreibpfad. Erfolg und Fehlschlag
     // laufen beide auf ein sichtbares Signal hinaus, nie auf stillschweigendes Nichts.
     knopf.onclick = (m.zustand === 'unbestaetigt') ? () => {
@@ -35317,8 +35618,12 @@ function renderSaveStatus() {
       try { renderSaveStatus(); } catch (_) {}
     } : async () => {
       bearbeitungSpeichern();
-      if (!(await _dateiNameSicherstellen())) return;   // Nicht-FSA: Name erfragt; Abbruch → nicht speichern
-      try { await depotInDateiSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(_); }
+      if (dateiWeg) {
+        if (!(await _dateiNameSicherstellen())) return;   // Nicht-FSA: Name erfragt; Abbruch → nicht speichern
+        try { await depotInDateiSichern(); } catch (_) { markiereSpeichernFehlgeschlagen(_); }
+      } else {
+        await speichernOderFehlschlagMarkieren();          // depotPersistieren() → intern (U2-ADR-212)
+      }
       try { renderSaveStatus(); } catch (_) {}
     };
   }
@@ -36222,7 +36527,11 @@ function einstellungenHTML() {
   // (pruefstufe gesetzt), nicht mehr nur unsignierte. Der "niemand hat geprüft"-Hinweis darf dann
   // nur noch stehen, wenn WENIGSTENS EIN Eintrag wirklich unsigniert ist (kein pruefstufe-Feld) —
   // sonst behauptet er das Gegenteil von dem, was die eigene Zeile direkt darunter zeigt.
-  const _hatUngeprueftes = _eingelassen.some((m) => !m.pruefstufe);
+  // U2-ADR-186: ein ausgefallenes Modul trägt ebenfalls kein `pruefstufe` (die Prüfung kam gar
+  // nicht bis dahin) — darum hier ausdrücklich ausgenommen, sonst zählte ein Ausfall fälschlich
+  // als "unsigniert selbst eingelassen".
+  const _hatUngeprueftes = _eingelassen.some((m) => !m.ausgefallen && !m.pruefstufe);
+  const _hatAusgefallene = _eingelassen.some((m) => m.ausgefallen);
   const _rolleLabel = (rolle) => (rolle === 'pruefer' ? 'Prüfstelle' : 'Herausgeber');
   // Auffindbarkeits-Fund (27.08.2026): der Modul-Abschnitt hieß bislang, zugeklappt wie
   // aufgeklappt, nur „Erweiterung" — kein Wort, kein Icon verriet, dass hier ein SPRACHMODUL
@@ -36239,14 +36548,17 @@ function einstellungenHTML() {
       '<input id="einst-modul-datei" type="file" accept="application/json,.json" hidden>' +
       // Der HINWEIS nur, wenn es etwas zu sagen gibt.
       (_eingelassen.length ? (
+        (_hatAusgefallene ? '<p class="einst-hint">' + escapeHTML(STRINGS.modulAusgefallenHinweis) + '</p>' : '') +
         (_hatUngeprueftes ? '<p class="einst-hint">' + escapeHTML(STRINGS.moduleUngeprueftHinweis) + '</p>' : '') +
         '<ul class="einst-modulliste">' + _eingelassen.map((m) => {
-          const zusatz = !m.pruefstufe
-            ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUnsigniertZusatz) + '</span>'
-            : m.pruefstufe.indexOf('extern-geprueft:') === 0
-              ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeGeprueftZusatz
-                  .replace('{rolle}', _rolleLabel(m.pruefstufe.slice('extern-geprueft:'.length)))) + '</span>'
-              : ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUngeprueftZusatz) + '</span>';
+          const zusatz = m.ausgefallen
+            ? ' <span class="modul-ausgefallen">· ' + escapeHTML(STRINGS.modulAusgefallenZusatz) + '</span>'
+            : !m.pruefstufe
+              ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUnsigniertZusatz) + '</span>'
+              : m.pruefstufe.indexOf('extern-geprueft:') === 0
+                ? ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeGeprueftZusatz
+                    .replace('{rolle}', _rolleLabel(m.pruefstufe.slice('extern-geprueft:'.length)))) + '</span>'
+                : ' <span class="modul-pruefstufe">· ' + escapeHTML(STRINGS.modulPruefstufeUngeprueftZusatz) + '</span>';
           return '<li>' + escapeHTML(STRINGS.moduleUngeprueftZeile
             .replace('{typ}', String(m.typ))
             .replace('{kennung}', String(m.kennung || '—'))
@@ -47060,14 +47372,23 @@ function flowListenEintragBearbeiten(sektorId, feld, index) {
 }
 
 // U2-ADR-064 · Reaktive Modal-Schicht (Muster: _refSubPickerVerdrahten). Blendet Unterfelder mit
-// sichtbarWenn live ein/aus, WÄHREND der Eintrag im Modal bearbeitet wird — ohne Neu-Render, damit
-// bereits getippte Eingaben nicht verloren gehen. Wertet feldSichtbar gegen die AKTUELLEN DOM-Werte
-// des Eintrags aus (nicht gegen den Sektor). Ohne bedingtes Unterfeld tut die Funktion nichts.
+// sichtbarWenn ODER verborgenWenn live ein/aus, WÄHREND der Eintrag im Modal bearbeitet wird — ohne
+// Neu-Render, damit bereits getippte Eingaben nicht verloren gehen. Wertet feldSichtbar gegen die
+// AKTUELLEN DOM-Werte des Eintrags aus (nicht gegen den Sektor). Ohne bedingtes Unterfeld tut die
+// Funktion nichts.
+// U2-ADR-202 (01.09.2026): der Guard prüfte bis hierher NUR sichtbarWenn — verborgenWenn (U2-ADR-109,
+// negatives Gate) kam später dazu und wurde hier vergessen. Betroffen war exakt eine Liste
+// (`meine-menschen.kinder`, gemessen gegen den ganzen Feldbaum, s. ADR): ihre Unterfelder tragen
+// AUSSCHLIESSLICH verborgenWenn, der Guard kehrte darum sofort zurück, verdrahtete nichts, rief nicht
+// einmal `neuBewerten()` initial auf — bei einer neuen Zeile blieben alle Unterfelder sichtbar, und
+// `liesEintragAusDOM` (das nur `zeile.hidden` respektiert) sammelte, was sichtbar aussah, tatsächlich
+// mit. `feldSichtbar()` selbst behandelt beide Gate-Formen korrekt (unverändert) — nur dieser Guard
+// kannte die zweite Form nicht.
 function _listenEintragBedingungVerdrahten(feld) {
   const modalEl = document.getElementById('modal-inhalt');
   if (!modalEl || !modalEl.querySelectorAll) return;
   const unterFelder = (feld && feld.unterFelder) || [];
-  if (!unterFelder.some(uf => uf.sichtbarWenn)) return;   // nichts Bedingtes → keine Verdrahtung
+  if (!unterFelder.some(uf => uf.sichtbarWenn || uf.verborgenWenn)) return;   // nichts Bedingtes → keine Verdrahtung
   const werteAusDOM = () => {
     const w = {};
     for (const uf of unterFelder) {
@@ -48894,8 +49215,10 @@ function bestaetigeEinhaengen(datei) {
 
 /* ── Verdrahtung ────────────────────────────────────────────────────────── */
 // A1/D46 (2026-06-09): Der freistehende #tb-speichern-Knopf ist entfernt. Das eine
-// „Sichern" verdrahtet renderSaveStatus() am Pillen-Knopf #tb-save-knopf (gleicher
-// Pfad: bearbeitungSpeichern() + kernAPI.speichern() → depotInDateiSichern()).
+// „Sichern" verdrahtet renderSaveStatus() am Pillen-Knopf #tb-save-knopf. Seit U2-ADR-212
+// (02.09.2026) NICHT mehr ein einziger Pfad: bearbeitungSpeichern() + Klick-Weiche nach
+// Zustand — Regelfall intern → kernAPI.speichern()/depotPersistieren(); 'keine-datei' und
+// wiederholter Fehlschlag bewusst weiter → depotInDateiSichern() (s. Kommentar dort).
 
 // Auto-Save pro Feld (Umbau „immer editierbar"): EIN delegierter Listener auf #content.
 // blur bubbelt nicht → capture=true, damit Feld-für-Feld-blur greift; change deckt
@@ -49275,21 +49598,26 @@ function _swRegistrierenErlaubt() {
 }
 // CC-Bauauftrag Service-Worker-Update (16.07.2026): Stufe 1 (aktiv auf sw.js-Änderung prüfen,
 // wenn die Seite wieder Fokus bekommt — sonst kann der Browser lange am HTTP-Cache der sw.js-
-// Datei selbst hängen bleiben) + Stufe 2 (Hinweis statt Zwangs-Reload bei Worker-Wechsel).
-// Stufe 3 (skipWaiting) bleibt ausdrücklich AUS — der bewusste Schnitt (Aktivierung erst, wenn
-// alle Tabs/die App zu sind) bleibt der sichere Pfad gegen ein Umschalten mitten in einer
-// offenen, ungespeicherten Depot-Sitzung (CC-Bericht Stufe 1 Service-Worker-Update, F3).
-var _swUpdateHinweisGezeigt = false;
-function _swUpdateHinweisZeigen() {
+// Datei selbst hängen bleiben). Stufe 2 (Hinweis-Banner bei controllerchange) ist mit U2-ADR-190
+// (01.09.2026) ZURÜCKGEBAUT — Entscheidung der Gründerin: automatische Aktualisierung, KEIN
+// ungefragter Hinweis über Versionen/Neuladen an jemanden, der nur ihr Depot öffnen wollte, auch
+// nicht nachträglich. Stufe 3 (skipWaiting) ist damit nicht mehr pauschal AUS, sondern PRÄZISE an
+// `_ungespeicherteAenderungen === 0` gebunden (Begründung an `_swAktivierenWennMoeglich` unten).
+// U2-ADR-190 (01.09.2026) — genaue statt pauschale Anwendung von U2-ADR-015 Etappe 8: ein
+// wartender Worker (`reg.waiting`) wird NUR aktiviert, wenn `_ungespeicherteAenderungen === 0` —
+// derselbe Zähler, der Politik A/U2-ADR-103 trägt, empirisch belegt (der Feld-Autosave faltet nur
+// ins RAM; er bleibt bei blosser Eingabe verlässlich über null). Steht er darüber, wird NICHT
+// umgeschaltet — sondern still gewartet: markiereGespeichert() stößt denselben Check beim
+// nächsten Sichern erneut an (s. dort), kein Fokus-/Sichtbarkeits-Tick nötig. In BEIDEN Fällen
+// bleibt es OHNE jedes Anzeichen für die Bürgerin — kein Toast, kein Banner, kein „Neu laden",
+// weder sofort noch später (Entscheidung der Gründerin, 01.09.2026): sie soll ihr Depot in der
+// richtigen Umgebung sehen und die aktuelle Version bekommen, nicht erfahren, dass es dafür einen
+// Service Worker gibt. Die Seite entscheidet (sie kennt den Zähler), der Worker gehorcht nur
+// (message-Handler in sw.js) — kein automatisches skipWaiting im Worker selbst, nirgends.
+function _swAktivierenWennMoeglich(reg) {
   try {
-    var el = document.getElementById('sw-update-banner'); if (!el) return;
-    var t = el.querySelector('.swb-text'); if (t) t.textContent = STRINGS.swUpdateVerfuegbar;
-    var neu = document.getElementById('sw-update-neu');
-    if (neu && !neu._gebunden) { neu._gebunden = true; neu.addEventListener('click', function () { location.reload(); }); }
-    var x = document.getElementById('sw-update-x');
-    if (x) x.setAttribute('aria-label', STRINGS.d37NamenlosWeg);   // A2/U2-ADR-112: aria-label aus STRINGS statt statischem Markup
-    if (x && !x._gebunden) { x._gebunden = true; x.addEventListener('click', function () { el.hidden = true; }); }
-    el.hidden = false;
+    if (!reg || !reg.waiting) return;
+    if (_ungespeicherteAenderungen === 0) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
   } catch (_) {}
 }
 function serviceWorkerRegistrieren() {
@@ -49297,22 +49625,29 @@ function serviceWorkerRegistrieren() {
     if (!_swRegistrierenErlaubt()) return;
     var reg = function () {
       try {
-        // Schon vor dem (erneuten) register() gemerkt: hatte diese Seite bereits einen aktiven
-        // Controller? Wenn nein, ist der erste 'controllerchange' nur der Erst-Erwerb der
-        // Kontrolle (clients.claim() beim allerersten Laden) — KEINE „neue Version", also kein
-        // Hinweis dafür. Erst ein SPÄTERER Wechsel ist ein echtes Update.
-        var hatteBereitsController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
-        if (navigator.serviceWorker.addEventListener) {
-          navigator.serviceWorker.addEventListener('controllerchange', function () {
-            if (!hatteBereitsController) { hatteBereitsController = true; return; }
-            if (_swUpdateHinweisGezeigt) return;
-            _swUpdateHinweisGezeigt = true;
-            _swUpdateHinweisZeigen();
-          });
-        }
         navigator.serviceWorker.register('sw.js').then(function (registrierung) {
           if (!registrierung) return;
-          var pruefen = function () { try { registrierung.update(); } catch (_) {} };
+          // U2-ADR-190: sofort prüfen, falls beim Registrieren schon ein Worker wartet (z. B. nach
+          // einem vorherigen Besuch, der die Aktivierung nicht erreichte) — nicht erst beim
+          // nächsten Fokus-Wechsel.
+          _swAktivierenWennMoeglich(registrierung);
+          // U2-ADR-190: EIGENER, sofortiger Auslöser statt nur auf den nächsten Fokus-/Sichtbarkeits-
+          // Tick zu warten — sobald ein neuer Worker den Zustand „installed" erreicht (während
+          // schon ein Controller aktiv ist, also wirklich „waiting", nicht der Erst-Erwerb),
+          // entscheidet die Seite sofort statt erst irgendwann später zufällig nachzuschauen.
+          if (registrierung.addEventListener) {
+            registrierung.addEventListener('updatefound', function () {
+              var neuerWorker = registrierung.installing;
+              if (!neuerWorker || !neuerWorker.addEventListener) return;
+              neuerWorker.addEventListener('statechange', function () {
+                if (neuerWorker.state === 'installed') _swAktivierenWennMoeglich(registrierung);
+              });
+            });
+          }
+          var pruefen = function () {
+            try { registrierung.update(); } catch (_) {}
+            _swAktivierenWennMoeglich(registrierung);   // U2-ADR-190: derselbe Check bei jedem Tick
+          };
           if (typeof document !== 'undefined' && document.addEventListener) {
             document.addEventListener('visibilitychange', function () {
               if (document.visibilityState === 'visible') pruefen();
@@ -49351,6 +49686,7 @@ async function _swSofortPruefen() {
     }
     await reg.update();
     var gefunden = !!(reg.installing || reg.waiting);
+    _swAktivierenWennMoeglich(reg);   // U2-ADR-190: derselbe Check, jetzt auch beim Sofort-Knopf
     if (typeof ui !== 'undefined' && ui.toast) {
       ui.toast(gefunden ? STRINGS.einstSwPruefenGefunden : STRINGS.einstSwPruefenAktuell, 'success');
     }

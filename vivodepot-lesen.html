@@ -2245,6 +2245,9 @@ const SEKTOREN = Object.freeze([
             { id: 'organspende_einschraenkung', sensibel: true, label: 'Welche Einschränkung?', typ: 'textarea',
               sichtbarWenn: { feld: 'organspende', wert: 'teil' },
               beispiel: 'z. B. nur Herz und Nieren; keine Hornhaut; nur für Transplantation, nicht für Forschung' },
+            { id: 'organspenderegister_id', sensibel: true, label: 'Organspende-Register — Erklärungs-ID', typ: 'text',
+              sichtbarWenn: { feld: 'typ', wert: 'patientenverfuegung' },
+              beispiel: 'A3K7B9X' },
             // ── Testament (typ='testament') — `erben` bleibt bewusst ein EIGENES Sektorfeld
             // (4497), weil es auch bei gesetzlicher Erbfolge gilt, nicht nur bei vorhandenem Testament ──
             { id: 'erbfolge_hinweis', label: 'Gesetzliche Erbfolge oder abweichender Wille?', typ: 'auswahl',
