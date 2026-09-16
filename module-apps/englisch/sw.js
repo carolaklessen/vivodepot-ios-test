@@ -149,7 +149,7 @@
 // v60 (2026-07-13): CC-02-Korrektur — Datums-Untergrenze ist NICHT global (1900 hätte Testament-
 // Verweise auf Belege Dritter/Grundbuch-Eintragungsdaten abgeschnitten). Jetzt pro Feld
 // (feld.datumJahrMin); nur Geburtsdatum setzt 1900, alles andere fällt auf 1800 zurück.
-// v61 (2026-07-13): Chip-Mechanik für Code-Slot-Felder (E1 Option C, CC-Auftrag Chip-Mechanik).
+// v61 (2026-07-13): Chip-Mechanik für Code-Slot-Felder (E1 Option C, Chip-Mechanik).
 // allergien/medikamente/krankheiten sind jetzt Chip-Arrays statt Skalar; Schema 37→38. Terminologie-
 // Listen unangetastet (kein neuer Code, keine Andockpunkte). Shell-Bytes geändert → Lockstep-Bump.
 // v62 (2026-07-14): Speicherpfad-Fix für die Chip-Mechanik (Geräte-Befund 14.07.: „Woraus
@@ -184,7 +184,7 @@
 // §5, 14.07.2026) — kein Aufrufer, die Wallet setzt mit eigener Implementierung zusammen.
 // Kamera-Bau der Lese-App (getUserMedia/jsQR) ebenfalls entfernt, U2-ADR-085 §5: beide
 // Erzeuger (PDF-QR, Bereichs-QR) waren bereits weg, der Kamera-Zugriff blieb ohne Zweck stehen.
-// v68 (2026-07-16): CC-Bauauftrag Service-Worker-Update-Zustellung (Stufe 1+2). Reagiert auf
+// v68 (2026-07-16): Service-Worker-Update-Zustellung (Stufe 1+2). Reagiert auf
 // den Geräte-Befund „Schale überlebt jeden Cache-Bump, nur harter Website-Daten-Löschen hilft":
 // (1) registration.update() jetzt aktiv bei visibilitychange/focus (vivodepot.html) — zwingt den
 // Browser, sw.js frisch zu prüfen, statt auf den nächsten Browser-eigenen Check zu warten. (2)
@@ -201,7 +201,7 @@
 // v69 (2026-07-16): reiner Versions-Bump, KEINE Logik-Änderung — der zweite, eigentliche
 // Testschritt für die Update-Zustellung (v68 lief bereits, jetzt: nur zum Tab zurückkehren,
 // NICHT Website-Daten löschen. Wenn der "Neu laden"-Hinweis erscheint, greift der Fix).
-// v482 (2026-08-31): CC-Auftrag Service-Worker-Update-Sackgasse — Geräte-Befund: eine sehr alte
+// v482 (2026-08-31): Service-Worker-Update-Sackgasse — Geräte-Befund: eine sehr alte
 // Installation (vor v68/a3e3fd5, 16.07.2026) trägt den Update-Zustellung-Mechanismus (registration.
 // update() bei Fokus + Hinweis-Banner) selbst gar nicht; für so einen Stand kann kein künftiger
 // Code mehr etwas tun (er lädt seine eigenen neuen Bytes nie — nur hartes Website-Daten-Löschen
@@ -220,12 +220,12 @@
 // nicht — darum entscheidet die Seite, der Worker gehorcht nur. Der Schutzgrund von U2-ADR-015
 // Etappe 8 bleibt exakt erhalten: „skipWaiting bleibt aus" gilt weiter als DEFAULT, jetzt mit einer
 // benannten, geprüften Ausnahme statt einer pauschalen Sperre. Nachträgliche ADR-Umbenennung
-// (Nummernkollision dreier paralleler Sitzungen, von VD KOORD 2 nach Landereihenfolge neu
+// (Nummernkollision dreier paralleler Sitzungen, von 2 nach Landereihenfolge neu
 // vergeben) änderte vivodepot.html-Kommentare inhaltlich (Testtitel-/ADR-Verweise) — kein
-// Verhaltens-, nur ein Beschriftungswechsel. Rebase auf u2-kanon v491 (VD KOORD 2, 01.09.2026)
+// Verhaltens-, nur ein Beschriftungswechsel. Rebase auf u2-kanon v491 ( 2, 01.09.2026)
 // — v488/v489 lokal übersprungen, direkt v491→v492 im Lockstep. Shell-Bytes geändert.
 // v492 → v493 (02.09.2026): U2-ADR-206, Signier-Werkzeug merkt sich stehende Pfade — reiner
-// tools/tests-Zug, keine Shell-Bytes geändert. Landepunkt-Marke auf Anweisung VD KOORD 2.
+// tools/tests-Zug, keine Shell-Bytes geändert. Landepunkt-Marke auf Anweisung 2.
 // v493 → v494 (02.09.2026): U2-ADR-202, Kinder-Liste — verborgenWenn-Live-Verdrahtung. Shell-
 // Bytes geändert.
 // v494 → v495 (02.09.2026): U2-ADR-207, Vor-Depot-Sprachmodul übersteht fremdes Depot. Shell-
@@ -235,14 +235,421 @@
 // v496 → v497 (02.09.2026): U2-ADR-208, Sprachkennung fällt auf aktive Sprache zurück. Shell-
 // Bytes geändert.
 // v497 → v498 (02.09.2026): U2-ADR-209, Produkt-Trennung im geteilten internen Speicher —
-// Auftrag KOORD2, Vorrang. Shell-Bytes geändert (vivodepot.html).
+// Auftrag, Vorrang. Shell-Bytes geändert (vivodepot.html).
 // v498 → v499 (02.09.2026): zweiter Rebase dieses Zweigs auf v498. Landepunkt-Marke auf
-// Anweisung VD KOORD 2.
+// Anweisung 2.
 // v499 → v500 (02.09.2026): U2-ADR-211, Sicherungsstand bekannt — persistiert statt
 // Arbeitsspeicher-Variable. Rebase auf v499. Shell-Bytes geändert (vivodepot.html).
 // v500 → v501 (02.09.2026): U2-ADR-212, Sichern-Knopf folgt Speicher-Modus — der Regelfall-Klick
 // faltet im internen Modus intern, keine Datei mehr je Klick. Shell-Bytes geändert (vivodepot.html).
-const CACHE = 'vivodepot-shell-v501';
+// v501 → v502 (02.09.2026): U2-ADR-217, Format-Tags Lese-App/Spezifikation nachgezogen — NUR
+// vivodepot-lesen.html geändert, kein vivodepot.html-Byte. Bump trotzdem nötig: vivodepot-lesen.html
+// ist Teil des ausgelieferten Dateisatzes (s. tools/testfassung-legen.js), der Service Worker
+// liefert sie sonst weiter aus einem veralteten Zwischenspeicher aus (Nebenfund, s. U2-ADR-217 +
+// U2-ADR-215).
+// v502 → v503 (02.09.2026): U2-ADR-222, ein leeres Depot ist keine Sicherung — der unbedingte
+// Anlege-Schreibversuch setzt sicherungsStand nicht mehr. Shell-Bytes geändert (vivodepot.html).
+// v503 → v504 (02.09.2026): U2-ADR-224, Boot-Wettlauf behoben — der vorDepot-Zweig
+// überschreibt den bereits gezeigten internen Passwort-Eintritt nicht mehr mit
+// renderWelcome(), wenn dessen Konfigurationsdatei-Fehlschlag schneller auflöst als der
+// Boot-Weg. Shell-Bytes geändert (vivodepot.html).
+// v504 → v505 (03.09.2026): Speicher-Modell Stück 3, Produktentscheidung „ein Speichersymbol,
+// das speichert, wenn ich drauf klicke" — der Sichern-Klick geht im internen Modus wieder immer
+// über die Datei (U2-ADR-212s Falt-Entscheidung zurückgebaut). Sieben stehengebliebene
+// Registerzahlen im Fließtext gestrichen, nicht korrigiert. Shell-Bytes geändert (vivodepot.html).
+// v505 → v506 (03.09.2026): U2-ADR-220, der Sicherungsdatei-Namens-Hinweis verspricht nicht mehr,
+// dieselbe Datei künftig zu ersetzen — das traf im Nicht-FSA-Zweig (Firefox/Safari) nie zu.
+// Shell-Bytes geändert (vivodepot.html).
+// v506 → v507 (03.09.2026): U2-ADR-219, Nachbau — plattformabhängiger Hinweis bleibt bei iOS,
+// dokumentierter Verzicht auf Android-/Schreibtisch-Safari-Erkennung (nur ein Kommentar, kein
+// Verhalten geändert). Shell-Bytes geändert (vivodepot.html).
+// v507 → v508 (03.09.2026): Signierungs-Automatisierung Zug 1 — _signJWS bekommt in allen vier
+// Trägern denselben Wächterhinweis-Kommentar (Hüllenschicht in tools/krypto-block-propagation-
+// pruefen.js deckt die Funktion jetzt, kein Verhalten geändert). Shell-Bytes geändert
+// (vivodepot.html + vivodepot-lesen.html).
+// v508 → v509 (03.09.2026, U2-ADR-233): Original-Bytes bleiben roh, Erkennung bleibt dekodiert.
+// „Original herunterladen" verliert kein führendes UTF-8-BOM mehr; die Erkennung selbst bleibt
+// auf dem dekodierten Text, unverändert. Shell-Bytes geändert (vivodepot.html).
+// v509 → v510 (03.09.2026, U2-ADR-235): der Sub-Depot-Umschlag wird je Kryptoversion
+// vollständig geprüft und versionsecht zurückgeschrieben. Sechs Stellen nahmen unbedingt die
+// V3-Form an; seit A345 (19.08.2026) liefert der allgemeine Speicherweg V4. Shell-Bytes
+// geändert (vivodepot.html).
+// v510 → v511 (03.09.2026, U2-ADR-236): Rahmen folgt Kontext. Sub-Depot-Farbe als Rand statt
+// Fläche bei Sub-Depot-Karten-Knopf (D47-Rücknahme), Navigation und Fußzeile nachgezogen; Palette
+// sechs auf acht (Schilf, Malve). Shell-Bytes geändert (vivodepot.html).
+// v511 → v512 (03.09.2026, U2-ADR-238, u2-kanon-Seite): das Depot-Pillen-Menü schließt nicht mehr
+// über den Fokus als Stellvertreter. macOS Safari fokussiert einen <button> beim Klick nicht —
+// der vorige focusout+requestAnimationFrame-Weg verlor damit den Wettlauf gegen den echten click.
+// Ersetzt durch pointerdown (Maus/Touch) + focusin (Tastatur), beide auf document. Shell-Bytes
+// geändert (vivodepot.html).
+// v511 → v512 (03.09.2026, U2-ADR-230, dieser Zweig): PBKDF2_ITERATIONS ändert sich nur über
+// einen Sprung der kryptoVersion, nie an Ort und Stelle — zwei neue Wächter-Tests, zwei
+// erklärende Kommentare außerhalb des gepinnten Krypto-Blocks (kein Block-Byte geändert, kein
+// Verhalten geändert). Shell-Bytes geändert (vivodepot.html).
+// v512 → v513 (03.09.2026, U2-ADR-237, u2-kanon-Seite): jede Feld-Änderung speichert jetzt still
+// intern (kein Klick, keine Pille); der Zähler bezieht sich auf die interne Ablage, nicht mehr
+// auf die Datei; die Datei wird ein eigener, seltener Menüpunkt ("Sicherungskopie erstellen").
+// Nimmt U2-ADR-015s Prinzip "vier bewusste Save-Punkte, kein stilles Auto-Save" für die interne
+// Ablage zurück — Produktentscheidung, an der Wirklichkeit auf WebKit/iPhone gescheitert.
+// Shell-Bytes geändert (vivodepot.html).
+// REBASE-MERGE auf 4c448412 (03.09.2026): beide Seiten trugen denselben Ausgangswert v512 UND
+// denselben Endwert v513 — zwei disjunkte Bumps (230 dieser Zweig, 237 u2-kanon-Seite),
+// v512+1+1=v514, nicht v513.
+// v514 → v515 (03.09.2026): U2-ADR-241 (Verlustwege-Zug 2) — EXPORT_TOPF_B_FELDER
+// trägt jetzt auch 'fim-json' (dieselbe Set-Referenz wie 'xoev-verwaltung', da beide dieselbe
+// Mapping-Tabelle teilen). Die „Das wird herausgegeben"-Übersicht zeigte 19 Felder für FIM
+// bisher als enthalten, obwohl der Builder sie nie schreibt — der Export selbst ist unverändert,
+// nur die Übersicht sagt jetzt die Wahrheit. Shell-Bytes geändert (vivodepot.html).
+// v515 → v516 (04.09.2026, U2-ADR-245): Sensibel-Schranke in logikModulPruefen
+// — ein datenSchema-Eintrag, der ein sensibel:true-Feld adressiert, braucht dafür das
+// ausdrückliche sensibelErlaubt:true, sonst wird das ganze Bundle zurückgewiesen.
+// REBASE-MERGE auf 4e1ba7fa (04.09.2026): U2-ADR-245 (u2-kanon-Seite) und U2-ADR-247 (dieser
+// Zweig) trugen beide denselben Ausgangswert v515 UND denselben Endwert v516 — zwei disjunkte
+// Bumps, v515+1+1=v517, nicht v516.
+// v516 → v517 (04.09.2026, U2-ADR-247, gehoben von einem drei Tage liegengebliebenen Zweig vom
+// 01.09.2026): Sichern-Knopf-Klick verliert nicht mehr das Ziel, wenn beim Klick noch ein zweites
+// Feld fokussiert ist; die Statuskarte zieht sofort nach dem Feld-Autosave nach, ohne
+// Bereichswechsel. Der Fix trug damals die Kennung U2-ADR-186 — dieselbe Nummer, die am selben
+// Tag durch eine Drei-Wege-Kollision über acht parallele Arbeitsbäume (s. Kommentar in
+// tests/adr-readme-uebereinstimmung.test.js) neu vergeben wurde; die beiden anderen Ansprüche
+// wurden umnummeriert (190, 194), dieser dritte blieb auf einem unlandierten Zweig liegen und
+// wurde nie mit umbenannt. Shell-Bytes geändert (vivodepot.html).
+// v517 → v518 (04.09.2026, REBASE-MERGE auf 9b6d5347, U2-ADR-244): das Anlegen selbst braucht
+// keinen Speicherort mehr — im Regelfall (internerSpeicherModus() true) entfällt der
+// Datei-Dialog vor depotAnlegen() vollständig; der Fallback (file://, kaputtes IndexedDB)
+// bleibt unverändert. U2-ADR-245/U2-ADR-247 (u2-kanon-Seite, bereits additiv v515→v517
+// aufgelöst) und U2-ADR-244 (dieser Zweig) trugen beide denselben Ausgangswert v515 — drei
+// disjunkte Bumps, v515+1+1+1=v518, nicht v517. Shell-Bytes geändert (vivodepot.html).
+// v518 → v519 (04.09.2026, REBASE-MERGE auf a84e8319): zeichneDokumentPdf/dokSignaturHTML
+// kannten unterschriftZeilen nur als Bestandsform — unterschriftZeilen ist kein
+// LOGIK_DOK_AUSGABE_SCHLUESSEL-Schlüssel, jedes eingelassene logikModul brach beim
+// Signaturblock, nicht nur bei unterschrift:false (gefunden beim Bau von
+// Referenzdepot-Modul-Template-2026-09-04.vivodepot). Die u2-kanon-Seite (bereits additiv
+// v515→v518 aufgelöst, drei Bumps: U2-ADR-245+U2-ADR-247+U2-ADR-244) und dieser Zweig
+// (eigener Bump v515→v516) trugen beide denselben Ausgangswert v515 — vier disjunkte
+// Bumps, v515+1+1+1+1=v519, nicht v518. Shell-Bytes geändert (vivodepot.html).
+// v519 → v520 (04.09.2026, U2-ADR-246, dieser Zweig): Situationen werden andockbar — das achte
+// Einlass-Register (situationsModule/situationFeldDefinitionen, situationsModulPruefen,
+// _situationsModuleAusDepotAnmelden, situationenAlle()). Dieser Zweig hatte unabhängig von den
+// vier oben schon einmal v515→v516 gebumpt (eigener Ausgangswert v515, wie die anderen vier
+// Bumps in dieser Kette) — additiv aufgelöst: fünf disjunkte Bumps ab v515, v515+1+1+1+1+1=v520,
+// nicht v519 und nicht v516.
+// v520 → v521 (04.09.2026, REBASE-MERGE auf 6bbb0779, U2-ADR-248, u2-kanon-Seite): Erbschein-
+// Vorbereitungsauszug las `kinder` aus dem Sektor 'identitaet' statt 'meine-menschen' — auf
+// beiden Lesepfaden (PDF/HTML, XML), gefunden beim Bau von Referenzdepot-Modul-Template-
+// 2026-09-04.vivodepot. Dieser Zweig hatte unabhängig von den fünf Bumps oben schon einmal
+// v518→v519 gebumpt (eigener Ausgangswert v515, wie die anderen fünf) — additiv aufgelöst:
+// sechs disjunkte Bumps ab v515, v515+1+1+1+1+1+1=v521, nicht v520 und nicht v519. Shell-Bytes
+// geändert (vivodepot.html).
+// v521 → v522 (04.09.2026, REBASE-MERGE auf c2261621): u2-kanon-Seite (echtes U2-ADR-248,
+// Erbschein-Kinder-Sektor, eigener Bump v520→v521) und dieser Zweig (U2-ADR-250, Assistenten
+// werden andockbar, Paket 2a des Gerüst-Umbaus — ursprünglich ebenfalls als „U2-ADR-248"
+// geschrieben, eigener Bump v520→v521, seit der Nummern-Kollision umbenannt) trugen beide
+// denselben Ausgangswert v520 — zwei disjunkte Bumps, v520+1+1=v522, nicht v521. Shell-Bytes
+// geändert (vivodepot.html: wizardsModule, wizardsModulPruefen, _wizardsModuleAusDepotAnmelden,
+// wizardsAlle(), das neunte Einlass-Register).
+// v522 → v523 (04.09.2026, Rebase auf 5923e47e, U2-ADR-249 .vdkey-Huelle-Allowlist berührt
+// vivodepot.html nicht): der Lockstep-Wächter verglich gegen den vorherigen PUSH-Stand dieses
+// Zweigs (ebenfalls v522), nicht nur gegen den Kanon-Ausgangswert — durch den Rebase tragen
+// die Commits im neuen Bereich neue Hashes und berühren vivodepot.html erneut, ohne dass sich
+// der Wert ändert. Kein neuer Inhalt, additiv trotzdem nachgezogen.
+// v523 → v524 (04.09.2026, U2-ADR-251): Ereignis-Achse wird andockbar, das zehnte
+// Einlass-Register (ereignisAchseModule, ereignisAchseModulPruefen,
+// _ereignisAchseModuleAusDepotAnmelden, ereignisAchseFelderAlle()) — Paket 2b des
+// Gerüst-Umbaus, wörtlicher Spiegel von U2-ADR-250.
+// v528 → v529 (04.09.2026, NGO-Härtetest): unbekannter Icon-Name wird bei Bereich/Situation/Assistent jetzt benannt verworfen statt still übernommen.
+// v528 → v529 (04.09.2026, U2-ADR-253 Nachtrag Teil 1/5, Bereichssatz): bereicheAlle() filtert Registry-Einträge jetzt nach bereichssatz, aber nur wenn ihre ID in BEREICH_IDS_EINGEBAUT steht — echte Dritt-Module bleiben unberührt.
+// REBASE-MERGE auf bab7df3c (04.09.2026): die u2-kanon-Seite (Icon-Prüfung) und dieser Zweig (Bereichssatz) trugen beide denselben Ausgangswert v528 — zwei disjunkte Bumps, v528+1+1=v530, nicht v529.
+// v530 → v531 (04.09.2026, U2-ADR-253 Nachtrag Teil 2/5, Personen-/Institutions-Verweis): entitaet/rolle/verweisZweck in die Andock-Erlaubnisliste aufgenommen — entitaet geschlossen auf vier Arten, rolle/verweisZweck bleiben offenes Vokabular. Echter neuer Inhalt oben auf v530, kein zweiter Bump auf v528 — v530+1=v531.
+// v531 → v532 (04.09.2026, U2-ADR-253 Nachtrag Teil 3/5, gebündelter Rest): 16 restliche
+// Schlüssel in die Andock-Erlaubnisliste aufgenommen, mechanisch wie Pro Teil 2.
+// v528 → v529 (04.09.2026, U2-ADR-254): der Rechtsraum-Vorschlagswert kommt jetzt vom angedockten Modul statt hart DE, an zwei Instrument-Stellen.
+// REBASE-MERGE auf d1166ebc (04.09.2026): dieser Zweig (U2-ADR-254, zuletzt additiv auf v532 aufgelöst) und die u2-kanon-Seite (gebündelter Rest, eigener Bump v531→v532) trugen beide denselben Ausgangswert v531 — v532+1=v533, nicht v532.
+// v529 → v530 (04.09.2026, U2-ADR-255): xoev-verwaltung/fim-json erscheinen nur noch beim passenden Rechtsraum-Vorschlagswert.
+// REBASE-MERGE auf d1166ebc (04.09.2026): zweiter Commit — nach der bereits erfolgten Aufloesung des ersten (v533) ist v533+1=v534, nicht v530.
+// v534 → v535 (04.09.2026, U2-ADR-256): identitaetAnzeigename() ersetzt 21 unabhängige
+// Namens-Kompositionskopien durch eine Funktion, Reihenfolge kommt aus dem neuen
+// additiven Feld identitaet.familienname_zuerst.
+// REBASE-MERGE auf bdefab2d (04.09.2026): dieser Zweig (U2-ADR-254, seither umbenannt auf U2-ADR-256) und die u2-kanon-Seite trugen beide denselben Ausgangswert v528 — nach der bereits erfolgten additiven Aufloesung auf der Kanon-Seite (s. o., v534) ist v534+1=v535, nicht v529.
+// v535 → v536 (04.09.2026): U2-ADR-256 umbenannt (Nummernkollision mit zwei vergebenen, noch ungelandeten Nummern; war zuvor unter der Nummer 254 geführt) — keine Verhaltensänderung, nur der Bezeichner.
+// v532 → v533 (04.09.2026, U2-ADR-253 Nachtrag Teil 4/5, NGO-Härtetest, DIESER Zweig): vorDepotKonfigurationAnwenden()
+// prüft Kanal-B-Bündel zweimal mit Registrierung dazwischen — ein Assistent/Ereignis-Achse-Bündel
+// sieht jetzt ein Bereich/Situations-Bündel aus demselben Stapel.
+// REBASE-MERGE auf bdefab2d (04.09.2026): die u2-kanon-Seite (U2-ADR-254+255, bereits intern additiv
+// v532→v534 aufgelöst, zwei Bumps vom selben Ausgangswert v532) und dieser Zweig (Teil 4, eigener
+// Bump v532→v533) trugen beide denselben tieferen Ausgangswert v532 — drei disjunkte Bumps
+// insgesamt, v532+1+1+1=v535, nicht v534 und nicht v533.
+// REBASE-MERGE auf 4e3d7348 (04.09.2026): die u2-kanon-Seite (Identitaet-Anzeigekomposition U2-ADR-256
+// + Umnummerierung, bereits intern additiv v534→v536 aufgeloest, zwei Bumps vom selben Ausgangswert
+// v534) und dieser Zweig (Teil 4, eigener Bump v534→v535, s. o.) trugen beide denselben tieferen
+// Ausgangswert v534 — drei disjunkte Bumps insgesamt, v534+1+1+1=v537, nicht v536 und nicht v535.
+// v537 → v538 (04.09.2026): dieser Rebase loeste den ersten Commit (Teil 4) und den zweiten Commit
+// (Korrektur: der additive Merge-Splice liess in vivodepot.html den oeffnenden Blockkommentar von
+// heuteLokal mit dem SCHALEN_STAND-Zeilenkommentar verschmelzen, fehlender Zeilenumbruch nach
+// „(v535)", die Kommentarprosa lief als Code, ladeKern() brach mit SyntaxError) NACHEINANDER auf —
+// die Korrektur ist ein eigener, echter disjunkter Bump zusaetzlich zu den drei oben gezaehlten,
+// v537+1=v538, nicht v537.
+// v538 → v539 (04.09.2026): U2-ADR-257 — FORMAT_SCHREIBER neben FORMAT_LESER, die Schreibseite der Format-Module. Zwei Schreiber (json@1, xml@1), `schreiber` als optionaler Modul-Schlüssel mit `json@1` als Vorgabe (byte-identisch zum Stand 4e3d7348 belegt), `mime`/`endung` folgen dem Schreiber statt fest JSON zu behaupten; csv@1/vcard-erste@1 bewusst NICHT gebaut, die Lücke steht benannt in `_FORMAT_SCHREIBER_LUECKEN`.
+// REBASE-MERGE auf dfe31362 (04.09.2026): die u2-kanon-Seite (U2-ADR-253 Nachtrag Teil 4/5 und die
+// Splice-Korrektur, bereits intern additiv v536→v538 aufgeloest, zwei Bumps vom selben Ausgangswert
+// v536) und dieser Zweig (U2-ADR-257, eigener Bump v536→v537) trugen beide denselben Ausgangswert
+// v536 — drei disjunkte Bumps, v536+1+1+1=v539, nicht v538 und nicht v537.
+// v539 → v540 (04.09.2026): U2-ADR-258 — die Herkunft eines Moduls erreicht den Empfaenger.
+// Datensatz-Schluessel modulHerkunft, Segment im PDF-Fuss, sichtbarer Block in vier Lese-App-Sichten,
+// unbekannt-Stand in der Kern-Anzeige.
+// REBASE-MERGE auf a0abbf52 (04.09.2026): gemeinsamer Vorfahr dieses Merges ist dfe31362 mit v538 —
+// NICHT v536 (dieser Wert gehoert zum bereits aufgeloesten Merge der Kanon-Seite eine Stufe frueher).
+// Die Kanon-Seite (U2-ADR-257, v538→v539) und dieser Zweig (U2-ADR-258, v538→v539) trugen beide
+// denselben Ausgangswert v538 — zwei disjunkte Bumps, v538+1+1=v540, nicht v539.
+// REBASE-MERGE auf dfe31362 (04.09.2026): gemeinsamer Vorfahr (git merge-base) ist dfe31362 mit
+// v538 — fuer den Kanon eine Stufe frueher bereits aufgeloest (v538→v540 oben). Der Kanon (zwei
+// dort bereits verrechnete Bumps) und dieser Zweig (U2-ADR-260, eigener Bump v538→v539) trugen
+// beide denselben Ausgangswert v538 — macht zusammen drei disjunkte Bumps seit v538,
+// v538+1+1+1=v541, nicht v540 und nicht v539.
+// v540 → v541 (04.09.2026, U2-ADR-266, dieser Zweig, vor Rebase): nach dem ersten bewussten
+// Datei-Sichern erklärt ein zweiter Absatz im bestehenden Rückweg-Hinweis-Modal, dass die Datei
+// verschlüsselt ist und das Passwort der einzige Schlüssel dazu ist. Shell-Bytes geändert
+// (vivodepot.html).
+// REBASE-MERGE auf 8292b457 (04.09.2026): der gemeinsame Vorfahr dieses Rebase ist a0abbf52 mit
+// v539 (gemessen mit git merge-base, nicht aus der Nachricht übernommen). Die Kanon-Seite
+// (U2-ADR-258, v539→v540) und dieser Zweig (U2-ADR-266, v539→v540) trugen beide denselben
+// Ausgangswert v539 — zwei disjunkte Bumps, v539+1+1=v541, nicht v540.
+// REBASE-MERGE auf 38de6ebc (04.09.2026, zweiter Rebase-Schritt dieses Zweigs): gemeinsamer
+// Vorfahr (git merge-base) ist 8292b457 mit v540 — nicht v539, dieser Wert gehoert zum bereits
+// aufgeloesten ersten Rebase-Schritt eine Stufe frueher. Die Kanon-Seite (U2-ADR-260-Landung,
+// v540→v541) und dieser Zweig (U2-ADR-266, hier bereits als v540→v541 gefuehrt) trugen beide
+// denselben Ausgangswert v540 — zwei disjunkte Bumps, v540+1+1=v542, nicht v541.
+// REBASE-MERGE auf 39372460 (04.09.2026): gemeinsamer Vorfahr (git merge-base) ist 8292b457 mit
+// v540. Die Kanon-Seite (U2-ADR-260-Landung + U2-ADR-266, bereits additiv v540→v542 aufgeloest,
+// zwei disjunkte Bumps) und dieser Zweig (U2-ADR-267: Modul-Einlass unumkehrbar, eigener Bump
+// v540→v541) trugen beide denselben Ausgangswert v540 — drei disjunkte Bumps,
+// v540+1+1+1=v543, nicht v542 und nicht v541.
+// v540 → v541 (04.09.2026, U2-ADR-267, dieser Zweig, vor diesem Rebase): die dauerhafte
+// Modul-Zeile in den Einstellungen nennt bei situation, dass Eingaben nicht mehr erreichbar
+// sind, wenn die Erweiterung fort ist (_modulTypUnwiederbringlichHinweis). Ein Bestaetigungs-
+// Dialog vor dem Einlass war Teil des ersten Entwurfs, angehalten und nicht nachgebaut
+// (04.09.2026: Gerüst und Modul werden PROVISIONIERT, nicht eingelassen — Produktentscheidung,
+// 04.09. wörtlich; ein Dialog am Hand-Einlass hätte einen Pfad bewacht, den das Produkt nicht
+// geht). vivodepot.html-Bytes geändert.
+// v540 → v541 (04.09.2026): U2-ADR-269 (Auftrag A1) — Rollen-Vokabular gebaut, vier
+// Rollen aus der Rollen-Vokabular-Erhebung vom selben Tag (zwei der ursprünglich sechs, geburts-
+// datumFeld/ehepartnerFeld, vor der Landung verworfen — A4-Rechtsformen-Öffnung), geschlossene
+// Liste bleibt geschlossen, instrumentTypUnterfeld erstmals in der Listenzeilen-Form.
+// REBASE-MERGE auf 39372460 (04.09.2026): gemeinsamer Vorfahr (git merge-base) ist 8292b457 mit
+// v540. Die Kanon-Seite trug seither zwei disjunkte Bumps (U2-ADR-260-Landung v540→v541,
+// U2-ADR-266 v541→v542, bereits oben aufgeloest) und dieser Zweig einen eigenen (U2-ADR-269,
+// v540→v541) — drei disjunkte Bumps insgesamt, v540+1+1+1=v543, nicht v542 und nicht v541.
+// Details s. vivodepot.html.
+// REBASE-MERGE auf ba826350 (04.09.2026): gemeinsamer Vorfahr (git merge-base) ist 39372460 mit
+// v542. Die Kanon-Seite (U2-ADR-267, v542→v543) und dieser Zweig (U2-ADR-269, ebenfalls
+// v542→v543, s. o.) trugen beide denselben Ausgangswert v542 — zwei disjunkte Bumps,
+// v542+1+1=v544, nicht v543. Details s. vivodepot.html.
+// v542 → v543 (05.09.2026, dieser Zweig): U2-ADR-263 — der PDF-Export prueft vor dem Erzeugen,
+// ob die eingebettete Schrift jedes vorkommende Zeichen tragen kann (pdfZeichenOhneDeckung),
+// sechs PDF-Erzeuger-Wege abgedeckt, kein stiller falscher Ersatz — benannter Abbruch statt
+// lautlos verstuemmelter Bytes. vivodepot.html-Bytes geaendert.
+// REBASE-MERGE auf eccda35e (05.09.2026): gemeinsamer Vorfahr (git merge-base) ist 39372460 mit
+// v542 (echt gegen `git show 39372460:sw.js` nachgemessen, nicht aus einer frueheren Notiz
+// uebernommen). Die Kanon-Seite (U2-ADR-267 + U2-ADR-269, bereits additiv v542→v544 aufgeloest,
+// zwei disjunkte Bumps) und dieser Zweig (U2-ADR-263, eigener Bump v542→v543) trugen beide
+// denselben Ausgangswert v542 — drei disjunkte Bumps insgesamt, v542+1+1+1=v545, nicht v544
+// und nicht v543. Details s. vivodepot.html.
+// v544 → v545 (05.09.2026, Kanon-Seite, U2-ADR-262 Handkopien-Waechter): in sw.js selbst nicht
+// eigens kommentiert (nur der CACHE-Wert geaendert) — bestaetigt gegen `git show
+// e097a5da:sw.js` und die SCHALEN_STAND-Zeile in vivodepot.html.
+// REBASE-MERGE auf e097a5da (05.09.2026): gemeinsamer Vorfahr (git merge-base) ist eccda35e mit
+// v544. Die Kanon-Seite (U2-ADR-262, eigener Bump v544→v545) und dieser Zweig (U2-ADR-278, eigener
+// Bump v544→v545) trugen beide denselben Ausgangswert v544 — zwei disjunkte Bumps,
+// v544+1+1=v546, nicht v545.
+// v544 → v546 (05.09.2026, U2-ADR-278, dieser Zweig): `textsatzRegeln().sprachkennung` folgt
+// jetzt dem tatsächlich gefundenen (Sprache, Rechtsraum)-Registry-Fach statt der Sprache allein —
+// Details s. vivodepot.html.
+// v546 → v547 (05.09.2026, REBASE-NACHZUG auf 9de4aabd): kein neuer Inhalt — reiner
+// Rebase-Nachzug, weil der schalen-lockstep-Wächter beim Push gegen den zuletzt auf diesen
+// Zweig gepushten Stand prüft (v546, `8f73bfc5`), nicht gegen den Kanon-Ausgangswert; 03s
+// Landung (9de4aabd) berührte vivodepot.html/sw.js nicht. Details s. vivodepot.html.
+// v544 → v545 (04.09.2026, U2-ADR-259 — Landung von a0s blockierter Arbeit,
+// diese Sitzung, zweiter Anlauf nach Auffrischen auf den durch U2-ADR-269 gewachsenen Kanon):
+// die zweite Angabe auf demselben Weg wie U2-ADR-258 — moduleVersion statt Herkunft, dieselbe
+// EINLASS_REGISTER/MODUL_SLOTS-Leitung, dieselben vier Stationen. a0 hatte vollständig
+// gemessen; a0s eigener Arbeitsbaum blieb wegen eines Auto-Mode-Gate-Fehlers auf 8292b457/v540
+// stehen und kam nie an die Gate-Reihe. Diese Landung wendet a0s Patch frisch auf den
+// aktuellen Kanon (eccda35e/v544) an, kein disjunkter Bump seither: v544+1=v545.
+// REBASE auf 1f06067b (05.09.2026): gemeinsamer Vorfahr (git merge-base) ist eccda35e mit v544. Die Kanon-Seite (bereits additiv auf v547 aufgeloest -- U2-ADR-262 v544->545, U2-ADR-278 545->546, REBASE-NACHZUG auf 9de4aabd 546->547 ohne neuen Inhalt, s. o.) und dieser Zweig (U2-ADR-259, eigener Bump v544->v545, s. o.) trugen beide denselben Ausgangswert v544 -- vier disjunkte Bumps insgesamt, v544+1+1+1+1=v548, nicht v547 und nicht v545 (v548)
+// // v549 → v550 (05.09.2026): U2-ADR-275: INSTITUTION_ART_EINGEBAUT fest verdrahtet statt aus
+// INSTITUTION_ART abgeleitet, wie zuvor bei den vier Registern aus U2-ADR-253 Commit A — Rebase
+// auf f7e5b052, dieser Zweig sitzt ohne eigene Commits direkt darauf, kein additiver Fall,
+// v549+1=v550
+// v545 → v549 (05.09.2026, dieser Zweig, U2-ADR-263): eigener Kern-Bump plus dokumentPdfBlob-
+// Korrektur (A253-Fund, keine Aufrufer mehr) — zwei eigene Bumps ab v545, Details s. vivodepot.html.
+// REBASE-MERGE auf a93df2a1 (05.09.2026): gemeinsamer Vorfahr (git merge-base) ist 1f06067b mit
+// v547 (echt gemessen). Die Kanon-Seite (mehrere Landungen inkl. U2-ADR-259 + Tippfehler-Korrektur,
+// zusammen v547→v550) und dieser Zweig (U2-ADR-263, zusammen v547→v549, s. o.) trugen beide
+// denselben Ausgangswert v547 — fuenf disjunkte Bumps insgesamt (drei Kanon, zwei dieser Zweig),
+// v547+3+2=v552, nicht v550 und nicht v549 + U2-ADR-279 (v553) + U2-ADR-282 (v554, Kanon-Seite)
+// + U2-ADR-287 (v554, dieser Zweig) — REBASE-MERGE auf 85ba98cb (05.09.2026): gemeinsamer
+// Vorfahr (git merge-base) ist v553, beide Seiten trugen denselben Ausgangswert — zwei
+// disjunkte Bumps, v553+1+1=v555 + U2-ADR-285 (v555, Kanon-Seite) — REBASE-MERGE auf 642f335c
+// (05.09.2026): gemeinsamer Vorfahr ist v554, beide Seiten trugen denselben Ausgangswert —
+// zwei disjunkte Bumps, v554+1+1=v556, nicht v555 + U2-ADR-290 (v557, kein eigener Kommentar
+// hier hinterlassen) + U2-ADR-294 (v558, Zehn-Register-Nachlese: renderSektor zieht angedockte
+// sektor-zielende Assistenten jetzt selbst) + Rebase auf e0da39ff (05.09.2026): kein Kanon-
+// Bump (U2-ADR-289 ließ die Schale bei v557), additiv trotzdem nachgezogen, weil der Push-Gate-
+// Wächter strikt höher als den vorherigen Push-Stand dieses Zweigs verlangt (v559). Details s. vivodepot.html.
+// REBASE-MERGE auf a773a7e0 (05.09.2026, U2-ADR-293-Zweig): gemeinsamer Vorfahr ist v557
+// (U2-ADR-290). Kanon-Seite ging v557->v559 (s. o., zwei Schritte). Dieser Zweig ging isoliert
+// v557->v559->v562 (gegen den damaligen Kanon-Stand e0da39ff/v557 gerechnet,
+// bevor a773a7e0 landete) — v560/v561/v562 waren zum Zeitpunkt DIESES Rebase bereits von drei
+// anderen, noch nicht gelandeten Zweigen beansprucht (-Zuteilung, nicht git-messbar).
+// v562 -> v563, von zugewiesen und unmittelbar vor diesem Commit gegen den echten
+// Kanon-Stand (a773a7e0/v559) nachgeschlagen, nicht nur übernommen.
+// REBASE-MERGE auf 1cb3ae1a (05.09.2026, U2-ADR-293 Struktur-Invarianz-Zweig): v563 -> v565,
+// von zugewiesen. Details s. vivodepot.html.
+// REBASE-MERGE auf 73383edc (05.09.2026, U2-ADR-291, vierter Rebase-Schritt dieses Zweigs):
+// gemeinsamer Vorfahr trug v565, Kanon zog in der Zwischenzeit selbst auf v566. Details s. vivodepot.html.
+// Zweitvergabe (05.09.2026): v566 UND v567 zeitgleich von anderen Zweigen beansprucht -
+// kollisionsfrei auf v568 gehoben, kein Inhalt geändert. REBASE-MERGE auf 813a2bdd (05.09.2026):
+// Kanon zog auf v568, dieser Zweig (interner Nachtrag) auf v567 - v568+1=v569. Details s. vivodepot.html.
+// U2-ADR-305 (05.09.2026, umnummeriert wegen Kollision mit dem echten U2-ADR-303 "der Aufrufer
+// statt des Riegels"): ADR-301-Korrektur + hinweis-Feld bei Einlass-Ablehnungen — REBASE-MERGE
+// auf 66e5e640: gemeinsamer Vorfahr trug v570, Kanon-Seite (U2-ADR-303, v570->v571, kein eigener
+// sw.js-Kommentar hinterlassen) und dieser Zweig (v570->v571) — zwei disjunkte Bumps, v572, nicht
+// v571. Details s. vivodepot.html.
+// U2-ADR-292 E4 (05.09.2026): Cherry-Pick auf 2b142910 (v572 bereits vom obigen Zweig belegt) —
+// v573. Details s. vivodepot.html.
+// U2-ADR-311 Punkt 1 (05.09.2026): _katalogOptionen-Schnappschuss geschlossen, get optionen()
+// statt fester Eigenschaft — v574 (eigener Bump, zeitgleich mit U2-ADR-307 unten beansprucht).
+// U2-ADR-307 (05.09.2026): die Rechtsraum-Überlagerung für Feld-Fristen
+// — ebenfalls v574, disjunkter Bump. REBASE-MERGE auf 199fc525: zwei disjunkte v574-Bumps,
+// v574+1=v575, nicht v574. Details s. vivodepot.html.
+// REBASE-MERGE auf c07332a7 (05.09.2026): gemeinsamer Vorfahr 199fc525 trägt v574. Kanon-Seite
+// (U2-ADR-311, v574->v575, ein Bump) und dieser Zweig (U2-ADR-308: v574->v575 Bau, v575->v576
+// Angleichen-Umbau, zwei Bumps) trugen beide v574 — drei disjunkte Bumps, v574+1+1+1=v577,
+// nicht v576 und nicht v575. Details s. vivodepot.html.
+// REBASE-MERGE auf 6d057fdc (05.09.2026): gemeinsamer Vorfahr c07332a7 trägt v575. Kanon-Seite
+// (U2-ADR-312, WIZARDS/SEKTOREN-Landkarte, v575->v576, ein Bump) und dieser Zweig (bereits
+// additiv v575->v577 aufgelöst, zwei eigene Bumps) trugen beide v575 — drei disjunkte Bumps
+// insgesamt, v575+1+1+1=v578, nicht v577 und nicht v576. Details s. vivodepot.html.
+// REBASE-MERGE auf b642674b (06.09.2026): gemeinsamer Vorfahr 6d057fdc trägt v576. Kanon-Seite
+// (U2-ADR-308-Landung, v576->v578, zwei Bumps, s. o.) und dieser Zweig (U2-ADR-313-Nachtrag,
+// v576->v577, ein Bump: zwei stille catch-Blöcke um textsatzNeuAnwenden() laut gemacht) trugen
+// beide v576 — drei disjunkte Bumps insgesamt, v576+1+1+1=v579, nicht v578 und nicht v577.
+// U2-ADR-399 (10.09.2026, Rebase-Landung, vom 06.09.): feld.<feldId>.vorschlaege
+// nimmt die Traegerkette auf (feld.<traeger>/<feldId>.vorschlaege) — die UnterFeld-ID `art`
+// war katalogweit doppelt vergeben und die flache Form konnte die beiden Vorschlagslisten
+// nicht unterscheiden. REBASE-MERGE auf c98c34a8 (10.09.2026): gemeinsamer Vorfahr v650.
+// Kanon-Seite („Zwei ungebaute Achsen", v650->v651) und dieser Zweig (v650->v651)
+// trugen beide v650 — zwei disjunkte Bumps, v650+1+1=v652, nicht v651.
+// U2-ADR-306: der Wizard-Ersetzer (v581). Details s. vivodepot.html.
+// U2-ADR-284: Stellensatz — eine rechtsraumgebundene Bezugsstelle (v585).
+// U2-ADR-326: generisches Auszugs-Tor + Beratungshilfe-Auszug (v587).
+// U2-ADR-335: die Lese-App liest, sie prueft nicht — kein „geprueft" aus einem Depot-Feld (v595).
+// U2-ADR-340: Verdeckungs-Zusicherung fuer die vier Zustandsbloecke (v600).
+// U2-ADR-341b/c: SITUATIONEN real ins Buendel, Nachtrag Anker-Reparaturen (v604).
+// U2-ADR-342: der Beleg bleibt im Depot — logikModule tragen ihn jetzt mit (v605).
+// U2-ADR-344: BMJ-Dokumente hinter der Buendel-Anwendung (v607).
+// U2-ADR-337/338/343: EN-Sprachmodul-Regelnkopf, VOLLMACHT_BMJ-Schluesselweg, 39 amtlich
+// uebernehmbare Wortlaute mechanisch belegt (v608). U2-ADR-345: vier Dokumentmodule +
+// STANDARD_VORLAGEN verlassen den nativen Block (v609). U2-ADR-346: fünf WIZARDS real ins
+// Buendel (v610), vier rohe C1-Steuerzeichen im Buendel-Merge auf \u-Escape nachgezogen (v611).
+// U2-ADR-348: bereichsErsatz — Struktur-Achse, Tausch statt Ergänzung (v613, v612 anderweitig belegt).
+// U2-ADR-351: fünf Schriftgrad-Rollen-Token + erscheinungAnwenden, .sektion-titel an allen
+// vierzehn Abschnitts-Überschriften (v616, Standzahl provisorisch — löst beim
+// final auf).
+// U2-ADR-354: „Weitere Bereiche" — eigenes Template-Verzeichnis in der Seitenleiste (v620).
+// „blattformat": dreizehntes EINLASS_REGISTER (nach `erscheinung`), fünf
+// Blatt-Zeichenfunktionen lesen es (v622).
+// U2-ADR-363 (Zug 2, 07.09.2026): textLesen() faellt nicht mehr auf TEXTSATZ_EINGEBAUT zurueck (v623).
+// „ohne Feststellung kein Vermerk, kein Vorgabewert" explizit im Kopf-Kommentar (v624).
+// PRODID/PDF-Titel nennen das erzeugende Produkt (v625).
+// U2-ADR-367 (Zug 3, Besitz-Zug): AB_WERK_TEXTSATZ_DE (vormals TEXTSATZ_EINGEBAUT) wird selbst
+// zum deutschen Sprachmodul, Kern/Werkzeuge/Proben lesen nur noch ueber .texte (v629).
+// U2-ADR-371 + U2-ADR-374: „Ihres Depots" statt „Ihres Vivodepots", Bestands-Wächter dagegen (v630).
+// U2-ADR-375: der zweite Einlass zieht das Intervall nach, ausser die Buergerin hat abgeschaltet (v631).
+//, Ab-Werk-Rangfolge (08.09.2026): logikModul bekommt dieselbe Drei-Stufen-
+// Rangfolge wie textsatz — _logikModuleAlle(d) als einzige Lesestelle (v631).
+// U2-ADR-384: Vivodepots eigene Marke wird Ab-Werk-Saat, brandingModulPruefen ohne Signatur (v632).
+// U2-ADR-387 (Ab-Werk-Rangfolge, 08.09.2026): logikModul bekommt dieselbe Drei-Stufen-
+// Rangfolge wie textsatz — _logikModuleAlle(d) als einzige Lesestelle (v631). Gemeinsamer,
+// tabellengetriebener Wächter über alle Ab-Werk-Mechanismen (v632).
+// U2-ADR-382 (Besitz-Zug): RECHTSRAUM_KATALOG wird selbst das deutsche Rechtsraum-Modul, ab Werk
+// ohne Signatur gesaet, Weg A unangetastet (v634).
+// U2-ADR-382-Nachtrag: umbenannt zu AB_WERK_RECHTSRAUM_DE (e2s Ab-Werk-Wächter-Konvention),
+// totes Migrationswerkzeug entfernt (v635).
+// U2-ADR-388: UX/Erscheinung gemessen vollstaendig, kein Ab-Werk-Artefakt aus sachlichem Grund
+// (v636).
+// U2-ADR-387-Nachtrag (08.09.2026, "Antwort ist (d)"): das Einbacken selbst — Sprache/Bereich/
+// Logikmodul als markierte Regionen in vivodepot.html gebacken statt als Begleitdatei kopiert (v637).
+// "Pro-Achse englisch" (08.09.2026): Konstanten-Ortswechsel gegen eine
+// TDZ-ReferenceError im Ab-Werk-Boot-Seed.
+// U2-ADR-398-Nachtrag (08.09.2026, "Pro-Produkt ersetzt statt ergänzt"): vierte Ab-Werk-Region
+// AB_WERK_BEREICHS_ERSATZ + _abWerkVorlagenInsDepot. Fund im echten Browser:
+// _bereichAusBuendelErzeugen braucht einen Label-Rückfall, sonst bricht renderSektor().
+// Korrektur: der Rückfall lief vor dem Textsatz-Lauf und traf alle dreizehn nativen Sektoren —
+// jetzt danach, nur wenn der Textsatz-Lauf nichts gefüllt hat.
+// U2-ADR-398 (08.09.2026, "das gekuendigte Zimmer", kanon-Zweig): data.abWerkMitschrift
+// schreibt die eingebackene Struktur beim Anlegen mit, lebendiges Ab-Werk gewinnt immer.
+// Rebase-Zusammenführung dieser beiden Zweige (Standzahl-Kollision v639 aufgelöst,
+// s. tools/standzahl-frei-pruefen.js).
+// Pro-EN-Rubriken-Ruecknahme — bereichsErsatz-Sektoren bekommen den lebendigen
+// Beschriftungs-Getter, den der Andock-Weg schon hatte (v641).
+// W-8-Doppelerfassung (08.09.2026): finanzen.steuerid.label auf Plural,
+// unterscheidet sich jetzt vom Unterfeld finanzen.steuerid/nr.label (v642).
+// „Produkt ist eine Datei" (10.09.2026): s. SCHALEN_STAND-Kommentar in
+// vivodepot.html (v659, nach dem Rebase auf VD43s gelandeten Stand v658) — dieselbe Sache,
+// kein sw.js-eigener Inhalt geändert, nur der Lockstep-Stand nachgezogen.
+// „notiz bleibt Notiz" (10.09.2026): vierter Kennung-Prüfer
+// _istBereichsErsatzFeldKennung, s. SCHALEN_STAND-Kommentar in vivodepot.html (v650).
+// Vorige — (10.09.2026): 56 Pro-Felder in die sieben Pro-Bereiche, dazu VD43s
+// „367 ADRs"-Zug (interne Pfad-Verweise aus Kommentaren entfernt). Beide trugen unabhängig
+// v648; beim Bündeln zusammengeführt und gemeinsam auf v649 gehoben (v649).
+// „Vollimport ist kein Vollimport" (11.09.2026): der Rundlauf trägt jetzt
+// 40 statt 3 Depot-Schlüssel, s. SCHALEN_STAND-Kommentar in vivodepot.html (v667 — v666 kollidierte
+// beim Rebase mit A576, unabhängig auf demselben Stand vergeben).
+// U2-ADR-402 (11.09.2026): die acht draußen bleibenden Vollimport-Schlüssel als eigene
+// Entscheidung nachgetragen, s. SCHALEN_STAND-Kommentar in vivodepot.html (v668).
+// Räumung Runde 2 (11.09.2026): eine Zurechnungs-Zeile weiter oben in diesem
+// Kommentarblock umformuliert ("Entscheidung" → "Produktentscheidung") — kein
+// eigener sw.js-Inhalt geändert, nur der Lockstep-Gate nachgezogen. Derselbe Stand v669
+// war beim Rebase bereits unabhängig auf origin vergeben; dieser Kommentarzusatz selbst
+// zählte danach erneut als Schalen-Änderung — zweiter Bump auf v670 (12.09.2026).
+// Nutzer-Rückmeldung v1.0-rc.501 (12.09.2026): Einlesen-Wortlaut, Notfall-Zur-Eingabe-Verweis,
+// Home-Signal auf der Marke, Speicher-Hinweis ohne Eigentums-Pathos — v671 kollidierte beim
+// Landen mit einer anderen Sitzung, darum direkt auf v673 (12.09.2026).
+// Die Palette folgt der Marke (13.09.2026): ein Vor-Depot-Branding-Modul faerbt nicht mehr nur
+// die Kopfzeile, sondern die sechzehn Tokens, die Vivodepots Erscheinung tragen — Ton von der
+// Marke, Helligkeit und Saettigung von der Rolle, jedes Textpaar durch die WCAG-Rechnung.
+// s. SCHALEN_STAND-Kommentar in vivodepot.html (v680 — v679 war an denselben Stand vergeben und
+// verbrannte, als die Kopfzeilen-Abweisung nachgebessert wurde: der Lockstep-Waechter vergleicht
+// gegen HEAD und sah den ersten, nie gepushten Versuch).
+// Lese-App bekommt denselben Branding-CSS-Hook wie der Kern (13.09.2026, KOORD5-Auftrag,
+// U2-ADR-400-Nachtrag): _markeFarbeAnwenden() in vivodepot-lesen.html, Kontrast-Primitive
+// woertlich aus dem Kern gespiegelt und ueber einen Huellen-Waechter gegen Drift gehalten.
+// Nachtrag: die Lese-App-PALETTE folgt jetzt ebenso der Marke (KOORD5-Fund, direkter Nachbar
+// U2-ADR-408) — fuenf eigene Rollen (_lesenPaletteAbleiten), nicht die gespiegelte Kern-Tabelle:
+// --akzent traegt hier Modus-Bedeutung (anker/sub/notfall), keine Marken-Rolle.
+// Nachtrag: KOORD5-Nachfrage zur Render-Reihenfolge beantwortet und als Kommentar festgehalten
+// (kein Render-Einstieg zeichnet vor setModusFarbe() — nachgemessen, nicht angenommen).
+// Drei Felder fuer die ZVR-Abschrift (13.09.2026): ab 01.10.2026 kann im Zentralen
+// Vorsorgeregister der Dokumenttext selbst liegen, hinterlegt von einer Institution.
+// s. SCHALEN_STAND-Kommentar in vivodepot.html (v688).
+// Hinweis außerhalb des amtlichen Wortlauts ergänzt (15.09.2026, Report-before-Build): toter
+// Bayern-Leitfaden-Link im BMJ-Patientenverfügung-Zitat, s. SCHALEN_STAND-Kommentar in
+// vivodepot.html (v691).
+const CACHE = 'vivodepot-shell-v710';
+// Feldtyp `verweis` (externe Adresse, nur https:) — Templates können jetzt auf ein amtliches
+// Register o. Ä. zeigen (12.09.2026, KOORD5-Auftrag).
+// Home-Icon-Abzeichen zurückgebaut, interner Toast entfernt, "Weitere Bereiche" in Klapp-
+// Struktur (12.09.2026, KOORD5).
+// Regal auf Zeilen umgebaut, Modus._setzeIntern rendert die Sidebar neu, Vorlagen-Generator
+// auf Marken-Palette gezogen (12.09.2026, KOORD5).
+// Sub-Depot-Akzent öffnet sich für freie White-Label-Hex-Werte, AA zur Laufzeit gerechnet
+// statt nur für die acht benannten Töne nachgeschlagen (12.09.2026, Nutzer-Rückmeldung/KOORD5).
+// „Zwei ungebaute Achsen" (10.09.2026): zwei neue Ab-Werk-Regionen
+// (AB_WERK_BRANDING_PRODUKT, AB_WERK_RECHTSRAUM_PRODUKT), s. SCHALEN_STAND-Kommentar in
+// vivodepot.html (v651).
+// Vorige — „notiz bleibt Notiz" (10.09.2026): vierter Kennung-Prüfer
+// _istBereichsErsatzFeldKennung (v650).
 
 // Die App-Schale. Einzeln & tolerant gecacht (fehlende Einträge brechen den
 // Install NICHT — z. B. wenn die Manifest-Entscheidung „inline" lautet und es
