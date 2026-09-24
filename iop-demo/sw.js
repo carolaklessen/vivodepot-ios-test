@@ -641,7 +641,7 @@
 // s. dortiger Kommentar. Schnitt×Verschluss-Merge (18.09.2026): Schnitt (v734) und Verschluss
 // (v743) brachten je ihre eigene Erhöhung, hier auf die gemeinsame v744 zusammengeführt —
 // s. ausführlicher SCHALEN_STAND-Kommentar in vivodepot.html (v744).
-const CACHE = 'vivodepot-shell-v794';
+const CACHE = 'vivodepot-shell-v794-k1';
 // Feldtyp `verweis` (externe Adresse, nur https:) — Templates können jetzt auf ein amtliches
 // Register o. Ä. zeigen (12.09.2026, KOORD5-Auftrag).
 // Home-Icon-Abzeichen zurückgebaut, interner Toast entfernt, "Weitere Bereiche" in Klapp-
