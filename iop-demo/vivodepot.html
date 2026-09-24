@@ -2997,6 +2997,12 @@ html[lang="en"] .vorfuehrung-karte::before { content: "Walkthrough · Explanatio
 html.vorfuehrung-band #app, html.vorfuehrung-band #app.an { height: calc(100vh - 26px - var(--vorfuehrung-band, 0px) - var(--vorfuehrung-unten, 0px) - var(--space-3)); }
 html.vorfuehrung-band #modal-rueck { bottom: calc(var(--vorfuehrung-band, 0px) + var(--vorfuehrung-unten, 0px) + var(--space-3)); }
 html.vorfuehrung-band .modal { max-height: calc(100vh - 26px - var(--vorfuehrung-band, 0px) - var(--vorfuehrung-unten, 0px) - var(--space-3) - 2 * var(--space-5)); }
+/* Mittel (Tablet hochkant, 600–999 px): kein Balken über die ganze Breite, sondern ein Zettel rechts im Band
+   (Carola, 24.09.: „hochkant ist es wieder quer"). Die Ansicht endet weiter über dem Band. */
+@media (min-width: 600px) and (max-width: 999px) {
+  #vorfuehrung-schleife .vorfuehrung-karte { width: 26rem; max-width: calc(100% - 2 * var(--space-5));
+    margin: 0 var(--space-5) var(--space-3) auto; transform: rotate(-1.2deg); }
+}
 /* Breit (ab 1000 px): eigene Spalte rechts. */
 @media (min-width: 1000px) {
   html.vorfuehrung-band { --zettel-spalte: 22rem; }
