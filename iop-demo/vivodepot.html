@@ -2977,27 +2977,36 @@
   @media print { #vorfuehrung-schleife, #vorfuehrung-warnung { display: none; } #vorfuehrung-streifen { position: static; } }
 </style>
 <style id="vorfuehrung-karte-abgehoben">
-/* Übergang (b) 24.09.2026, KOORD1/KOORD3: Die Erklärkarte ist ein Notizzettel, kein Balken (Carola: „wie ein Post-it,
-   es muss erkennbar sein"). Kanonisch nachzubauen bei VDS1 (a). Nur Kern-Tokens, kein neuer Farbwert. */
-#vorfuehrung-schleife .vorfuehrung-karte, .vorfuehrung-karte {
-  max-width: 26rem; width: calc(100% - 2 * var(--space-4)); margin: 0 var(--space-5) var(--space-4) auto;
+/* Übergang (b) 24.09.2026, KOORD1/KOORD3: Die Erklärkarte ist ein Notizzettel (Carola: „wie ein Post-it, es muss
+   erkennbar sein") in einem EIGENEN Bereich; sie verdeckt keinen Inhalt. Breit: #app lässt rechts eine Spalte frei,
+   der Zettel steht darin. Schmal: ein Band unten, die Ansicht endet davor. Nur Kern-Tokens. Nachbau bei VDS1 (a). */
+.vorfuehrung-karte {
   background: var(--gold-soft); color: var(--ink); border: 0; border-top: 10px solid var(--warning);
   border-radius: 2px 2px 6px 6px; transform: rotate(-1.2deg);
   box-shadow: 0 2px 4px rgba(28,42,30,0.18), 0 14px 30px rgba(28,42,30,0.28); padding: var(--space-4) var(--space-5); }
-#vorfuehrung-warnung .vorfuehrung-karte { margin: 0; }
-.vorfuehrung-karte-titel { color: var(--ink); }
-.vorfuehrung-karte-text { color: var(--ink); }
+.vorfuehrung-karte-titel, .vorfuehrung-karte-text { color: var(--ink); }
 .vorfuehrung-karte-tippen { color: var(--ink2); }
 .vorfuehrung-karte::before { content: "Vorführung · Erklärung"; display: block; font-size: var(--fs-xs); font-weight: 700;
   letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin: 0 0 var(--space-2); }
 html[lang="en"] .vorfuehrung-karte::before { content: "Walkthrough · Explanation"; }
-/* Der Zettel klebt auf der Seite (Ecke unten rechts); die Ansicht behält ihre volle Höhe, statt über die ganze Breite
-   einen leeren Streifen für ihn freizuhalten. #vorfuehrung-schleife bleibt durchsichtig und fängt die erste Berührung. */
-html.vorfuehrung-band #app { height: calc(100vh - 26px - var(--vorfuehrung-unten, 0px)); }
-html.vorfuehrung-band #modal-rueck { bottom: var(--vorfuehrung-unten, 0px); }
-html.vorfuehrung-band .modal { max-height: calc(100vh - 26px - var(--vorfuehrung-unten, 0px) - 2 * var(--space-5)); }
-@media (max-width: 760px) {
-  #vorfuehrung-schleife .vorfuehrung-karte { margin: 0 auto var(--space-3); max-width: none; }
+/* Schmal (Band unten): Abstand ringsum, die Ansicht endet über dem Zettel samt Abstand. Das gemessene Rechteck
+   (_vorfuehrungBandMessen) schließt die Drehung ein. */
+#vorfuehrung-schleife .vorfuehrung-karte { max-width: none; width: auto; margin: 0 var(--space-3) var(--space-3);
+  border-radius: 2px 2px 6px 6px; border-width: 10px 0 0 0; transform: rotate(-0.5deg);
+  box-shadow: 0 2px 4px rgba(28,42,30,0.18), 0 10px 24px rgba(28,42,30,0.28); }
+html.vorfuehrung-band #app, html.vorfuehrung-band #app.an { height: calc(100vh - 26px - var(--vorfuehrung-band, 0px) - var(--vorfuehrung-unten, 0px) - var(--space-3)); }
+html.vorfuehrung-band #modal-rueck { bottom: calc(var(--vorfuehrung-band, 0px) + var(--vorfuehrung-unten, 0px) + var(--space-3)); }
+html.vorfuehrung-band .modal { max-height: calc(100vh - 26px - var(--vorfuehrung-band, 0px) - var(--vorfuehrung-unten, 0px) - var(--space-3) - 2 * var(--space-5)); }
+/* Breit (ab 1000 px): eigene Spalte rechts. */
+@media (min-width: 1000px) {
+  html.vorfuehrung-band { --zettel-spalte: 22rem; }
+  html.vorfuehrung-band #app, html.vorfuehrung-band #app.an { width: calc(100% - var(--zettel-spalte)); height: calc(100vh - 26px); }
+  html.vorfuehrung-band #modal-rueck { right: var(--zettel-spalte); bottom: 0; }
+  html.vorfuehrung-band .modal { max-height: calc(100vh - 26px - 2 * var(--space-5)); }
+  html.vorfuehrung-band #toast-host { left: calc((100% - var(--zettel-spalte)) / 2); }
+  html.vorfuehrung-band .banner-stapel { right: var(--zettel-spalte); }
+  #vorfuehrung-schleife .vorfuehrung-karte { width: calc(var(--zettel-spalte) - 2 * var(--space-5));
+    margin: 0 var(--space-5) var(--space-5) auto; transform: rotate(-1.2deg); }
 }
 </style>
 </head>
